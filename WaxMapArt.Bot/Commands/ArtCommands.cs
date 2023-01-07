@@ -59,7 +59,7 @@ public class ArtCommands : ApplicationCommandModule
             double shulkers = Math.Truncate(packs / 27f * 100) / 100;
 
             string packCount = packs > 0 ? $"{packs} packs + {rem}" : count.ToString();
-            string id = palette.Colors[mapId].BlockId;
+            string id = palette.Colors[mapId.ToString()].BlockId;
             
             sb.Append($"  {id}: {count} ({packCount} blocks) ({shulkers}SB)\n");
         }
@@ -120,7 +120,7 @@ public class ArtCommands : ApplicationCommandModule
             double shulkers = Math.Truncate(packs / 27f * 100) / 100;
 
             string packCount = packs > 0 ? $"{packs} packs + {rem}" : count.ToString();
-            string id = palette.Colors[mapId].BlockId;
+            string id = palette.Colors[mapId.ToString()].BlockId;
             
             sb.Append($"  {id}: {count} ({packCount} blocks) ({shulkers}SB)\n");
         }

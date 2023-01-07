@@ -4,8 +4,7 @@ namespace WaxMapArt;
 
 public struct Palette
 {
-    [JsonProperty("colors")]
-    public Dictionary<int, BlockInfo> Colors;
-    [JsonProperty("placeholder_block")]
-    public BlockInfo PlaceholderBlock;
+    [JsonProperty("name")] public string Name;
+    [JsonProperty("colors")] public Dictionary<string, BlockInfo> Colors;
+    [JsonProperty("placeholder_block")] public BlockInfo PlaceholderBlock;
 }

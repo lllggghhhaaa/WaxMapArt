@@ -5,11 +5,11 @@ BlockInfo[] blocks = JsonConvert.DeserializeObject<BlockInfo[]>(File.ReadAllText
 
 Palette palette = new Palette
 {
-    Colors = new Dictionary<int, BlockInfo>(),
+    Colors = new Dictionary<string, BlockInfo>(),
     PlaceholderBlock = blocks[0]
 };
 
 foreach (IGrouping<int,BlockInfo> blockInfos in blocks.GroupBy(info => info.MapId))
-    palette.Colors.Add(blockInfos.Key, blockInfos.First());
+    palette.Colors.Add(blockInfos.Key.ToString(), blockInfos.First());
     
 File.WriteAllText("ceira.json", JsonConvert.SerializeObject(palette));    
