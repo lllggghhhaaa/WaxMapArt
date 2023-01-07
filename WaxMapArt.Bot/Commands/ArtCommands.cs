@@ -1,7 +1,5 @@
 using System.Diagnostics;
 using System.Text;
-using Cyotek.Data.Nbt;
-using Cyotek.Data.Nbt.Serialization;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;

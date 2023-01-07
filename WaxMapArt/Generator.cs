@@ -16,11 +16,11 @@ public class Generator
     public GeneratorOutput Generate(Image<Rgb24> input)
     {
         Size size = MapSize * 128;
-        Dictionary<int, int> usedBlocks = new Dictionary<int, int>();
-        Image<Rgb24> outImage = new Image<Rgb24>(size.X, size.Y);
+        var usedBlocks = new Dictionary<int, int>();
+        var outImage = new Image<Rgb24>(size.X, size.Y);
         input.Mutate(ctx => ctx.Resize(size.X, size.Y));
 
-        List<BlockColor> colors = new List<BlockColor>();
+        var colors = new List<BlockColor>();
         
         foreach (var (_, info) in ColorPalette.Colors)
         {
@@ -29,7 +29,7 @@ public class Generator
             colors.Add(new BlockColor(info.GetBaseColor(), info));
         }
 
-        List<Block> blocks = new List<Block>();
+        var blocks = new List<Block>();
 
         for (int x = 0; x < input.Width; x++)
         {

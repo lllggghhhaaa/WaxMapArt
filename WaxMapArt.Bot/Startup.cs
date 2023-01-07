@@ -23,7 +23,7 @@ public class Startup
         IMongoClient client = new MongoClient(configJson.MongoUri);
         Database = client.GetDatabase("Ciara");
 
-        DiscordConfiguration cfg = new DiscordConfiguration
+        var cfg = new DiscordConfiguration
         {
             Token = configJson.Token,
             TokenType = TokenType.Bot,

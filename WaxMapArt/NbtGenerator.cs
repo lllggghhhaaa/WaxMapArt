@@ -1,4 +1,3 @@
-using System.IO.Compression;
 using Cyotek.Data.Nbt;
 using Cyotek.Data.Nbt.Serialization;
 
@@ -11,16 +10,16 @@ public static class NbtGenerator
         Tuple<int, int, int> size = blocks.CalculateSize();
         BlockInfo[] palette = blocks.GroupBy(block => block.Info.BlockId).Select(grouping => grouping.First().Info).ToArray();
 
-        TagList paletteTag = new TagList("palette", TagType.Compound);
+        var paletteTag = new TagList("palette", TagType.Compound);
         
         for (int i = 0; i < palette.Length; i++)
         {
-            TagCompound blockInfo = new TagCompound();
+            var blockInfo = new TagCompound();
             blockInfo.Value.Add(new TagString("Name", palette[i].BlockId));
 
             if (palette[i].Properties.Count > 0)
             {
-                TagCompound properties = new TagCompound("Properties");
+                var properties = new TagCompound("Properties");
                 foreach (var (name, value) in palette[i].Properties) properties.Value.Add(new TagString(name, value));
                 blockInfo.Value.Add(properties);
             }
@@ -28,17 +27,17 @@ public static class NbtGenerator
             paletteTag.Value.Add(blockInfo);
         }
 
-        TagList blocksTag = new TagList("blocks", TagType.Compound);
+        var blocksTag = new TagList("blocks", TagType.Compound);
         foreach (Block block in blocks)
         {
-            TagCompound blockTag = new TagCompound();
+            var blockTag = new TagCompound();
             blockTag.Value.Add(new TagList("pos", TagType.Int, new TagCollection { block.X, block.Y, block.Z }));
             blockTag.Value.Add(new TagInt("state", Array.IndexOf(palette, block.Info)));
 
             blocksTag.Value.Add(blockTag);
         }
         
-        NbtDocument document = new NbtDocument();
+        var document = new NbtDocument();
         TagCompound root = document.DocumentRoot;
 
         root.Value.Add(new TagString("author", "lllggghhhaaa"));
@@ -48,7 +47,7 @@ public static class NbtGenerator
         root.Value.Add(new TagList("size", TagType.Int, new TagCollection { size.Item1, size.Item2, size.Item3 }));
 
         Stream stream = new MemoryStream();
-        BinaryTagWriter writer = new BinaryTagWriter(stream);
+        var writer = new BinaryTagWriter(stream);
         writer.WriteStartDocument();
         writer.WriteTag(document.DocumentRoot);
         writer.WriteEndDocument();

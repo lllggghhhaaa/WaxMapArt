@@ -1,4 +1,3 @@
-using System.Text;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity.Extensions;
@@ -31,8 +30,7 @@ public class PaletteCommands : ApplicationCommandModule
 
         palette.PlaceholderBlock = blockList.First(info => info.BlockId == phBlock);
 
-        List<DiscordSelectComponentOption> options = new List<DiscordSelectComponentOption>();
-        DiscordMessage message;
+        var options = new List<DiscordSelectComponentOption>();
 
         foreach (IGrouping<int, BlockInfo> blockGroup in blockList.GroupBy(info => info.MapId))
         {
@@ -42,7 +40,7 @@ public class PaletteCommands : ApplicationCommandModule
             foreach (BlockInfo block in blockGroup)
                 options.Add(new DiscordSelectComponentOption(block.BlockId, block.BlockId));
 
-            message = await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent($"Selecione o id {mapId}")
+            var message = await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent($"Selecione o id {mapId}")
                 .AddComponents(new DiscordSelectComponent(ctx.User.Id.ToString(), "Blocks", options)));
 
             var result = await interactivity.WaitForSelectAsync(message, ctx.User, ctx.User.Id.ToString());
