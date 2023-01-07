@@ -52,11 +52,11 @@ public class PaletteCommands : ApplicationCommandModule
 
         var stream = new MemoryStream();
         var writer = new StreamWriter(stream);
-        await writer.WriteAsync(JsonConvert.SerializeObject(palette));
+        await writer.WriteAsync(JsonConvert.SerializeObject(palette, Formatting.Indented));
         await writer.FlushAsync();
         stream.Position = 0;
         
-        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent($"Done :relaxed:```")
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Done :relaxed:")
             .AddFile($"{name}.json", stream));
 
         User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id) ??
