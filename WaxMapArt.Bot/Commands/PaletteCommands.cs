@@ -98,7 +98,7 @@ public class PaletteCommands : ApplicationCommandModule
 
         if (user.Palettes.Exists(pal => pal.Name == palette.Name))
         {
-            StringBuilder sbp = new StringBuilder($"{ctx.User.Username}:");
+            StringBuilder sbp = new StringBuilder($"{ctx.User.Username}:\n");
             foreach (Palette userPalette in user.Palettes) sbp.AppendLine($"  - {userPalette.Name}");
 
             await ctx.EditResponseAsync(new DiscordWebhookBuilder()
@@ -117,5 +117,53 @@ public class PaletteCommands : ApplicationCommandModule
             .WithContent($"Done :relaxed:\n```yaml\n{sb}\n```"));
 
         await user.SendToDatabaseAsync(Startup.Database);
+    }
+
+    [SlashCommand("view", "View an specified palette")]
+    public async Task View(InteractionContext ctx,
+        [Option("palette", "The palette in the json format")]
+        string paletteName)
+    {
+        await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+        
+        paletteName = paletteName.ToLower();
+        User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id);
+
+        if (!user.Palettes.Exists(pal => pal.Name.ToLower() == paletteName))
+        {
+            StringBuilder sbp = new StringBuilder($"{ctx.User.Username}:\n");
+            foreach (Palette userPalette in user.Palettes) sbp.AppendLine($"  - {userPalette.Name}");
+
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+                .WithContent($"This palette doesn't exists\n```yaml\n{sbp}\n```"));
+            
+            return;
+        }
+
+        Palette palette = user.Palettes.Find(pal => pal.Name.ToLower() == paletteName);
+        
+        var stream = new MemoryStream();
+        var writer = new StreamWriter(stream);
+        await writer.WriteAsync(JsonConvert.SerializeObject(palette, Formatting.Indented));
+        await writer.FlushAsync();
+        stream.Position = 0;
+        
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+            .WithContent("Done :relaxed:")
+            .AddFile($"{palette.Name}.json", stream));
+    }
+
+    [SlashCommand("list", "List all palettes")]
+    public async Task List(InteractionContext ctx)
+    {
+        await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+        
+        User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id);
+        
+        StringBuilder sb = new StringBuilder($"{ctx.User.Username}:\n");
+        foreach (Palette userPalette in user.Palettes) sb.AppendLine($"  - {userPalette.Name}");
+
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+            .WithContent($"Done :relaxed:\n```yaml\n{sb}\n```"));
     }
 }

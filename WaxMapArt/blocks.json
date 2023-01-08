@@ -82,47 +82,65 @@
   {
     "id": "minecraft:jungle_leaves",
     "map_id": 7,
-    "properties": {}
+    "properties": {
+      "persistent": "true"
+    }
   },
   {
     "id": "minecraft:oak_leaves",
     "map_id": 7,
-    "properties": {}
+    "properties": {
+      "persistent": "true"
+    }
   },
   {
     "id": "minecraft:birch_leaves",
     "map_id": 7,
-    "properties": {}
+    "properties": {
+      "persistent": "true"
+    }
   },
   {
     "id": "minecraft:spruce_leaves",
     "map_id": 7,
-    "properties": {}
+    "properties": {
+      "persistent": "true"
+    }
   },
   {
     "id": "minecraft:mangrove_leaves",
     "map_id": 7,
-    "properties": {}
+    "properties": {
+      "persistent": "true"
+    }
   },
   {
     "id": "minecraft:acacia_leaves",
     "map_id": 7,
-    "properties": {}
+    "properties": {
+      "persistent": "true"
+    }
   },
   {
     "id": "minecraft:dark_oak_leaves",
     "map_id": 7,
-    "properties": {}
+    "properties": {
+      "persistent": "true"
+    }
   },
   {
     "id": "minecraft:azalea_leaves",
     "map_id": 7,
-    "properties": {}
+    "properties": {
+      "persistent": "true"
+    }
   },
   {
     "id": "minecraft:flowering_azalea_leaves",
     "map_id": 7,
-    "properties": {}
+    "properties": {
+      "persistent": "true"
+    }
   },
   {
     "id": "minecraft:snow_block",
