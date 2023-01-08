@@ -24,9 +24,11 @@ public class Generator
         
         foreach (var (_, info) in ColorPalette.Colors)
         {
-            colors.Add(new BlockColor(info.GetBaseColor().Multiply(MapColors.M0), info));
-            colors.Add(new BlockColor(info.GetBaseColor().Multiply(MapColors.M1), info));
-            colors.Add(new BlockColor(info.GetBaseColor(), info));
+            Rgb24 baseColor = MapColors.BaseColors[info.MapId];
+            
+            colors.Add(new BlockColor(baseColor.Multiply(MapColors.M0), info));
+            colors.Add(new BlockColor(baseColor.Multiply(MapColors.M1), info));
+            colors.Add(new BlockColor(baseColor, info));
         }
 
         var blocks = new List<Block>();

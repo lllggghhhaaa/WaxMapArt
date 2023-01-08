@@ -16,5 +16,11 @@
         <None Include="blocks.json" CopyToOutputDirectory="PreserveNewest" />
         <None Include="palette.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
+    
+    <ItemGroup>
+      <Reference Include="MongoDB.Bson">
+        <HintPath>..\..\..\.nuget\packages\mongodb.bson\2.18.0\lib\netstandard2.1\MongoDB.Bson.dll</HintPath>
+      </Reference>
+    </ItemGroup>
 
 </Project>

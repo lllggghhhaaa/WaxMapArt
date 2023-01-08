@@ -1,3 +1,4 @@
+using System.Text;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity.Extensions;
@@ -55,14 +56,46 @@ public class PaletteCommands : ApplicationCommandModule
         await writer.WriteAsync(JsonConvert.SerializeObject(palette, Formatting.Indented));
         await writer.FlushAsync();
         stream.Position = 0;
-        
-        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Done :relaxed:")
-            .AddFile($"{name}.json", stream));
 
         User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id) ??
                     new User { UserId = ctx.User.Id.ToString() };
 
         user.Palettes.Add(palette);
+        
+        StringBuilder sb = new StringBuilder($"{ctx.User.Username}:");
+        
+        foreach (Palette userPalette in user.Palettes) sb.AppendLine($"  - {userPalette.Name}");
+
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+            .WithContent($"Done :relaxed:\n```yaml\n{sb}\n```")
+            .AddFile($"{name}.json", stream));
+
+        await user.SendToDatabaseAsync(Startup.Database);
+    }
+
+    [SlashCommand("upload", "Create a new palette")]
+    public async Task Upload(InteractionContext ctx,
+        [Option("palette", "The palette in the json format")]
+        DiscordAttachment attachment)
+    {
+        await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+        
+        HttpClient client = new HttpClient();
+        string content = await (await client.GetAsync(attachment.Url)).Content.ReadAsStringAsync();
+
+        Palette palette = JsonConvert.DeserializeObject<Palette>(content);
+
+        User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id) ??
+                    new User { UserId = ctx.User.Id.ToString() };
+
+        user.Palettes.Add(palette);
+
+        StringBuilder sb = new StringBuilder($"{ctx.User.Username}:\n");
+        
+        foreach (Palette userPalette in user.Palettes) sb.AppendLine($"  - {userPalette.Name}");
+
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+            .WithContent($"Done :relaxed:\n```yaml\n{sb}\n```"));
 
         await user.SendToDatabaseAsync(Startup.Database);
     }
