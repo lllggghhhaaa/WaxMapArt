@@ -57,13 +57,22 @@ public class PaletteCommands : ApplicationCommandModule
         await writer.FlushAsync();
         stream.Position = 0;
 
-        User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id) ??
-                    new User { UserId = ctx.User.Id.ToString() };
+        User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id);
+
+        if (user.Palettes.Exists(pal => pal.Name == palette.Name))
+        {
+            StringBuilder sbp = new StringBuilder($"{ctx.User.Username}:");
+            foreach (Palette userPalette in user.Palettes) sbp.AppendLine($"  - {userPalette.Name}");
+
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+                .WithContent($"This palette already exists\n```yaml\n{sbp}\n```"));
+            
+            return;
+        }
 
         user.Palettes.Add(palette);
         
         StringBuilder sb = new StringBuilder($"{ctx.User.Username}:");
-        
         foreach (Palette userPalette in user.Palettes) sb.AppendLine($"  - {userPalette.Name}");
 
         await ctx.EditResponseAsync(new DiscordWebhookBuilder()
@@ -85,9 +94,19 @@ public class PaletteCommands : ApplicationCommandModule
 
         Palette palette = JsonConvert.DeserializeObject<Palette>(content);
 
-        User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id) ??
-                    new User { UserId = ctx.User.Id.ToString() };
+        User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id);
 
+        if (user.Palettes.Exists(pal => pal.Name == palette.Name))
+        {
+            StringBuilder sbp = new StringBuilder($"{ctx.User.Username}:");
+            foreach (Palette userPalette in user.Palettes) sbp.AppendLine($"  - {userPalette.Name}");
+
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+                .WithContent($"This palette already exists\n```yaml\n{sbp}\n```"));
+            
+            return;
+        }
+        
         user.Palettes.Add(palette);
 
         StringBuilder sb = new StringBuilder($"{ctx.User.Username}:\n");
