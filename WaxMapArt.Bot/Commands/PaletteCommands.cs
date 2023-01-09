@@ -31,6 +31,7 @@ public class PaletteCommands : ApplicationCommandModule
 
         palette.PlaceholderBlock = blockList.First(info => info.BlockId == phBlock);
 
+        string customId = $"create{ctx.User.Id.ToString()}";
         var options = new List<DiscordSelectComponentOption>();
 
         foreach (IGrouping<int, BlockInfo> blockGroup in blockList.GroupBy(info => info.MapId))
@@ -41,10 +42,12 @@ public class PaletteCommands : ApplicationCommandModule
             foreach (BlockInfo block in blockGroup)
                 options.Add(new DiscordSelectComponentOption(block.BlockId, block.BlockId));
 
-            var message = await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent($"Selecione o id {mapId}")
-                .AddComponents(new DiscordSelectComponent(ctx.User.Id.ToString(), "Blocks", options)));
+            var message = await ctx.EditResponseAsync(
+                new DiscordWebhookBuilder()
+                .WithContent($"Selecione o id {mapId}")
+                .AddComponents(new DiscordSelectComponent(customId, "Blocks", options)));
 
-            var result = await interactivity.WaitForSelectAsync(message, ctx.User, ctx.User.Id.ToString());
+            var result = await interactivity.WaitForSelectAsync(message, ctx.User, customId);
 
             string selected = result.Result.Values.First();
 
