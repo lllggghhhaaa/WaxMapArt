@@ -15,10 +15,10 @@ public class Generator
 
     public GeneratorOutput Generate(Image<Rgb24> input)
     {
-        WaxSize waxSize = MapSize * 128;
+        WaxSize size = MapSize * 128;
         var usedBlocks = new Dictionary<int, int>();
-        var outImage = new Image<Rgb24>(waxSize.X, waxSize.Y);
-        input.Mutate(ctx => ctx.Resize(waxSize.X, waxSize.Y));
+        var outImage = new Image<Rgb24>(size.X, size.Y);
+        input.Mutate(ctx => ctx.Resize(size.X, size.Y));
 
         var colors = new List<BlockColor>();
         
@@ -97,6 +97,8 @@ public class Generator
         }
         
         outImage.Mutate(ctx => ctx.Resize(OutputSize.X, OutputSize.Y));
+        usedBlocks = new Dictionary<int, int>(usedBlocks.OrderByDescending(pair => pair.Value));
+        usedBlocks.Add(ColorPalette.PlaceholderBlock.MapId, size.X);
 
         return new GeneratorOutput(blocks.ToArray(), outImage, usedBlocks);
     }
