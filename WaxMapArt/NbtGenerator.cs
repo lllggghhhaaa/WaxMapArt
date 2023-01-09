@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using Cyotek.Data.Nbt;
 using Cyotek.Data.Nbt.Serialization;
 
@@ -8,6 +9,7 @@ public static class NbtGenerator
     public static Stream Generate(Block[] blocks)
     {
         Tuple<int, int, int> size = blocks.CalculateSize();
+        
         BlockInfo[] palette = blocks.GroupBy(block => block.Info.BlockId).Select(grouping => grouping.First().Info).ToArray();
 
         var paletteTag = new TagList("palette", TagType.Compound);
@@ -53,6 +55,12 @@ public static class NbtGenerator
         writer.WriteEndDocument();
 
         stream.Position = 0;
-        return stream;
+
+        var ms = new MemoryStream();
+        var gz = new GZipStream(ms, CompressionLevel.Optimal);
+        stream.CopyTo(gz);
+
+        ms.Position = 0;
+        return ms;
     }
 }
