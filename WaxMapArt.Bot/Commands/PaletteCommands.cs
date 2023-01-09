@@ -44,7 +44,7 @@ public class PaletteCommands : ApplicationCommandModule
 
             var message = await ctx.EditResponseAsync(
                 new DiscordWebhookBuilder()
-                .WithContent($"Selecione o id {mapId}")
+                .WithContent($"Selecione o id ({mapId} - {((MapNames)mapId).GetName()})")
                 .AddComponents(new DiscordSelectComponent(customId, "Blocks", options)));
 
             var result = await interactivity.WaitForSelectAsync(message, ctx.User, customId);
