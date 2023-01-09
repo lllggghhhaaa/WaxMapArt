@@ -54,9 +54,9 @@ public class PaletteCommands : ApplicationCommandModule
 
         var stream = await JsonConvert.SerializeObject(palette, Formatting.Indented).ToStreamAsync();
         
-        User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id);
+        User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id.ToString());
 
-        if (user.Palettes.Exists(pal => pal.Name == palette.Name))
+        if (user.HasPalette(palette.Name))
         {
             StringBuilder sbp = new StringBuilder($"{ctx.User.Username}:");
             foreach (Palette userPalette in user.Palettes) sbp.AppendLine($"  - {userPalette.Name}");
@@ -90,9 +90,9 @@ public class PaletteCommands : ApplicationCommandModule
 
         Palette palette = JsonConvert.DeserializeObject<Palette>(content);
 
-        User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id);
+        User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id.ToString());
 
-        if (user.Palettes.Exists(pal => pal.Name == palette.Name))
+        if (user.HasPalette(palette.Name))
         {
             StringBuilder sbp = new StringBuilder($"{ctx.User.Username}:\n");
             foreach (Palette userPalette in user.Palettes) sbp.AppendLine($"  - {userPalette.Name}");
@@ -122,10 +122,10 @@ public class PaletteCommands : ApplicationCommandModule
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
         
-        paletteName = paletteName.ToLower();
-        User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id);
-
-        if (!user.Palettes.Exists(pal => pal.Name.ToLower() == paletteName))
+        User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id.ToString());
+        Palette? palette = user.GetPalette(paletteName);
+        
+        if (palette is null)
         {
             StringBuilder sbp = new StringBuilder($"{ctx.User.Username}:\n");
             foreach (Palette userPalette in user.Palettes) sbp.AppendLine($"  - {userPalette.Name}");
@@ -136,13 +136,11 @@ public class PaletteCommands : ApplicationCommandModule
             return;
         }
 
-        Palette palette = user.Palettes.Find(pal => pal.Name.ToLower() == paletteName);
-        
         var stream = await JsonConvert.SerializeObject(palette, Formatting.Indented).ToStreamAsync();
         
         await ctx.EditResponseAsync(new DiscordWebhookBuilder()
             .WithContent("Done :relaxed:")
-            .AddFile($"{palette.Name}.json", stream));
+            .AddFile($"{palette.Value.Name}.json", stream));
     }
 
     [SlashCommand("list", "List all palettes")]
@@ -150,7 +148,7 @@ public class PaletteCommands : ApplicationCommandModule
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
         
-        User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id);
+        User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id.ToString());
         
         StringBuilder sb = new StringBuilder($"{ctx.User.Username}:\n");
         foreach (Palette userPalette in user.Palettes) sb.AppendLine($"  - {userPalette.Name}");

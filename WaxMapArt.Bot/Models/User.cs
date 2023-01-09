@@ -12,15 +12,15 @@ public class User
     [JsonProperty("palettes")]
     public List<Palette> Palettes = new();
 
-    public static async Task<User> GetFromDatabaseAsync(IMongoDatabase database, ulong id)
+    public static async Task<User> GetFromDatabaseAsync(IMongoDatabase database, string id)
     {
         var collection = database.GetCollection<BsonDocument>("Users");
-        var filter = new BsonDocument { { "user_id", id.ToString() } };
+        var filter = new BsonDocument { { "user_id", id } };
         
         if (await collection.CountDocumentsAsync(filter) <= 0) 
             return new User
             {
-                UserId = id.ToString(),
+                UserId = id,
                 Palettes = new List<Palette>
                 {
                     JsonConvert.DeserializeObject<Palette>(await File.ReadAllTextAsync("palette.json"))
@@ -46,4 +46,12 @@ public class User
         else
             await collection.InsertOneAsync(document);
     }
+
+    public Palette? GetPalette(string name)
+    {
+        if (!HasPalette(name)) return null;
+        return Palettes.Find(palette => palette.Name == name);
+    }
+
+    public bool HasPalette(string name) => Palettes.Exists(palette => palette.Name == name);
 }
