@@ -37,9 +37,9 @@ public class ArtCommands : ApplicationCommandModule
         
         Preview preview = new Preview(palette)
         {
-            MapSize = new Size((int) width, (int) height),
+            MapSize = new WaxSize((int) width, (int) height),
             Method = cca,
-            OutputSize = new Size(512, 512)
+            OutputSize = new WaxSize(512, 512)
         };
 
         PreviewOutput output = preview.GeneratePreview(await Image.LoadAsync<Rgb24>(stream));
@@ -93,9 +93,9 @@ public class ArtCommands : ApplicationCommandModule
         
         Generator generator = new Generator(palette)
         {
-            MapSize = new Size((int) width, (int) height),
+            MapSize = new WaxSize((int) width, (int) height),
             Method = cca,
-            OutputSize = new Size(512, 512)
+            OutputSize = new WaxSize(512, 512)
         };
 
         GeneratorOutput output = generator.Generate(await Image.LoadAsync<Rgb24>(stream));

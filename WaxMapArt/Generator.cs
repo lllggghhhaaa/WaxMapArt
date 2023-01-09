@@ -7,18 +7,18 @@ namespace WaxMapArt;
 public class Generator
 {
     public ComparisonMethod Method = ComparisonMethod.Cie76;
-    public Size MapSize = new(1, 1);
-    public Size OutputSize = new(128, 128);
+    public WaxSize MapSize = new(1, 1);
+    public WaxSize OutputSize = new(128, 128);
     public Palette ColorPalette;
 
     public Generator(Palette colorPalette) => ColorPalette = colorPalette;
 
     public GeneratorOutput Generate(Image<Rgb24> input)
     {
-        Size size = MapSize * 128;
+        WaxSize waxSize = MapSize * 128;
         var usedBlocks = new Dictionary<int, int>();
-        var outImage = new Image<Rgb24>(size.X, size.Y);
-        input.Mutate(ctx => ctx.Resize(size.X, size.Y));
+        var outImage = new Image<Rgb24>(waxSize.X, waxSize.Y);
+        input.Mutate(ctx => ctx.Resize(waxSize.X, waxSize.Y));
 
         var colors = new List<BlockColor>();
         
