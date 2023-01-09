@@ -57,8 +57,10 @@ public static class NbtGenerator
         stream.Position = 0;
 
         var ms = new MemoryStream();
-        var gz = new GZipStream(ms, CompressionLevel.Optimal);
+        var gz = new GZipStream(ms, CompressionMode.Compress, true);
         stream.CopyTo(gz);
+        stream.Close();
+        gz.Close();
 
         ms.Position = 0;
         return ms;
