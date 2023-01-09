@@ -18,7 +18,8 @@ public class PaletteCommands : ApplicationCommandModule
         [Option("placeholder", "Placeholder block")]
         string phBlock)
     {
-        await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+        await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
+            new DiscordInteractionResponseBuilder { IsEphemeral = true });
         BlockInfo[] blockList = JsonConvert.DeserializeObject<BlockInfo[]>(await File.ReadAllTextAsync("blocks.json"))!;
 
         var interactivity = ctx.Client.GetInteractivity();
@@ -44,8 +45,8 @@ public class PaletteCommands : ApplicationCommandModule
 
             var message = await ctx.EditResponseAsync(
                 new DiscordWebhookBuilder()
-                .WithContent($"Selecione o id ({mapId} - {((MapNames)mapId).GetName()})")
-                .AddComponents(new DiscordSelectComponent(customId, "Blocks", options)));
+                    .WithContent($"Selecione o id ({mapId} - {((MapNames)mapId).GetName()})")
+                    .AddComponents(new DiscordSelectComponent(customId, "Blocks", options)));
 
             var result = await interactivity.WaitForSelectAsync(message, ctx.User, customId);
 
