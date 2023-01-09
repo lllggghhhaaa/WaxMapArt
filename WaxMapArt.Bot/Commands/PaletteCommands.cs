@@ -1,4 +1,3 @@
-using System.Text;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity.Extensions;
@@ -58,22 +57,16 @@ public class PaletteCommands : ApplicationCommandModule
 
         if (user.HasPalette(palette.Name))
         {
-            StringBuilder sbp = new StringBuilder($"{ctx.User.Username}:");
-            foreach (Palette userPalette in user.Palettes) sbp.AppendLine($"  - {userPalette.Name}");
-
             await ctx.EditResponseAsync(new DiscordWebhookBuilder()
-                .WithContent($"This palette already exists\n```yaml\n{sbp}\n```"));
+                .WithContent($"This palette already exists\n```yaml\n{user.ListPaletteNamesYaml(ctx.User.Username)}\n```"));
             
             return;
         }
 
         user.Palettes.Add(palette);
         
-        StringBuilder sb = new StringBuilder($"{ctx.User.Username}:");
-        foreach (Palette userPalette in user.Palettes) sb.AppendLine($"  - {userPalette.Name}");
-
         await ctx.EditResponseAsync(new DiscordWebhookBuilder()
-            .WithContent($"Done :relaxed:\n```yaml\n{sb}\n```")
+            .WithContent($"Done :relaxed:\n```yaml\n{user.ListPaletteNamesYaml(ctx.User.Username)}\n```")
             .AddFile($"{name}.json", stream));
 
         await user.SendToDatabaseAsync(Startup.Database);
@@ -94,23 +87,16 @@ public class PaletteCommands : ApplicationCommandModule
 
         if (user.HasPalette(palette.Name))
         {
-            StringBuilder sbp = new StringBuilder($"{ctx.User.Username}:\n");
-            foreach (Palette userPalette in user.Palettes) sbp.AppendLine($"  - {userPalette.Name}");
-
             await ctx.EditResponseAsync(new DiscordWebhookBuilder()
-                .WithContent($"This palette already exists\n```yaml\n{sbp}\n```"));
+                .WithContent($"This palette already exists\n```yaml\n{user.ListPaletteNamesYaml(ctx.User.Username)}\n```"));
             
             return;
         }
         
         user.Palettes.Add(palette);
 
-        StringBuilder sb = new StringBuilder($"{ctx.User.Username}:\n");
-        
-        foreach (Palette userPalette in user.Palettes) sb.AppendLine($"  - {userPalette.Name}");
-
         await ctx.EditResponseAsync(new DiscordWebhookBuilder()
-            .WithContent($"Done :relaxed:\n```yaml\n{sb}\n```"));
+            .WithContent($"Done :relaxed:\n```yaml\n{user.ListPaletteNamesYaml(ctx.User.Username)}\n```"));
 
         await user.SendToDatabaseAsync(Startup.Database);
     }
@@ -127,11 +113,8 @@ public class PaletteCommands : ApplicationCommandModule
 
         if (palette is null)
         {
-            StringBuilder sbp = new StringBuilder($"{ctx.User.Username}:\n");
-            foreach (Palette userPalette in user.Palettes) sbp.AppendLine($"  - {userPalette.Name}");
-
             await ctx.EditResponseAsync(new DiscordWebhookBuilder()
-                .WithContent($"This palette doesn't exists\n```yaml\n{sbp}\n```"));
+                .WithContent($"This palette doesn't exists\n```yaml\n{user.ListPaletteNamesYaml(ctx.User.Username)}\n```"));
             
             return;
         }
@@ -157,11 +140,8 @@ public class PaletteCommands : ApplicationCommandModule
         
         if (palette is null)
         {
-            StringBuilder sbp = new StringBuilder($"{ctx.User.Username}:\n");
-            foreach (Palette userPalette in user.Palettes) sbp.AppendLine($"  - {userPalette.Name}");
-
             await ctx.EditResponseAsync(new DiscordWebhookBuilder()
-                .WithContent($"This palette doesn't exists\n```yaml\n{sbp}\n```"));
+                .WithContent($"This palette doesn't exists\n```yaml\n{user.ListPaletteNamesYaml(ctx.User.Username)}\n```"));
             
             return;
         }
@@ -180,10 +160,7 @@ public class PaletteCommands : ApplicationCommandModule
         
         User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id.ToString());
         
-        StringBuilder sb = new StringBuilder($"{ctx.User.Username}:\n");
-        foreach (Palette userPalette in user.Palettes) sb.AppendLine($"  - {userPalette.Name}");
-
         await ctx.EditResponseAsync(new DiscordWebhookBuilder()
-            .WithContent($"Done :relaxed:\n```yaml\n{sb}\n```"));
+            .WithContent($"Done :relaxed:\n```yaml\n{user.ListPaletteNamesYaml(ctx.User.Username)}\n```"));
     }
 }

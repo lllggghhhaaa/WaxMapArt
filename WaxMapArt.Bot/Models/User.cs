@@ -1,3 +1,4 @@
+using System.Text;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
@@ -51,6 +52,14 @@ public class User
     {
         if (!HasPalette(name)) return null;
         return Palettes.Find(palette => palette.Name == name);
+    }
+
+    public string ListPaletteNamesYaml(string title)
+    {
+        StringBuilder sb = new StringBuilder($"{title}:\n");
+        foreach (Palette palette in Palettes) sb.AppendLine($"  - {palette.Name}");
+
+        return sb.ToString();
     }
 
     public bool HasPalette(string name) => Palettes.Exists(palette => palette.Name == name);
