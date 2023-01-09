@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
+using WaxMapArt.Bot.Utils;
 
 namespace WaxMapArt.Bot.Commands;
 
@@ -29,10 +30,8 @@ public class ArtCommands : ApplicationCommandModule
         stopwatch.Start();
         
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
-        
-        HttpClient client = new HttpClient();
-        Stream stream = await (await client.GetAsync(attachment.Url)).Content.ReadAsStreamAsync();
-        stream.Position = 0;
+
+        Stream stream = await attachment.DownloadAsStreamAsync();
 
         Palette palette = JsonConvert.DeserializeObject<Palette>(await File.ReadAllTextAsync($"{paletteName}.json"));
         
@@ -45,9 +44,7 @@ public class ArtCommands : ApplicationCommandModule
 
         PreviewOutput output = preview.GeneratePreview(await Image.LoadAsync<Rgb24>(stream));
         
-        Stream outStream = new MemoryStream();
-        await output.Image.SaveAsync(outStream, new PngEncoder());
-        outStream.Position = 0;
+        Stream outStream = await output.Image.SaveAsStreamAsync(new PngEncoder());
         
         StringBuilder sb = new StringBuilder("Blocks: \n");
         foreach (var (mapId, count) in output.BlockList)
@@ -90,9 +87,7 @@ public class ArtCommands : ApplicationCommandModule
         
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
         
-        HttpClient client = new HttpClient();
-        Stream stream = await (await client.GetAsync(attachment.Url)).Content.ReadAsStreamAsync();
-        stream.Position = 0;
+        Stream stream = await attachment.DownloadAsStreamAsync();
 
         Palette palette = JsonConvert.DeserializeObject<Palette>(await File.ReadAllTextAsync($"{paletteName}.json"));
         
@@ -106,9 +101,7 @@ public class ArtCommands : ApplicationCommandModule
         GeneratorOutput output = generator.Generate(await Image.LoadAsync<Rgb24>(stream));
         Stream outNbtStream = NbtGenerator.Generate(output.Blocks);
 
-        Stream outImgStream = new MemoryStream();
-        await output.Image.SaveAsync(outImgStream, new PngEncoder());
-        outImgStream.Position = 0;
+        Stream outImgStream = await output.Image.SaveAsStreamAsync(new PngEncoder());
         
         StringBuilder sb = new StringBuilder("Blocks: \n");
         foreach (var (mapId, count) in output.BlockList)

@@ -5,6 +5,7 @@ using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using Newtonsoft.Json;
 using WaxMapArt.Bot.Models;
+using WaxMapArt.Bot.Utils;
 
 namespace WaxMapArt.Bot.Commands;
 
@@ -51,12 +52,8 @@ public class PaletteCommands : ApplicationCommandModule
             palette.Colors[mapId.ToString()] = blockList.First(info => info.BlockId == selected);
         }
 
-        var stream = new MemoryStream();
-        var writer = new StreamWriter(stream);
-        await writer.WriteAsync(JsonConvert.SerializeObject(palette, Formatting.Indented));
-        await writer.FlushAsync();
-        stream.Position = 0;
-
+        var stream = await JsonConvert.SerializeObject(palette, Formatting.Indented).ToStreamAsync();
+        
         User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id);
 
         if (user.Palettes.Exists(pal => pal.Name == palette.Name))
@@ -88,9 +85,8 @@ public class PaletteCommands : ApplicationCommandModule
         DiscordAttachment attachment)
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
-        
-        HttpClient client = new HttpClient();
-        string content = await (await client.GetAsync(attachment.Url)).Content.ReadAsStringAsync();
+
+        string content = await attachment.DownloadAsStringAsync();
 
         Palette palette = JsonConvert.DeserializeObject<Palette>(content);
 
@@ -142,11 +138,7 @@ public class PaletteCommands : ApplicationCommandModule
 
         Palette palette = user.Palettes.Find(pal => pal.Name.ToLower() == paletteName);
         
-        var stream = new MemoryStream();
-        var writer = new StreamWriter(stream);
-        await writer.WriteAsync(JsonConvert.SerializeObject(palette, Formatting.Indented));
-        await writer.FlushAsync();
-        stream.Position = 0;
+        var stream = await JsonConvert.SerializeObject(palette, Formatting.Indented).ToStreamAsync();
         
         await ctx.EditResponseAsync(new DiscordWebhookBuilder()
             .WithContent("Done :relaxed:")
