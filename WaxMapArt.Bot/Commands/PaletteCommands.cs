@@ -115,6 +115,36 @@ public class PaletteCommands : ApplicationCommandModule
         await user.SendToDatabaseAsync(Startup.Database);
     }
 
+    [SlashCommand("delete", "Delete an specified palette")]
+    public async Task Delete(InteractionContext ctx,
+        [Option("palette", "The palette in the json format")]
+        string paletteName)
+    {
+        await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+        
+        User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id.ToString());
+        Palette? palette = user.GetPalette(paletteName);
+
+        if (palette is null)
+        {
+            StringBuilder sbp = new StringBuilder($"{ctx.User.Username}:\n");
+            foreach (Palette userPalette in user.Palettes) sbp.AppendLine($"  - {userPalette.Name}");
+
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+                .WithContent($"This palette doesn't exists\n```yaml\n{sbp}\n```"));
+            
+            return;
+        }
+
+        user.Palettes.Remove(palette.Value);
+        
+        var stream = await JsonConvert.SerializeObject(palette, Formatting.Indented).ToStreamAsync();
+        
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+            .WithContent("Done :relaxed:")
+            .AddFile($"{palette.Value.Name}.json", stream));
+    }
+
     [SlashCommand("view", "View an specified palette")]
     public async Task View(InteractionContext ctx,
         [Option("palette", "The palette in the json format")]
