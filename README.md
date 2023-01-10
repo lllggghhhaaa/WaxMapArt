@@ -1,5 +1,7 @@
 # WaxMapArt
 
+![Render](./Assets/render.png)
+
 >## Table of content
 >- [Generating Preview](#rendering-preview-of-map)<br/>
 >- [Generating Schematic](#generating-schematic-file--nbt-)
