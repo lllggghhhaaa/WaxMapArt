@@ -7,6 +7,10 @@
 >- [Generating Schematic](#generating-schematic-file--nbt-)
 >- [Using the bot](#using-the-bot)
 >  - [Generating Schematic](#generating-schematic)
+
+**My bot is available in** <br/>
+[![](https://dcbadge.vercel.app/api/server/MhCmnG6ZBA)](https://discord.gg/MhCmnG6ZBA)
+
 ### Rendering preview of map
 ```csharp
 using Newtonsoft.Json;
@@ -118,12 +122,10 @@ fs.Close();
 ### Generating schematic
 `/generate`
 
-#### Args
-`image` The image that will be transformed <br/>
-`palette` The name of the palette (default is **default**) <br/>
-`color_comparator` The color comparison algorithm (optional) (default is **CIE76**) <br/>
-`width` & `height` The number of maps (optional) (default is **1 x 1**)
+>#### Args
+>`image` The image that will be transformed <br/>
+>`palette` The name of the palette (default is **default**) <br/>
+>`color_comparator` The color comparison algorithm (optional) (default is **CIE76**) <br/>
+>`width` & `height` The number of maps (optional) (default is **1 x 1**)
 
 ![generate](./Assets/Bot/generate.png)
-
-Join in [My discord server](https://discord.gg/MhCmnG6ZBA)
