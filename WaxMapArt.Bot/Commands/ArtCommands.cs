@@ -3,10 +3,10 @@ using System.Text;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
-using Newtonsoft.Json;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
+using WaxMapArt.Bot.Models;
 using WaxMapArt.Bot.Utils;
 
 namespace WaxMapArt.Bot.Commands;
@@ -33,9 +33,18 @@ public class ArtCommands : ApplicationCommandModule
 
         Stream stream = await attachment.DownloadAsStreamAsync();
 
-        Palette palette = JsonConvert.DeserializeObject<Palette>(await File.ReadAllTextAsync($"{paletteName}.json"));
+        User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id.ToString());
+        Palette? palette = user.GetPalette(paletteName);
+
+        if (palette is null)
+        {
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+                .WithContent($"This palette doesn't exists\n```yaml\n{user.ListPaletteNamesYaml(ctx.User.Username)}\n```"));
+            
+            return;
+        }
         
-        Preview preview = new Preview(palette)
+        Preview preview = new Preview(palette.Value)
         {
             MapSize = new WaxSize((int) width, (int) height),
             Method = cca,
@@ -54,7 +63,7 @@ public class ArtCommands : ApplicationCommandModule
             double shulkers = Math.Truncate(packs / 27f * 100) / 100;
 
             string packCount = packs > 0 ? $"{packs} packs + {rem}" : count.ToString();
-            string id = palette.Colors[mapId.ToString()].BlockId;
+            string id = palette.Value.Colors[mapId.ToString()].BlockId;
             
             sb.Append($"  {id}: {count} ({packCount} blocks) ({shulkers}SB)\n");
         }
@@ -89,9 +98,18 @@ public class ArtCommands : ApplicationCommandModule
         
         Stream stream = await attachment.DownloadAsStreamAsync();
 
-        Palette palette = JsonConvert.DeserializeObject<Palette>(await File.ReadAllTextAsync($"{paletteName}.json"));
+        User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id.ToString());
+        Palette? palette = user.GetPalette(paletteName);
+
+        if (palette is null)
+        {
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+                .WithContent($"This palette doesn't exists\n```yaml\n{user.ListPaletteNamesYaml(ctx.User.Username)}\n```"));
+            
+            return;
+        }
         
-        Generator generator = new Generator(palette)
+        Generator generator = new Generator(palette.Value)
         {
             MapSize = new WaxSize((int) width, (int) height),
             Method = cca,
@@ -111,7 +129,7 @@ public class ArtCommands : ApplicationCommandModule
             double shulkers = Math.Truncate(packs / 27f * 100) / 100;
 
             string packCount = packs > 0 ? $"{packs} packs + {rem}" : count.ToString();
-            string id = palette.Colors[mapId.ToString()].BlockId;
+            string id = palette.Value.Colors[mapId.ToString()].BlockId;
             
             sb.Append($"  {id}: {count} ({packCount} blocks) ({shulkers}SB)\n");
         }
