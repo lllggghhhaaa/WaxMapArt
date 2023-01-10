@@ -95,7 +95,7 @@ public class Generator
             
             blocks.AddRange(row);
         }
-        
+
         outImage.Mutate(ctx => ctx.Resize(OutputSize.X, OutputSize.Y));
         usedBlocks = new Dictionary<int, int>(usedBlocks.OrderByDescending(pair => pair.Value));
         usedBlocks.Add(ColorPalette.PlaceholderBlock.MapId, size.X);
