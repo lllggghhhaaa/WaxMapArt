@@ -109,3 +109,10 @@ stream.CopyTo(fs);
 stream.Close();
 fs.Close();
 ```
+
+## Using the bot
+
+### Generating schematic
+`/generate`
+
+![generate](./Assets/Bot/generate.gif)
