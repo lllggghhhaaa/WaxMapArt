@@ -115,4 +115,4 @@ fs.Close();
 ### Generating schematic
 `/generate`
 
-![generate](./Assets/Bot/generate.gif)
+![generate](./Assets/Bot/generate.png)
