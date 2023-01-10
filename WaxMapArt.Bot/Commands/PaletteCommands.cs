@@ -55,7 +55,7 @@ public class PaletteCommands : ApplicationCommandModule
             palette.Colors[mapId.ToString()] = blockList.First(info => info.BlockId == selected);
         }
 
-        var stream = await JsonConvert.SerializeObject(palette, Formatting.Indented).ToStreamAsync();
+        var stream = JsonConvert.SerializeObject(palette, Formatting.Indented).ToStream();
         
         User user = await User.GetFromDatabaseAsync(Startup.Database, ctx.User.Id.ToString());
 
@@ -125,7 +125,7 @@ public class PaletteCommands : ApplicationCommandModule
 
         user.Palettes.Remove(palette.Value);
         
-        var stream = await JsonConvert.SerializeObject(palette, Formatting.Indented).ToStreamAsync();
+        var stream = JsonConvert.SerializeObject(palette, Formatting.Indented).ToStream();
         
         await ctx.EditResponseAsync(new DiscordWebhookBuilder()
             .WithContent("Done :relaxed:")
@@ -150,7 +150,7 @@ public class PaletteCommands : ApplicationCommandModule
             return;
         }
 
-        var stream = await JsonConvert.SerializeObject(palette, Formatting.Indented).ToStreamAsync();
+        var stream = JsonConvert.SerializeObject(palette, Formatting.Indented).ToStream();
         
         await ctx.EditResponseAsync(new DiscordWebhookBuilder()
             .WithContent("Done :relaxed:")
