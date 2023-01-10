@@ -1,5 +1,9 @@
 # WaxMapArt
 
+## Table of content
+- [Generating Preview](#rendering-preview-of-map)<br/>
+- [Generating Schematic](#generating-schematic-file--nbt-)
+
 ### Rendering preview of map
 ```csharp
 using Newtonsoft.Json;
