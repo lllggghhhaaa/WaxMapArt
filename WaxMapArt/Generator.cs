@@ -97,8 +97,12 @@ public class Generator
         }
 
         outImage.Mutate(ctx => ctx.Resize(OutputSize.X, OutputSize.Y));
+
+        if (usedBlocks.ContainsKey(ColorPalette.PlaceholderBlock.MapId))
+            usedBlocks[ColorPalette.PlaceholderBlock.MapId] += size.X;
+        else usedBlocks.Add(ColorPalette.PlaceholderBlock.MapId, size.X);
+        
         usedBlocks = new Dictionary<int, int>(usedBlocks.OrderByDescending(pair => pair.Value));
-        usedBlocks.Add(ColorPalette.PlaceholderBlock.MapId, size.X);
 
         return new GeneratorOutput(blocks.ToArray(), outImage, usedBlocks);
     }
