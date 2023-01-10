@@ -1,9 +1,10 @@
 # WaxMapArt
 
-## Table of content
-- [Generating Preview](#rendering-preview-of-map)<br/>
-- [Generating Schematic](#generating-schematic-file--nbt-)
-
+>## Table of content
+>- [Generating Preview](#rendering-preview-of-map)<br/>
+>- [Generating Schematic](#generating-schematic-file--nbt-)
+>- [Using the bot](#using-the-bot)
+>  - [Generating Schematic](#generating-schematic)
 ### Rendering preview of map
 ```csharp
 using Newtonsoft.Json;
@@ -115,4 +116,12 @@ fs.Close();
 ### Generating schematic
 `/generate`
 
+#### Args
+`image` The image that will be transformed <br/>
+`palette` The name of the palette (default is **default**) <br/>
+`color_comparator` The color comparison algorithm (optional) (default is **CIE76**) <br/>
+`width` & `height` The number of maps (optional) (default is **1 x 1**)
+
 ![generate](./Assets/Bot/generate.png)
+
+Join in [My discord server](https://discord.gg/MhCmnG6ZBA)
