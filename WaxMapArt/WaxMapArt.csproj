@@ -7,9 +7,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Cyotek.Data.Nbt" Version="3.2.1-beta1" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
         <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
+        <PackageReference Include="WaxNBT" Version="0.1.0" />
     </ItemGroup>
     
     <ItemGroup>

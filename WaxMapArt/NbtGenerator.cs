@@ -1,6 +1,6 @@
 using System.IO.Compression;
-using Cyotek.Data.Nbt;
-using Cyotek.Data.Nbt.Serialization;
+using WaxNBT;
+using WaxNBT.Tags;
 
 namespace WaxMapArt;
 
@@ -12,49 +12,59 @@ public static class NbtGenerator
         
         BlockInfo[] palette = blocks.GroupBy(block => block.Info.BlockId).Select(grouping => grouping.First().Info).ToArray();
 
-        var paletteTag = new TagList("palette", TagType.Compound);
+        var paletteTag = new NbtList<NbtCompound>("palette");
         
-        for (int i = 0; i < palette.Length; i++)
+        foreach (var block in palette)
         {
-            var blockInfo = new TagCompound();
-            blockInfo.Value.Add(new TagString("Name", palette[i].BlockId));
+            var blockInfo = new NbtCompound();
+            blockInfo.Add(new NbtString("Name", block.BlockId));
 
-            if (palette[i].Properties.Count > 0)
+            if (block.Properties.Count > 0)
             {
-                var properties = new TagCompound("Properties");
-                foreach (var (name, value) in palette[i].Properties) properties.Value.Add(new TagString(name, value));
-                blockInfo.Value.Add(properties);
+                var properties = new NbtCompound("Properties");
+                foreach (var (name, value) in block.Properties) properties.Add(new NbtString(name, value));
+                blockInfo.Add(properties);
             }
 
-            paletteTag.Value.Add(blockInfo);
+            paletteTag.Data.Add(blockInfo);
         }
 
-        var blocksTag = new TagList("blocks", TagType.Compound);
+        var blocksTag = new NbtList<NbtCompound>("blocks");
         foreach (Block block in blocks)
         {
-            var blockTag = new TagCompound();
-            blockTag.Value.Add(new TagList("pos", TagType.Int, new TagCollection { block.X, block.Y, block.Z }));
-            blockTag.Value.Add(new TagInt("state", Array.IndexOf(palette, block.Info)));
+            var blockTag = new NbtCompound();
+            blockTag.Add(new NbtList<NbtInt>("pos")
+            {
+                Data = new List<NbtInt>
+                {
+                    new(block.X),
+                    new(block.Y), 
+                    new(block.Z)
+                }
+            });
+            blockTag.Add(new NbtInt("state", Array.IndexOf(palette, block.Info)));
 
-            blocksTag.Value.Add(blockTag);
+            blocksTag.Data.Add(blockTag);
         }
+
+        var nbt = new NbtFile();
         
-        var document = new NbtDocument();
-        TagCompound root = document.DocumentRoot;
+        
+        nbt.Root.Add(new NbtString("author", "lllggghhhaaa"));
+        nbt.Root.Add(new NbtInt("DataVersion", 2586));
+        nbt.Root.Add(blocksTag);
+        nbt.Root.Add(paletteTag);
+        nbt.Root.Add(new NbtList<NbtInt>("size")
+        {
+            Data = new List<NbtInt>
+            {
+                new(size.Item1),
+                new(size.Item2), 
+                new(size.Item3)
+            }
+        });
 
-        root.Value.Add(new TagString("author", "lllggghhhaaa"));
-        root.Value.Add(new TagInt("DataVersion", 2586));
-        root.Value.Add(blocksTag);
-        root.Value.Add(paletteTag);
-        root.Value.Add(new TagList("size", TagType.Int, new TagCollection { size.Item1, size.Item2, size.Item3 }));
-
-        Stream stream = new MemoryStream();
-        var writer = new BinaryTagWriter(stream);
-        writer.WriteStartDocument();
-        writer.WriteTag(document.DocumentRoot);
-        writer.WriteEndDocument();
-
-        stream.Position = 0;
+        Stream stream = nbt.Serialize();
 
         var ms = new MemoryStream();
         var gz = new GZipStream(ms, CompressionMode.Compress, true);
