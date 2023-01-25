@@ -12,9 +12,9 @@ namespace WaxMapArt.Bot;
 
 public class Startup
 {
-    public DiscordShardedClient Client;
-    public IReadOnlyDictionary<int, SlashCommandsExtension> SlashCommandsExtensions;
-    public static IMongoDatabase Database;
+    private DiscordShardedClient _client = null!;
+    private IReadOnlyDictionary<int, SlashCommandsExtension> _slashCommandsExtensions = null!;
+    public static IMongoDatabase Database = null!;
 
     public async Task Run()
     {
@@ -39,33 +39,41 @@ public class Startup
             LogTimestampFormat = "dd MMM yyy - hh:mm:ss"
         };
 
-        Client = new DiscordShardedClient(cfg);
+        _client = new DiscordShardedClient(cfg);
 
-        await Client.UseInteractivityAsync(new InteractivityConfiguration
+        await _client.UseInteractivityAsync(new InteractivityConfiguration
         {
             PollBehaviour = PollBehaviour.KeepEmojis,
             Timeout = TimeSpan.FromSeconds(30)
         });
 
-        SlashCommandsExtensions = await Client.UseSlashCommandsAsync();
+        _slashCommandsExtensions = await _client.UseSlashCommandsAsync();
 
         // Register commands
-        SlashCommandsExtensions.RegisterCommands<ArtCommands>();
-        SlashCommandsExtensions.RegisterCommands<PaletteCommands>();
+        _slashCommandsExtensions.RegisterCommands<ArtCommands>();
+        _slashCommandsExtensions.RegisterCommands<PaletteCommands>();
 
-        Client.ComponentInteractionCreated += async (_, args) =>
+        _client.ComponentInteractionCreated += async (_, args) =>
         {
             await args.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
         };
 
-        Client.ClientErrored += async (_, args) => { Client.Logger.LogError(args.Exception, "error"); };
-
-        foreach (var (_, value) in SlashCommandsExtensions)
+        _client.ClientErrored += (_, args) =>
         {
-            value.SlashCommandErrored += async (_, args) => { Client.Logger.LogError(args.Exception, "error"); };
+            _client.Logger.LogError(args.Exception, "error");
+            return Task.CompletedTask;
+        };
+
+        foreach (var (_, value) in _slashCommandsExtensions)
+        {
+            value.SlashCommandErrored += (_, args) =>
+            {
+                _client.Logger.LogError(args.Exception, "error");
+                return Task.CompletedTask;
+            };
         }
 
-        await Client.StartAsync();
+        await _client.StartAsync();
         await Task.Delay(-1);
     }
 }
