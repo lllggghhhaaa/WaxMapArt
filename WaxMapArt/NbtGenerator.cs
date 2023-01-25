@@ -42,7 +42,9 @@ public static class NbtGenerator
                     new(block.Z)
                 }
             });
-            blockTag.Add(new NbtInt("state", Array.IndexOf(palette, block.Info)));
+            
+            int index = Array.FindIndex(palette, info => info.MapId == block.Info.MapId);
+            blockTag.Add(new NbtInt("state", index));
 
             blocksTag.Data.Add(blockTag);
         }
