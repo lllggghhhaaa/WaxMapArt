@@ -131,90 +131,90 @@
     "id": "minecraft:jungle_leaves",
     "map_id": 7,
     "properties": {
-      "persistent": "true",
-      "generator_properties": {
-        "need_support": false
-      }
+      "persistent": "true"
+    },
+    "generator_properties": {
+      "need_support": false
     }
   },
   {
     "id": "minecraft:oak_leaves",
     "map_id": 7,
     "properties": {
-      "persistent": "true",
-      "generator_properties": {
-        "need_support": false
-      }
+      "persistent": "true"
+    },
+    "generator_properties": {
+      "need_support": false
     }
   },
   {
     "id": "minecraft:birch_leaves",
     "map_id": 7,
     "properties": {
-      "persistent": "true",
-      "generator_properties": {
-        "need_support": false
-      }
+      "persistent": "true"
+    },
+    "generator_properties": {
+      "need_support": false
     }
   },
   {
     "id": "minecraft:spruce_leaves",
     "map_id": 7,
     "properties": {
-      "persistent": "true",
-      "generator_properties": {
-        "need_support": false
-      }
+      "persistent": "true"
+    },
+    "generator_properties": {
+      "need_support": false
     }
   },
   {
     "id": "minecraft:mangrove_leaves",
     "map_id": 7,
     "properties": {
-      "persistent": "true",
-      "generator_properties": {
-        "need_support": false
-      }
+      "persistent": "true"
+    },
+    "generator_properties": {
+      "need_support": false
     }
   },
   {
     "id": "minecraft:acacia_leaves",
     "map_id": 7,
     "properties": {
-      "persistent": "true",
-      "generator_properties": {
-        "need_support": false
-      }
+      "persistent": "true"
+    },
+    "generator_properties": {
+      "need_support": false
     }
   },
   {
     "id": "minecraft:dark_oak_leaves",
     "map_id": 7,
     "properties": {
-      "persistent": "true",
-      "generator_properties": {
-        "need_support": false
-      }
+      "persistent": "true"
+    },
+    "generator_properties": {
+      "need_support": false
     }
   },
   {
     "id": "minecraft:azalea_leaves",
     "map_id": 7,
     "properties": {
-      "persistent": "true",
-      "generator_properties": {
-        "need_support": false
-      }
+      "persistent": "true"
+    },
+    "generator_properties": {
+      "need_support": false
     }
   },
   {
     "id": "minecraft:flowering_azalea_leaves",
     "map_id": 7,
     "properties": {
-      "persistent": "true",
-      "generator_properties": {
-        "need_support": false
-      }
+      "persistent": "true"
+    },
+    "generator_properties": {
+      "need_support": false
     }
   },
   {
