@@ -35,8 +35,9 @@ public class Generator
 
         for (int x = 0; x < input.Width; x++)
         {
-            Block[] row = new Block[input.Height + 1]; 
-            
+            Block[] row = new Block[input.Height + 1];
+            var supports = new Dictionary<int, Block>();
+
             Tuple<int, Block>? previous = null;
             
             for (int y = input.Height; y > 0; y--)
@@ -66,6 +67,14 @@ public class Generator
                 else if (previous.Item1 == 1) block.Y = previous.Item2.Y;
                 else if (previous.Item1 == 2) block.Y = previous.Item2.Y - 1;
                 previous = new Tuple<int, Block>(shadow, block);
+                
+                if (info.GeneratorProperties.NeedSupport) supports.Add(y, new Block
+                {
+                    Info = ColorPalette.PlaceholderBlock,
+                    X = x,
+                    Y = block.Y - 1,
+                    Z = y
+                });
 
                 row[y] = block;
             }
@@ -84,16 +93,26 @@ public class Generator
                 Info = ColorPalette.PlaceholderBlock
             };
 
-            int minY = row.MinBy(block => block.Y)!.Y;
+            int minY = supports.Count <= 0
+                ? row.MinBy(block => block.Y)!.Y
+                : Math.Min(row.MinBy(block => block.Y)!.Y, supports.MinBy(pair => pair.Value.Y).Value.Y);
+            
             for (int i = 0; i < row.Length; i++)
             {
                 Block block = row[i];
                 block.Y -= minY;
 
                 row[i] = block;
+
+                if (supports.ContainsKey(i)) supports[i].Y -= minY;
             }
             
+            if (usedBlocks.ContainsKey(ColorPalette.PlaceholderBlock.MapId))
+                usedBlocks[ColorPalette.PlaceholderBlock.MapId] += supports.Count;
+            else usedBlocks.Add(ColorPalette.PlaceholderBlock.MapId, supports.Count);
+            
             blocks.AddRange(row);
+            blocks.AddRange(supports.Values);
         }
 
         outImage.Mutate(ctx => ctx.Resize(OutputSize.X, OutputSize.Y));
