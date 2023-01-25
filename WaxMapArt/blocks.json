@@ -2,604 +2,963 @@
   {
     "id": "minecraft:grass_block",
     "map_id": 1,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:slime_block",
     "map_id": 1,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:birch_planks",
     "map_id": 2,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:sandstone",
     "map_id": 2,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:glowstone",
     "map_id": 2,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:ochre_froglight",
     "map_id": 2,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:cobweb",
     "map_id": 3,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:mushroom_stem",
     "map_id": 3,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:redstone_block",
     "map_id": 4,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:tnt",
     "map_id": 4,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:ice",
     "map_id": 5,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:packed_ice",
     "map_id": 5,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:blue_ice",
     "map_id": 5,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:iron_block",
     "map_id": 6,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:iron_trapdoor",
     "map_id": 6,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:lodestone",
     "map_id": 6,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:jungle_leaves",
     "map_id": 7,
     "properties": {
-      "persistent": "true"
+      "persistent": "true",
+      "generator_properties": {
+        "need_support": false
+      }
     }
   },
   {
     "id": "minecraft:oak_leaves",
     "map_id": 7,
     "properties": {
-      "persistent": "true"
+      "persistent": "true",
+      "generator_properties": {
+        "need_support": false
+      }
     }
   },
   {
     "id": "minecraft:birch_leaves",
     "map_id": 7,
     "properties": {
-      "persistent": "true"
+      "persistent": "true",
+      "generator_properties": {
+        "need_support": false
+      }
     }
   },
   {
     "id": "minecraft:spruce_leaves",
     "map_id": 7,
     "properties": {
-      "persistent": "true"
+      "persistent": "true",
+      "generator_properties": {
+        "need_support": false
+      }
     }
   },
   {
     "id": "minecraft:mangrove_leaves",
     "map_id": 7,
     "properties": {
-      "persistent": "true"
+      "persistent": "true",
+      "generator_properties": {
+        "need_support": false
+      }
     }
   },
   {
     "id": "minecraft:acacia_leaves",
     "map_id": 7,
     "properties": {
-      "persistent": "true"
+      "persistent": "true",
+      "generator_properties": {
+        "need_support": false
+      }
     }
   },
   {
     "id": "minecraft:dark_oak_leaves",
     "map_id": 7,
     "properties": {
-      "persistent": "true"
+      "persistent": "true",
+      "generator_properties": {
+        "need_support": false
+      }
     }
   },
   {
     "id": "minecraft:azalea_leaves",
     "map_id": 7,
     "properties": {
-      "persistent": "true"
+      "persistent": "true",
+      "generator_properties": {
+        "need_support": false
+      }
     }
   },
   {
     "id": "minecraft:flowering_azalea_leaves",
     "map_id": 7,
     "properties": {
-      "persistent": "true"
+      "persistent": "true",
+      "generator_properties": {
+        "need_support": false
+      }
     }
   },
   {
     "id": "minecraft:snow_block",
     "map_id": 8,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:powder_snow",
     "map_id": 8,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:white_wool",
     "map_id": 8,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:white_concrete",
     "map_id": 8,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:clay_block",
     "map_id": 9,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:dirt",
     "map_id": 10,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:coarse_dirt",
     "map_id": 10,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:granite",
     "map_id": 10,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:polished_granite",
     "map_id": 10,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:jungle_planks",
     "map_id": 10,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:stone",
     "map_id": 11,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:andesite",
     "map_id": 11,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:polished_andesite",
     "map_id": 11,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:cobblestone",
     "map_id": 11,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "water",
     "map_id": 12,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:oak_planks",
     "map_id": 13,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:diorite",
     "map_id": 14,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:polished_diorite",
     "map_id": 14,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:quartz_block",
     "map_id": 14,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:acacia_planks",
     "map_id": 15,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:orange_wool",
     "map_id": 15,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:orange_concrete",
     "map_id": 15,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:magenta_wool",
     "map_id": 16,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:magenta_concrete",
     "map_id": 16,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:light_blue_wool",
     "map_id": 17,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:light_blue_concrete",
     "map_id": 17,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:yellow_wool",
     "map_id": 18,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:yellow_concrete",
     "map_id": 18,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:light_green_wool",
     "map_id": 19,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:light_green_concrete",
     "map_id": 19,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:pink_wool",
     "map_id": 20,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:pink_concrete",
     "map_id": 20,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:gray_wool",
     "map_id": 21,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:gray_concrete",
     "map_id": 21,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:light_gray_wool",
     "map_id": 22,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:light_gray_concrete",
     "map_id": 22,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:cyan_wool",
     "map_id": 23,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:cyan_concrete",
     "map_id": 23,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:purple_wool",
     "map_id": 24,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:purple_concrete",
     "map_id": 24,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:blue_wool",
     "map_id": 25,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:blue_concrete",
     "map_id": 25,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:brown_wool",
     "map_id": 26,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:brown_concrete",
     "map_id": 26,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:green_wool",
     "map_id": 27,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:green_concrete",
     "map_id": 27,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:red_wool",
     "map_id": 28,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:red_concrete",
     "map_id": 28,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:black_wool",
     "map_id": 29,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:black_concrete",
     "map_id": 29,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:gold_block",
     "map_id": 30,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:raw_gold_block",
     "map_id": 30,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
+  },
+  {
+    "id": "minecraft:light_weighted_pressure_plate",
+    "map_id": 30,
+    "properties": {},
+    "generator_properties": {
+      "need_support": true
+    }
   },
   {
     "id": "minecraft:diamond_block",
     "map_id": 31,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:beacon",
     "map_id": 31,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:prismarine_bricks",
     "map_id": 31,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:lapis_block",
     "map_id": 32,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:emerald_block",
     "map_id": 33,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:podzol",
     "map_id": 34,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:spruce_planks",
     "map_id": 34,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:mangrove_roots",
     "map_id": 34,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:netherrack",
     "map_id": 35,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:nether_bricks",
     "map_id": 35,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:magma_block",
     "map_id": 35,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:calcite",
     "map_id": 36,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:white_terracotta",
     "map_id": 36,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:orange_terracotta",
     "map_id": 37,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:magenta_terracotta",
     "map_id": 38,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:light_blue_terracotta",
     "map_id": 39,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:yellow_terracotta",
     "map_id": 40,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:light_green_terracotta",
     "map_id": 41,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:pink_terracotta",
     "map_id": 42,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:gray_terracotta",
     "map_id": 43,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:light_gray_terracotta",
     "map_id": 44,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:cyan_terracotta",
     "map_id": 45,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:purple_terracotta",
     "map_id": 46,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:blue_terracotta",
     "map_id": 47,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:brown_terracotta",
     "map_id": 48,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:green_terracotta",
     "map_id": 49,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:red_terracotta",
     "map_id": 50,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:black_terracotta",
     "map_id": 51,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:crimson_nylium",
     "map_id": 52,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:crimson_planks",
     "map_id": 53,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:crimson_hyphae",
     "map_id": 54,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:warped_nylium",
     "map_id": 55,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:warped_planks",
     "map_id": 56,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:warped_hyphae",
     "map_id": 57,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:warped_wart_block",
     "map_id": 58,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:deepslate",
     "map_id": 59,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:cobbled_deepslate",
     "map_id": 59,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:raw_iron_block",
     "map_id": 60,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:verdant_froglight",
     "map_id": 61,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   },
   {
     "id": "minecraft:glow_lichen",
     "map_id": 61,
-    "properties": {}
+    "properties": {},
+    "generator_properties": {
+      "need_support": false
+    }
   }
 ]
