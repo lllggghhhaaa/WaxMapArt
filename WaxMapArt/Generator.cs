@@ -1,6 +1,8 @@
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using WaxMapArt.ImageProcessing;
+using WaxMapArt.ImageProcessing.Dithering;
 
 namespace WaxMapArt;
 
@@ -9,6 +11,7 @@ public class Generator
     public ComparisonMethod Method = ComparisonMethod.Cie76;
     public WaxSize MapSize = new(1, 1);
     public WaxSize OutputSize = new(128, 128);
+    public DitheringType Dithering = DitheringType.None;
     public Palette ColorPalette;
 
     public Generator(Palette colorPalette) => ColorPalette = colorPalette;
@@ -18,7 +21,8 @@ public class Generator
         WaxSize size = MapSize * 128;
         var usedBlocks = new Dictionary<int, int>();
         var outImage = new Image<Rgb24>(size.X, size.Y);
-        input.Mutate(ctx => ctx.Resize(size.X, size.Y));
+
+        new ImageProcessor(size, Dithering).Process(ref input);
 
         var colors = new List<BlockColor>();
         

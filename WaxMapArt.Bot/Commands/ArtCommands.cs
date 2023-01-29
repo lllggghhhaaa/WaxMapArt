@@ -8,6 +8,7 @@ using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using WaxMapArt.Bot.Models;
 using WaxMapArt.Bot.Utils;
+using WaxMapArt.ImageProcessing.Dithering;
 
 namespace WaxMapArt.Bot.Commands;
 
@@ -24,7 +25,9 @@ public class ArtCommands : ApplicationCommandModule
         [Option("height", "Numbers of map in horizontal")]
         long height = 1,
         [Option("color_comparator", "Color comparison algorithm")]
-        ComparisonMethod cca = ComparisonMethod.Cie76)
+        ComparisonMethod cca = ComparisonMethod.Cie76,
+        [Option("dithering", "The dithering method")]
+        DitheringType dithering = DitheringType.None)
     {
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
@@ -48,7 +51,8 @@ public class ArtCommands : ApplicationCommandModule
         {
             MapSize = new WaxSize((int) width, (int) height),
             Method = cca,
-            OutputSize = new WaxSize(512, 512)
+            OutputSize = new WaxSize(512, 512),
+            Dithering = dithering
         };
 
         PreviewOutput output = preview.GeneratePreview(await Image.LoadAsync<Rgb24>(stream));
@@ -72,6 +76,7 @@ public class ArtCommands : ApplicationCommandModule
 
         string resume = $"Size: {width * 128}x{height * 128}\n" +
                         $"Comparison method: {cca}\n" +
+                        $"Dithering: {Enum.GetName(dithering)}\n" +
                         $"Elapsed time: {stopwatch.Elapsed:m\\:ss\\.fff}\n" +
                         sb;
         
@@ -89,7 +94,9 @@ public class ArtCommands : ApplicationCommandModule
         [Option("height", "Numbers of map in horizontal")]
         long height = 1,
         [Option("color_comparator", "Color comparison algorithm")]
-        ComparisonMethod cca = ComparisonMethod.Cie76)
+        ComparisonMethod cca = ComparisonMethod.Cie76,
+        [Option("dithering", "The dithering method")]
+        DitheringType dithering = DitheringType.None)
     {
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
@@ -113,7 +120,8 @@ public class ArtCommands : ApplicationCommandModule
         {
             MapSize = new WaxSize((int) width, (int) height),
             Method = cca,
-            OutputSize = new WaxSize(512, 512)
+            OutputSize = new WaxSize(512, 512),
+            Dithering = dithering
         };
 
         GeneratorOutput output = generator.Generate(await Image.LoadAsync<Rgb24>(stream));
@@ -129,7 +137,8 @@ public class ArtCommands : ApplicationCommandModule
             double shulkers = Math.Truncate(packs / 27f * 100) / 100;
 
             string packCount = packs > 0 ? $"{packs} packs + {rem}" : count.ToString();
-            string id = palette.Value.Colors[mapId.ToString()].BlockId;
+            string id = palette.Value.Colors[mapId.ToString()].BlockId
+                .Replace("minecraft:", "");
             
             sb.Append($"  {id}: {count} ({packCount} blocks) ({shulkers}SB)\n");
         }
@@ -138,6 +147,7 @@ public class ArtCommands : ApplicationCommandModule
 
         string resume = $"Size: {width * 128}x{height * 128}\n" +
                         $"Comparison method: {cca}\n" +
+                        $"Dithering: {Enum.GetName(dithering)}\n" +
                         $"Elapsed time: {stopwatch.Elapsed:m\\:ss\\.fff}\n" +
                         sb;
 
