@@ -27,7 +27,9 @@ public class ArtCommands : ApplicationCommandModule
         [Option("color_comparator", "Color comparison algorithm")]
         ComparisonMethod cca = ComparisonMethod.Cie76,
         [Option("dithering", "The dithering method")]
-        DitheringType dithering = DitheringType.None)
+        DitheringType dithering = DitheringType.None,
+        [Option("method", "The generate method")]
+        GenerateMethod method = GenerateMethod.Staircase)
     {
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
@@ -55,7 +57,12 @@ public class ArtCommands : ApplicationCommandModule
             Dithering = dithering
         };
 
-        PreviewOutput output = preview.GeneratePreview(await Image.LoadAsync<Rgb24>(stream));
+        PreviewOutput output = method switch
+        {
+            GenerateMethod.Flat => preview.GeneratePreviewFlat(await Image.LoadAsync<Rgb24>(stream)),
+            GenerateMethod.Staircase => preview.GeneratePreviewStaircase(await Image.LoadAsync<Rgb24>(stream)),
+            _ => preview.GeneratePreviewStaircase(await Image.LoadAsync<Rgb24>(stream))
+        };
         
         Stream outStream = await output.Image.SaveAsStreamAsync(new PngEncoder());
         
@@ -76,7 +83,8 @@ public class ArtCommands : ApplicationCommandModule
 
         string resume = $"Size: {width * 128}x{height * 128}\n" +
                         $"Comparison method: {cca}\n" +
-                        $"Dithering: {Enum.GetName(dithering)}\n" +
+                        $"Dithering: {dithering}\n" +
+                        $"Method: {method}\n" +
                         $"Elapsed time: {stopwatch.Elapsed:m\\:ss\\.fff}\n" +
                         sb;
         
@@ -96,7 +104,9 @@ public class ArtCommands : ApplicationCommandModule
         [Option("color_comparator", "Color comparison algorithm")]
         ComparisonMethod cca = ComparisonMethod.Cie76,
         [Option("dithering", "The dithering method")]
-        DitheringType dithering = DitheringType.None)
+        DitheringType dithering = DitheringType.None,
+        [Option("method", "The generate method")]
+        GenerateMethod method = GenerateMethod.Staircase)
     {
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
@@ -124,7 +134,13 @@ public class ArtCommands : ApplicationCommandModule
             Dithering = dithering
         };
 
-        GeneratorOutput output = generator.Generate(await Image.LoadAsync<Rgb24>(stream));
+        GeneratorOutput output = method switch
+        {
+            GenerateMethod.Flat => generator.GenerateFlat(await Image.LoadAsync<Rgb24>(stream)),
+            GenerateMethod.Staircase => generator.GenerateStaircase(await Image.LoadAsync<Rgb24>(stream)),
+            _ => generator.GenerateStaircase(await Image.LoadAsync<Rgb24>(stream))
+        };
+        
         Stream outNbtStream = NbtGenerator.Generate(output.Blocks);
 
         Stream outImgStream = await output.Image.SaveAsStreamAsync(new PngEncoder());
@@ -147,7 +163,8 @@ public class ArtCommands : ApplicationCommandModule
 
         string resume = $"Size: {width * 128}x{height * 128}\n" +
                         $"Comparison method: {cca}\n" +
-                        $"Dithering: {Enum.GetName(dithering)}\n" +
+                        $"Dithering: {dithering}\n" +
+                        $"Method: {method}\n" +
                         $"Elapsed time: {stopwatch.Elapsed:m\\:ss\\.fff}\n" +
                         sb;
 

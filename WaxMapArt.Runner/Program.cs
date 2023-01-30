@@ -1,4 +1,6 @@
-﻿/*
+﻿#region Preview
+
+
 using Newtonsoft.Json;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -21,7 +23,7 @@ Preview preview = new Preview(palette)
 };
 
 // Generate the preview.
-PreviewOutput previewOutput = preview.GeneratePreview(image);
+PreviewOutput previewOutput = preview.GeneratePreviewStaircase(image); // Or preview.GeneratePreviewFlat(image) for flat generation
 
 // Save the preview in a file.
 previewOutput.Image.SaveAsPng("preview.png");
@@ -43,7 +45,14 @@ foreach (var (mapId, count) in previewOutput.BlockList)
     Console.WriteLine(packCount);
     Console.WriteLine();
 }
-*/
+
+
+
+#endregion
+
+#region Generate
+
+/*
 
 using Newtonsoft.Json;
 using SixLabors.ImageSharp;
@@ -67,7 +76,7 @@ Generator generator = new Generator(palette)
 };
 
 // Generate the list of blocks.
-GeneratorOutput generatorOutput = generator.Generate(image);
+GeneratorOutput generatorOutput = generator.GenerateStaircase(image); // Or generator.GenerateFlat(image) for flat generation
 
 // Save the preview in a file.
 generatorOutput.Image.SaveAsPng("preview.png");
@@ -98,3 +107,7 @@ stream.CopyTo(fs);
 
 stream.Close();
 fs.Close();
+
+*/
+
+#endregion

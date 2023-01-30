@@ -16,7 +16,7 @@ public class Generator
 
     public Generator(Palette colorPalette) => ColorPalette = colorPalette;
 
-    public GeneratorOutput Generate(Image<Rgb24> input)
+    public GeneratorOutput GenerateStaircase(Image<Rgb24> input)
     {
         WaxSize size = MapSize * 128;
         var usedBlocks = new Dictionary<int, int>();
@@ -127,6 +127,48 @@ public class Generator
         
         usedBlocks = new Dictionary<int, int>(usedBlocks.OrderByDescending(pair => pair.Value));
 
+        return new GeneratorOutput(blocks.ToArray(), outImage, usedBlocks);
+    }
+
+    public GeneratorOutput GenerateFlat(Image<Rgb24> input)
+    {
+        WaxSize size = MapSize * 128;
+        var usedBlocks = new Dictionary<int, int>();
+        var outImage = new Image<Rgb24>(size.X, size.Y);
+
+        new ImageProcessor(size, Dithering).Process(ref input);
+
+        var colors = new List<BlockColor>();
+        foreach (var (_, info) in ColorPalette.Colors)
+            colors.Add(new BlockColor(MapColors.BaseColors[info.MapId].Multiply(MapColors.M1), info));
+
+        var blocks = new List<Block>();
+        
+        for (int x = 0; x < size.X; x++)
+        for (int y = 0; y < size.Y; y++)
+        {
+            var inputColor = input[x, y];
+            var nearest = inputColor.Nearest(colors.Select(color => color.Color), Method);
+            outImage[x, y] = nearest; 
+            
+            var blockInfo = colors.Find(color => color.Color == nearest).Info;
+            
+            blocks.Add(new Block
+            {
+                X = x,
+                Y = 0,
+                Z = y,
+                Info = blockInfo
+            });
+            
+            if (usedBlocks.ContainsKey(blockInfo.MapId))
+                usedBlocks[blockInfo.MapId]++;
+            else
+                usedBlocks.Add(blockInfo.MapId, 1);
+        }
+
+        outImage.Mutate(ctx => ctx.Resize(OutputSize.X, OutputSize.Y));
+        
         return new GeneratorOutput(blocks.ToArray(), outImage, usedBlocks);
     }
 }
