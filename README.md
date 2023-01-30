@@ -122,10 +122,12 @@ fs.Close();
 ### Generating schematic
 `/generate`
 
->#### Args
->`image` The image that will be transformed <br/>
->`palette` The name of the palette (default is **default**) <br/>
->`color_comparator` The color comparison algorithm (optional) (default is **CIE76**) <br/>
->`width` & `height` The number of maps (optional) (default is **1 x 1**)
+> #### Args
+> `image` The image that will be transformed <br/>
+> `palette` The name of the palette (default is **default**) <br/>
+> `color_comparator` The color comparison algorithm (optional) (default is **CIE76**) <br/>
+> `width` & `height` The number of maps (optional) (default is **1 x 1**) <br/>
+> `dithering` The dithering algorithm (optional) (default is None) <br/>
+> `method` The generation method (optional) (default is Staircase)
 
 ![generate](./Assets/Bot/generate.png)
