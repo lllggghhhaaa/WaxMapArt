@@ -35,7 +35,7 @@ Preview preview = new Preview(palette)
 };
 
 // Generate the preview.
-PreviewOutput previewOutput = preview.GeneratePreview(image);
+PreviewOutput previewOutput = preview.GeneratePreviewStaircase(image); // Or preview.GeneratePreviewFlat(image) for flat generation
 
 // Save the preview in a file.
 previewOutput.Image.SaveAsPng("preview.png");
@@ -84,7 +84,7 @@ Generator generator = new Generator(palette)
 };
 
 // Generate the list of blocks.
-GeneratorOutput generatorOutput = generator.Generate(image);
+GeneratorOutput generatorOutput = generator.GenerateStaircase(image); // Or generator.GenerateFlat(image) for flat generation
 
 // Save the preview in a file.
 generatorOutput.Image.SaveAsPng("preview.png");
