@@ -16,7 +16,7 @@
         <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-00009" />
         <PackageReference Include="DSharpPlus.Interactivity" Version="5.0.0-nightly-00009" />
         <PackageReference Include="DSharpPlus.SlashCommands" Version="5.0.0-nightly-00009" />
-        <PackageReference Include="MongoDB.Driver" Version="2.18.0" />
+        <PackageReference Include="MongoDB.Driver" Version="2.19.0" />
     </ItemGroup>
 
     <ItemGroup>
