@@ -1,6 +1,5 @@
 using CommandLine;
 using WaxMapArt;
-using WaxMapArt.ImageProcessing;
 using WaxMapArt.ImageProcessing.Dithering;
 
 public class CliOptions
@@ -11,10 +10,14 @@ public class CliOptions
     public string OutputPath { get; set; }
     [Option('p', "preview", Required = true, HelpText = "Preview image path")]
     public string PreviewPath { get; set; }
+    [Option('c', "palette", Required = true)]
+    public string Palette { get; set; }
     [Option('m', "method", Default = ComparisonMethod.Cie76)]
     public ComparisonMethod ColorComparisonMethod { get; set; }
     [Option('d', "dithering", Default = DitheringType.None)]
     public DitheringType Dithering { get; set; }
+    [Option('s', "staircase", Default = true)]
+    public bool Staircase { get; set;}
     [Option('w', "width", Default = 1)]
     public int Width { get; set; }
     [Option('h', "height", Default = 1)]
