@@ -3,13 +3,32 @@
 ![Render](./Assets/render.png)
 
 >## Table of content
->- [Generating Preview](#rendering-preview-of-map)<br/>
+>- [Console](#console)<br/>
+>- [Generating Preview](#rendering-preview-of-map)
 >- [Generating Schematic](#generating-schematic-file--nbt-)
 >- [Using the bot](#using-the-bot)
->  - [Generating Schematic](#generating-schematic)
+>- [Generating Schematic](#generating-schematic)
 
-**My bot is available in** <br/>
-[![](https://dcbadge.vercel.app/api/server/MhCmnG6ZBA)](https://discord.gg/MhCmnG6ZBA)
+
+### Console
+
+
+```sh
+./waxmapart.exe -i "image.png" -o "output.nbt" -p "preview.png" -c "pallete.json"
+```
+
+#### Options
+- *`--image | -i`
+- *`--output | -o`
+- *`--preview | -p`
+- *`--palette | -c`
+- `--method | -m`
+- `--dithering | -d`
+- `--staircase | -s`
+- `--width | -w`
+- `--height | -h`
+
+> \* Required
 
 ### Rendering preview of map
 ```csharp
