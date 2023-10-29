@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
@@ -13,10 +13,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-00009" />
-        <PackageReference Include="DSharpPlus.Interactivity" Version="5.0.0-nightly-00009" />
-        <PackageReference Include="DSharpPlus.SlashCommands" Version="5.0.0-nightly-00009" />
-        <PackageReference Include="MongoDB.Driver" Version="2.19.0" />
+        <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-01851" />
+        <PackageReference Include="DSharpPlus.Interactivity" Version="5.0.0-nightly-01851" />
+        <PackageReference Include="DSharpPlus.SlashCommands" Version="5.0.0-nightly-01851" />
+        <PackageReference Include="MongoDB.Driver" Version="2.22.0" />
     </ItemGroup>
 
     <ItemGroup>

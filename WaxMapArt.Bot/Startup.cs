@@ -30,9 +30,7 @@ public class Startup
 
             Intents = DiscordIntents.GuildMessages
                       | DiscordIntents.Guilds
-                      | DiscordIntents.GuildMembers
-                      | DiscordIntents.GuildBans
-                      | DiscordIntents.GuildVoiceStates,
+                      | DiscordIntents.GuildMembers,
 
             AutoReconnect = true,
             MinimumLogLevel = LogLevel.Debug,
