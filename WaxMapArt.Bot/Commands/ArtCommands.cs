@@ -87,8 +87,13 @@ public class ArtCommands : ApplicationCommandModule
                         $"Method: {method}\n" +
                         $"Elapsed time: {stopwatch.Elapsed:m\\:ss\\.fff}\n" +
                         sb;
-        
-        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent($"Done :relaxed:\n```yaml\n{resume}```").AddFile("preview.png", outStream));
+
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Done :relaxed:")
+            .AddFiles(new Dictionary<string, Stream>
+            {
+                { "preview.png", outStream },
+                { "resume.yaml", resume.ToStream() }
+            }));
     }
 
     [SlashCommand("generate", "Generate the schematic of the map")]
@@ -169,11 +174,12 @@ public class ArtCommands : ApplicationCommandModule
                         sb;
 
         await ctx.EditResponseAsync(new DiscordWebhookBuilder()
-            .WithContent($"Done :relaxed:\n```yaml\n{resume}```")
+            .WithContent("Done :relaxed:")
             .AddFiles(new Dictionary<string, Stream>
             {
                 { "preview.png", outImgStream },
-                { "ceira.nbt", outNbtStream }
+                { "ceira.nbt", outNbtStream },
+                { "resume.yaml", resume.ToStream() }
             }));
     }
 }

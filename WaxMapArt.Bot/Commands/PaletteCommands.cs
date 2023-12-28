@@ -32,7 +32,7 @@ public class PaletteCommands : ApplicationCommandModule
 
         palette.PlaceholderBlock = blockList.First(info => info.BlockId == phBlock);
 
-        string customId = $"create{ctx.User.Id.ToString()}";
+        string customId = $"create{ctx.User.Id}";
         var options = new List<DiscordSelectComponentOption>();
 
         foreach (IGrouping<int, BlockInfo> blockGroup in blockList.GroupBy(info => info.MapId))
@@ -43,6 +43,8 @@ public class PaletteCommands : ApplicationCommandModule
             foreach (BlockInfo block in blockGroup)
                 options.Add(new DiscordSelectComponentOption(block.BlockId, block.BlockId));
 
+            options.Add(new DiscordSelectComponentOption("none", "none"));
+
             var message = await ctx.EditResponseAsync(
                 new DiscordWebhookBuilder()
                     .WithContent($"Selecione o id ({mapId} - {((MapNames)mapId).GetName()})")
@@ -51,6 +53,8 @@ public class PaletteCommands : ApplicationCommandModule
             var result = await interactivity.WaitForSelectAsync(message, ctx.User, customId);
 
             string selected = result.Result.Values.First();
+
+            if (selected == "none") continue;
 
             palette.Colors[mapId.ToString()] = blockList.First(info => info.BlockId == selected);
         }

@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
@@ -16,7 +16,7 @@
         <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-01851" />
         <PackageReference Include="DSharpPlus.Interactivity" Version="5.0.0-nightly-01851" />
         <PackageReference Include="DSharpPlus.SlashCommands" Version="5.0.0-nightly-01851" />
-        <PackageReference Include="MongoDB.Driver" Version="2.22.0" />
+        <PackageReference Include="MongoDB.Driver" Version="2.23.1" />
     </ItemGroup>
 
     <ItemGroup>
