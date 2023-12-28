@@ -42,7 +42,7 @@
       "properties": {}
     },
     "9": {
-      "id": "minecraft:clay_block",
+      "id": "minecraft:clay",
       "map_id": 9,
       "properties": {}
     },
@@ -92,7 +92,7 @@
       "properties": {}
     },
     "19": {
-      "id": "minecraft:light_green_wool",
+      "id": "minecraft:lime_wool",
       "map_id": 19,
       "properties": {}
     },
@@ -202,7 +202,7 @@
       "properties": {}
     },
     "41": {
-      "id": "minecraft:light_green_terracotta",
+      "id": "minecraft:lime_terracotta",
       "map_id": 41,
       "properties": {}
     },
