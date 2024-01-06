@@ -112,7 +112,7 @@ public class ArtCommands : ApplicationCommandModule
         DitheringType dithering = DitheringType.None,
         [Option("method", "The generate method")]
         GenerateMethod method = GenerateMethod.Staircase)
-    {
+        {
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
         
@@ -151,15 +151,14 @@ public class ArtCommands : ApplicationCommandModule
         Stream outImgStream = await output.Image.SaveAsStreamAsync(new PngEncoder());
         
         StringBuilder sb = new StringBuilder("Blocks: \n");
-        foreach (var (mapId, count) in output.BlockList)
+        foreach (var (info, count) in output.CountBlocks())
         {
             int packs = count / 64;
             int rem = count % 64;
             double shulkers = Math.Truncate(packs / 27f * 100) / 100;
 
             string packCount = packs > 0 ? $"{packs} packs + {rem}" : count.ToString();
-            string id = palette.Value.Colors[mapId.ToString()].BlockId
-                .Replace("minecraft:", "");
+            string id = info.BlockId.Replace("minecraft:", "");
             
             sb.Append($"  {id}: {count} ({packCount} blocks) ({shulkers}SB)\n");
         }
