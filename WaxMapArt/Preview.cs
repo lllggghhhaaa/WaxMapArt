@@ -51,9 +51,7 @@ public class Preview
         
         outImage.Mutate(ctx => ctx.Resize(OutputSize.X, OutputSize.Y));
 
-        var blockCount = new Dictionary<int, int>();
-
-        blockCount.Add(ColorPalette.PlaceholderBlock.MapId, size.X);
+        var blockCount = new Dictionary<int, int> { { ColorPalette.PlaceholderBlock.MapId, size.X } };
         foreach (var block in usedBlocks)
         {
             if (blockCount.ContainsKey(block)) blockCount[block]++;
