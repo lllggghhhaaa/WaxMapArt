@@ -19,7 +19,7 @@ public class Preview
     public PreviewOutput GeneratePreviewStaircase(Image<Rgb24> input)
     {
         WaxSize size = MapSize * 128;
-        var usedBlocks = new Dictionary<int, int>();
+        var usedBlocks = new List<int>();
         var outImage = new Image<Rgb24>(size.X, size.Y);
         
         new ImageProcessor(size, Dithering).Process(ref input);
@@ -35,34 +35,39 @@ public class Preview
             colors.Add(new BlockColor(baseColor, info));
         }
 
-        for (int x = 0; x < size.X; x++)
-        for (int y = 0; y < size.Y; y++)
+        Parallel.For(0, size.X, x =>
         {
-            Rgb24 inputColor = input[x, y];
-            Rgb24 nearest = inputColor.Nearest(colors.Select(blockColor => blockColor.Color), Method);
+            for (int y = 0; y < size.Y; y++)
+            {
+                Rgb24 inputColor = input[x, y];
+                Rgb24 nearest = inputColor.Nearest(colors.Select(blockColor => blockColor.Color), Method);
 
-            outImage[x, y] = nearest;
-            int id = colors.Find(blockColor => blockColor.Color == nearest).Info.MapId;
+                outImage[x, y] = nearest;
+                int id = colors.Find(blockColor => blockColor.Color == nearest).Info.MapId;
 
-            if (usedBlocks.ContainsKey(id))
-                usedBlocks[id]++;
-            else
-                usedBlocks.Add(id, 1);
-        }
+                usedBlocks.Add(id);
+            }
+        });
         
         outImage.Mutate(ctx => ctx.Resize(OutputSize.X, OutputSize.Y));
-        usedBlocks = new Dictionary<int, int>(usedBlocks.OrderByDescending(pair => pair.Value));
-        if (usedBlocks.ContainsKey(ColorPalette.PlaceholderBlock.MapId))
-            usedBlocks[ColorPalette.PlaceholderBlock.MapId] += size.X;
-        else usedBlocks.Add(ColorPalette.PlaceholderBlock.MapId, size.X);
+
+        var blockCount = new Dictionary<int, int>();
+
+        blockCount.Add(ColorPalette.PlaceholderBlock.MapId, size.X);
+        foreach (var block in usedBlocks)
+        {
+            if (blockCount.ContainsKey(block)) blockCount[block]++;
+            else blockCount.Add(block, 1);
+        }
         
-        return new PreviewOutput(outImage, usedBlocks);
+
+        return new PreviewOutput(outImage, blockCount.OrderByDescending(bc => bc.Value).ToDictionary());
     }
 
     public PreviewOutput GeneratePreviewFlat(Image<Rgb24> input)
     {
         WaxSize size = MapSize * 128;
-        var usedBlocks = new Dictionary<int, int>();
+        var usedBlocks = new List<int>();
         var outImage = new Image<Rgb24>(size.X, size.Y);
         
         new ImageProcessor(size, Dithering).Process(ref input);
@@ -71,28 +76,31 @@ public class Preview
         foreach (var (_, info) in ColorPalette.Colors)
             colors.Add(new BlockColor(MapColors.BaseColors[info.MapId].Multiply(MapColors.M1), info));
 
-        for (int x = 0; x < size.X; x++)
-        for (int y = 0; y < size.Y; y++)
+        Parallel.For(0, size.X, x =>
         {
-            Rgb24 inputColor = input[x, y];
-            Rgb24 nearest = inputColor.Nearest(colors.Select(blockColor => blockColor.Color), Method);
+            for (int y = 0; y < size.Y; y++)
+            {
+                Rgb24 inputColor = input[x, y];
+                Rgb24 nearest = inputColor.Nearest(colors.Select(blockColor => blockColor.Color), Method);
 
-            outImage[x, y] = nearest;
-            int id = colors.Find(blockColor => blockColor.Color == nearest).Info.MapId;
+                outImage[x, y] = nearest;
+                int id = colors.Find(blockColor => blockColor.Color == nearest).Info.MapId;
 
-            if (usedBlocks.ContainsKey(id))
-                usedBlocks[id]++;
-            else
-                usedBlocks.Add(id, 1);
-        }
-        
+                usedBlocks.Add(id);
+            }
+        });
+
         outImage.Mutate(ctx => ctx.Resize(OutputSize.X, OutputSize.Y));
-        usedBlocks = new Dictionary<int, int>(usedBlocks.OrderByDescending(pair => pair.Value));
-        if (usedBlocks.ContainsKey(ColorPalette.PlaceholderBlock.MapId))
-            usedBlocks[ColorPalette.PlaceholderBlock.MapId] += size.X;
-        else usedBlocks.Add(ColorPalette.PlaceholderBlock.MapId, size.X);
-        
-        return new PreviewOutput(outImage, usedBlocks);
+
+        var blockCount = new Dictionary<int, int>();
+
+        foreach (var block in usedBlocks)
+        {
+            if (blockCount.ContainsKey(block)) blockCount[block]++;
+            else blockCount.Add(block, 1);
+        }
+
+        return new PreviewOutput(outImage, blockCount.OrderByDescending(bc => bc.Value).ToDictionary());
     }
 }
 
