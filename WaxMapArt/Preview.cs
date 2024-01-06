@@ -43,9 +43,10 @@ public class Preview
                 Rgb24 nearest = inputColor.Nearest(colors.Select(blockColor => blockColor.Color), Method);
 
                 outImage[x, y] = nearest;
-                int id = colors.Find(blockColor => blockColor.Color == nearest).Info.MapId;
+                BlockInfo info = colors.Find(blockColor => blockColor.Color == nearest).Info;
 
-                usedBlocks.Add(id);
+                usedBlocks.Add(info.MapId);
+                if (info.GeneratorProperties.NeedSupport) usedBlocks.Add(ColorPalette.PlaceholderBlock.MapId);
             }
         });
         
