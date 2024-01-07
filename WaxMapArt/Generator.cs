@@ -20,8 +20,7 @@ public class Generator
     {
         WaxSize size = MapSize * 128;
         var outImage = new Image<Rgb24>(size.X, size.Y);
-
-        new ImageProcessor(size, Dithering).Process(ref input);
+        var pImage = new ImageProcessor(size, Dithering).Process(input);
 
         var colors = new List<BlockColor>();
 
@@ -36,16 +35,16 @@ public class Generator
 
         var blocks = new List<Block>();
 
-        Parallel.For(0, input.Width, x =>
+        Parallel.For(0, pImage.Width, x =>
         {
-            Block[] row = new Block[input.Height + 1];
+            Block[] row = new Block[pImage.Height + 1];
             var supports = new Dictionary<int, Block>();
 
             Tuple<int, Block>? previous = null;
 
-            for (int y = input.Height; y > 0; y--)
+            for (int y = pImage.Height; y > 0; y--)
             {
-                Rgb24 inputColor = input[x, y - 1];
+                Rgb24 inputColor = pImage[x, y - 1];
                 Rgb24 nearest = inputColor.Nearest(colors.Select(blockColor => blockColor.Color), Method);
 
                 outImage[x, y - 1] = nearest;
@@ -115,8 +114,7 @@ public class Generator
     {
         WaxSize size = MapSize * 128;
         var outImage = new Image<Rgb24>(size.X, size.Y);
-
-        new ImageProcessor(size, Dithering).Process(ref input);
+        var pImage = new ImageProcessor(size, Dithering).Process(input);
 
         var colors = new List<BlockColor>();
         foreach (var (_, info) in ColorPalette.Colors)
@@ -124,11 +122,11 @@ public class Generator
 
         var blocks = new List<Block>();
 
-        Parallel.For(0, input.Width, x =>
+        Parallel.For(0, pImage.Width, x =>
         {
             for (int y = 0; y < size.Y; y++)
             {
-                var inputColor = input[x, y];
+                var inputColor = pImage[x, y];
                 var nearest = inputColor.Nearest(colors.Select(color => color.Color), Method);
                 outImage[x, y] = nearest;
 

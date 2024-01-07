@@ -21,8 +21,7 @@ public class Preview
         WaxSize size = MapSize * 128;
         var usedBlocks = new List<int>();
         var outImage = new Image<Rgb24>(size.X, size.Y);
-        
-        new ImageProcessor(size, Dithering).Process(ref input);
+        var pImage = new ImageProcessor(size, Dithering).Process(input);
 
         var colors = new List<BlockColor>();
         
@@ -39,7 +38,7 @@ public class Preview
         {
             for (int y = 0; y < size.Y; y++)
             {
-                Rgb24 inputColor = input[x, y];
+                Rgb24 inputColor = pImage[x, y];
                 Rgb24 nearest = inputColor.Nearest(colors.Select(blockColor => blockColor.Color), Method);
 
                 outImage[x, y] = nearest;
@@ -68,8 +67,7 @@ public class Preview
         WaxSize size = MapSize * 128;
         var usedBlocks = new List<int>();
         var outImage = new Image<Rgb24>(size.X, size.Y);
-        
-        new ImageProcessor(size, Dithering).Process(ref input);
+        var pImage = new ImageProcessor(size, Dithering).Process(input);
 
         var colors = new List<BlockColor>();
         foreach (var (_, info) in ColorPalette.Colors)
@@ -79,7 +77,7 @@ public class Preview
         {
             for (int y = 0; y < size.Y; y++)
             {
-                Rgb24 inputColor = input[x, y];
+                Rgb24 inputColor = pImage[x, y];
                 Rgb24 nearest = inputColor.Nearest(colors.Select(blockColor => blockColor.Color), Method);
 
                 outImage[x, y] = nearest;

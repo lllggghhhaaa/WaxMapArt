@@ -16,15 +16,19 @@ public class ImageProcessor
         Dithering = dithering;
     }
 
-    public void Process(ref Image<Rgb24> image)
+    public Image<Rgb24> Process(Image<Rgb24> image)
     {
-        image.Mutate(ctx => ctx.Resize(OutputSize.X, OutputSize.Y));
+        Image<Rgb24> output = image.Clone();
+
+        output.Mutate(ctx => ctx.Resize(OutputSize.X, OutputSize.Y));
 
         switch (Dithering)
         {
             case DitheringType.FloydSteinberg:
-                FloydSteinbergDithering.ApplyDithering(ref image);
+                FloydSteinbergDithering.ApplyDithering(ref output);
                 break;
         }
+
+        return output;
     }
 }
