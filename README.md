@@ -109,7 +109,7 @@ GeneratorOutput generatorOutput = generator.GenerateStaircase(image); // Or gene
 generatorOutput.Image.SaveAsPng("preview.png");
 
 // Interact with all necessary blocks.
-foreach (var (mapId, count) in generatorOutput.BlockList)
+foreach (var (info, count) in generatorOutput.CountBlocks())
 {
     int packs = count / 64;
     int rem = count % 64;
@@ -117,7 +117,7 @@ foreach (var (mapId, count) in generatorOutput.BlockList)
     
     string packCount = packs > 0 ? $"{packs} packs + {rem}" : count.ToString();
     // Get the block id from the map id.
-    string id = palette.Colors[mapId.ToString()].BlockId;
+    string id = info.BlockId;
     
     // Print the result.
     Console.WriteLine(id);
