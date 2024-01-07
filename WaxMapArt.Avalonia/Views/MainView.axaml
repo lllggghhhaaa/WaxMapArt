@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:WaxMapArt.Avalonia.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="WaxMapArt.Avalonia.Views.MainView"
+             x:DataType="vm:MainViewModel">
+	<Design.DataContext>
+		<!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+		<vm:MainViewModel />
+	</Design.DataContext>
+	<StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+		<StackPanel>
+			<TextBlock Text="Size" Margin="0, 5, 0, 5"/>
+			<StackPanel Margin="0, 0, 0, 5" Orientation="Horizontal">
+				<NumericUpDown x:Name="numWidth" Watermark="Width" Minimum="1" Value="1" Margin="0, 0, 5, 0"></NumericUpDown>
+				<NumericUpDown x:Name="numHeight" Watermark="Height" Minimum="1" Value="1" Margin="0, 0, 5, 0" ></NumericUpDown>
+			</StackPanel>
+			<TextBlock Text="Palette" Margin="0, 5, 0, 5"/>
+			<ListBox x:Name="paletteBox" Margin="0, 0, 0, 5">
+				<ListBoxItem>Default</ListBoxItem>
+			</ListBox>
+			<TextBlock Text="Method" Margin="0, 5, 0, 5"/>
+			<ListBox x:Name="methodBox" Margin="0, 0, 0, 5">
+				<ListBoxItem>Default</ListBoxItem>
+			</ListBox>
+			<TextBlock Text="Generation method" Margin="0, 5, 0, 5"/>
+			<ListBox x:Name="genMethodBox" Margin="0, 0, 0, 5">
+				<ListBoxItem>Default</ListBoxItem>
+			</ListBox>
+			<TextBlock Text="Dithering" Margin="0, 5, 0, 5"/>
+			<ListBox x:Name="ditheringBox" Margin="0, 0, 0, 5">
+				<ListBoxItem>Default</ListBoxItem>
+			</ListBox>
+			<StackPanel Margin="0, 5, 0, 5" HorizontalAlignment="Right" Orientation="Horizontal">
+				<Button Content="Upload" Click="UploadClick"></Button>
+				<Button Content="Preview" Click="PreviewClick"></Button>
+			</StackPanel>
+		</StackPanel>
+		<StackPanel Margin="10, 0, 0, 0">
+			<Image x:Name="inputImage" MaxWidth="256" MaxHeight="256"></Image>
+			<Image x:Name="previewImage" MaxWidth="256" MaxHeight="256"></Image>
+			<StackPanel Margin="0, 10, 0, 0">
+				<TextBlock Text="Resume"/>
+				<StackPanel Margin="3, 0, 0, 0">
+					<TextBlock x:Name="resPalette" FontSize="10" Text="Palette:"/>
+					<TextBlock x:Name="resMethod" FontSize="10" Text="Comparison method:"/>
+					<TextBlock x:Name="resGenMethod" FontSize="10" Text="Generation method:"/>
+					<TextBlock x:Name="resDithering" FontSize="10" Text="Dithering:"/>
+				</StackPanel>
+			</StackPanel>
+		</StackPanel>
+	</StackPanel>
+</UserControl>
