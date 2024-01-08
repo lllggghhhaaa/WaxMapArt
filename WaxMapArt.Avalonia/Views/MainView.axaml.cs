@@ -7,21 +7,23 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.IO;
+using System.Collections.Generic;
 using WaxMapArt.Avalonia.ViewModels;
 using WaxMapArt.ImageProcessing.Dithering;
+using System.Linq;
 
 namespace WaxMapArt.Avalonia.Views;
 
 public partial class MainView : UserControl
 {
-
     private Image<Rgb24>? _image = null;
+    private Dictionary<string, Palette> _palettes = new();
 
     public MainView()
     {
         InitializeComponent();
         ReloadOptions();
-        ReloadPalettes();
+        WatchPalettes();
     }
 
     public void ReloadOptions()
@@ -40,12 +42,49 @@ public partial class MainView : UserControl
             genMethodBox.Items.Add(genMethod.ToString());
     }
 
-    public async void ReloadPalettes()
+    public void WatchPalettes()
     {
-        var samplePalette = JsonConvert.DeserializeObject<Palette>(await File.ReadAllTextAsync("palette.json"));
-        paletteBox.Items.Clear();
+        var watcher = new FileSystemWatcher
+        {
+            Path = "palettes",
+            Filter = "*.json",
+            EnableRaisingEvents = true
+        };
 
-        paletteBox.Items.Add(samplePalette.Name);
+        watcher.Created += (sender, args) =>
+        {
+            Palette palette = JsonConvert.DeserializeObject<Palette>(File.ReadAllText(args.FullPath));
+            _palettes.Add(args.Name!, palette);
+            ReloadPalettes();
+        };
+
+        watcher.Deleted += (sender, args) => 
+        { 
+            _palettes.Remove(args.Name!);
+            ReloadPalettes();
+        };
+
+        ReloadPalettes();
+    }
+
+    public void ReloadPaletteList()
+    {
+        if (!Directory.Exists("palettes")) Directory.CreateDirectory("palettes");
+
+        _palettes.Clear();
+
+        foreach (var file in Directory.GetFiles("palettes", "*.json"))
+        {
+            Palette palette = JsonConvert.DeserializeObject<Palette>(File.ReadAllText(file));
+            _palettes.Add(Path.GetFileName(file), palette);
+        }
+    }
+
+    public void ReloadPalettes()
+    {
+        ReloadPaletteList();
+        paletteBox.Items.Clear();
+        foreach (var palette in _palettes.Values) paletteBox.Items.Add(palette.Name);
     }
 
     public async void UploadClick(object sender, RoutedEventArgs args)
@@ -69,17 +108,19 @@ public partial class MainView : UserControl
         await stream.FlushAsync();
     }
 
+    public void ReloadPalettesClick(object sender, RoutedEventArgs args) => ReloadPalettes();
+
     public async void PreviewClick(object sender, RoutedEventArgs args)
     {
         if (_image is null) return;
 
         var ctx = DataContext as MainViewModel;
 
-        Palette palette = JsonConvert.DeserializeObject<Palette>(File.ReadAllText("palette.json"));
+        Palette palette = _palettes.ElementAt(ctx!.PaletteIndex).Value;
 
         var preview = new Preview(palette)
         {
-            Method = ctx!.Comparison,
+            Method = ctx.Comparison,
             MapSize = ctx.MapSize,
             OutputSize = new WaxSize(512, 512),
             Dithering = ctx.Dithering

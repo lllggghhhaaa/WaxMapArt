@@ -22,6 +22,7 @@
 			<ListBox x:Name="paletteBox" Margin="0, 0, 0, 5" SelectedIndex="{Binding PaletteIndex}">
 				<ListBoxItem>Default</ListBoxItem>
 			</ListBox>
+			<Button Content="Reload Palettes" Click="ReloadPalettesClick"></Button>
 			<TextBlock Text="Method" Margin="0, 5, 0, 5"/>
 			<ListBox x:Name="methodBox" Margin="0, 0, 0, 5" SelectedIndex="{Binding ComparisonMethodIndex}">
 				<ListBoxItem>Default</ListBoxItem>
