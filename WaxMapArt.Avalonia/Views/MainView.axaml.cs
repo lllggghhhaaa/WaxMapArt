@@ -14,6 +14,7 @@ namespace WaxMapArt.Avalonia.Views;
 
 public partial class MainView : UserControl
 {
+
     private Image<Rgb24>? _image = null;
 
     public MainView()
@@ -72,22 +73,19 @@ public partial class MainView : UserControl
     {
         if (_image is null) return;
 
+        var ctx = DataContext as MainViewModel;
+
         Palette palette = JsonConvert.DeserializeObject<Palette>(File.ReadAllText("palette.json"));
 
-        var size = new WaxSize((int)numWidth.Value!, (int)numHeight.Value!);
-        var method = Enum.GetValues<ComparisonMethod>()[methodBox.SelectedIndex];
-        var dithering = Enum.GetValues<DitheringType>()[ditheringBox.SelectedIndex];
-        var genMethod = Enum.GetValues<GenerateMethod>()[genMethodBox.SelectedIndex];
-
-        Preview preview = new Preview(palette)
+        var preview = new Preview(palette)
         {
-            Method = method,
-            MapSize = size,
+            Method = ctx!.Comparison,
+            MapSize = ctx.MapSize,
             OutputSize = new WaxSize(512, 512),
-            Dithering = dithering
+            Dithering = ctx.Dithering
         };
 
-        PreviewOutput previewOutput = genMethod switch
+        PreviewOutput previewOutput = ctx.Generate switch
         {
             GenerateMethod.Staircase => preview.GeneratePreviewStaircase(_image),
             GenerateMethod.Flat => preview.GeneratePreviewFlat(_image),
@@ -100,9 +98,18 @@ public partial class MainView : UserControl
         previewImage.Source = new Bitmap(stream);
         await stream.FlushAsync();
 
-        resPalette.Text = $"Palette: {palette.Name}";
-        resMethod.Text = $"Comparison method: {Enum.GetName(method)}";
-        resGenMethod.Text = $"Generation method: {Enum.GetName(genMethod)}";
-        resDithering.Text = $"Dithering: {Enum.GetName(dithering)}";
+        UpdateResume(ctx);
+    }
+
+    public void UpdateResume(MainViewModel ctx)
+    {
+        var size = ctx.MapSize;
+
+        // resPalette.Text = $"Palette: {palette.Name}";
+        resWidth.Text = $"Width: {size.X}";
+        resHeight.Text = $"Height: {size.Y}";
+        resMethod.Text = $"Comparison method: {Enum.GetName(ctx.Comparison)}";
+        resGenMethod.Text = $"Generation method: {Enum.GetName(ctx.Generate)}";
+        resDithering.Text = $"Dithering: {Enum.GetName(ctx.Dithering)}";
     }
 }
