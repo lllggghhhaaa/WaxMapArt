@@ -90,7 +90,7 @@ public partial class MainView : UserControl
     public async void UploadClick(object sender, RoutedEventArgs args)
     {
         var topLevel = TopLevel.GetTopLevel(this);
-
+        
         var files = await topLevel!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = "Open Image",
@@ -115,7 +115,6 @@ public partial class MainView : UserControl
         if (_image is null) return;
 
         var ctx = DataContext as MainViewModel;
-
         Palette palette = _palettes.ElementAt(ctx!.PaletteIndex).Value;
 
         var preview = new Preview(palette)
@@ -126,7 +125,7 @@ public partial class MainView : UserControl
             Dithering = ctx.Dithering
         };
 
-        PreviewOutput previewOutput = ctx.Generate switch
+        PreviewOutput output = ctx.Generate switch
         {
             GenerateMethod.Staircase => preview.GeneratePreviewStaircase(_image),
             GenerateMethod.Flat => preview.GeneratePreviewFlat(_image),
@@ -134,10 +133,61 @@ public partial class MainView : UserControl
         };
 
         Stream stream = new MemoryStream();
-        await previewOutput.Image.SaveAsPngAsync(stream);
+        await output.Image.SaveAsPngAsync(stream);
         stream.Seek(0, SeekOrigin.Begin);
         previewImage.Source = new Bitmap(stream);
         await stream.FlushAsync();
+
+        UpdateResume(ctx);
+    }
+
+    public async void GenerateClick(object sender, RoutedEventArgs args)
+    {
+        if (_image is null) return;
+
+        var ctx = DataContext as MainViewModel;
+        Palette palette = _palettes.ElementAt(ctx!.PaletteIndex).Value;
+
+        var generator = new Generator(palette)
+        {
+            Method = ctx.Comparison,
+            MapSize = ctx.MapSize,
+            OutputSize = new WaxSize(512, 512),
+            Dithering = ctx.Dithering
+        };
+
+        GeneratorOutput output = ctx.Generate switch
+        {
+            GenerateMethod.Staircase => generator.GenerateStaircase(_image),
+            GenerateMethod.Flat => generator.GenerateFlat(_image),
+            _ => generator.GenerateStaircase(_image)
+        };
+
+        Stream stream = new MemoryStream();
+        await output.Image.SaveAsPngAsync(stream);
+        stream.Seek(0, SeekOrigin.Begin);
+        previewImage.Source = new Bitmap(stream);
+        await stream.FlushAsync();
+
+        Stream nbtStream = NbtGenerator.Generate(output.Blocks);
+
+        var topLevel = TopLevel.GetTopLevel(this);
+
+        var file = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Save NBT schematic",
+            SuggestedFileName = "output.nbt",
+            DefaultExtension = "nbt"
+        });
+
+        if (file is not null)
+        {
+            using (var fs = await file.OpenWriteAsync())
+            {
+                await nbtStream.CopyToAsync(fs);
+                await nbtStream.FlushAsync();
+            }
+        }
 
         UpdateResume(ctx);
     }

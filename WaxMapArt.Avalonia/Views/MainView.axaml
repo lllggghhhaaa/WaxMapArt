@@ -38,6 +38,7 @@
 			<StackPanel Margin="0, 5, 0, 5" HorizontalAlignment="Right" Orientation="Horizontal">
 				<Button Content="Upload" Click="UploadClick"></Button>
 				<Button Content="Preview" Click="PreviewClick"></Button>
+				<Button Content="Generate" Click="GenerateClick"></Button>
 			</StackPanel>
 		</StackPanel>
 		<StackPanel Margin="10, 0, 0, 0">
