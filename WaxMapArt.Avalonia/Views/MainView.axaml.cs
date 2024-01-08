@@ -146,7 +146,7 @@ public partial class MainView : UserControl
     {
         var size = ctx.MapSize;
 
-        // resPalette.Text = $"Palette: {palette.Name}";
+        resPalette.Text = $"Palette: {_palettes.ElementAt(ctx.PaletteIndex).Value.Name}";
         resWidth.Text = $"Width: {size.X}";
         resHeight.Text = $"Height: {size.Y}";
         resMethod.Text = $"Comparison method: {Enum.GetName(ctx.Comparison)}";
