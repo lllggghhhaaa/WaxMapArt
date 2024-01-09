@@ -1,6 +1,8 @@
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using WaxMapArt.ImageProcessing;
 using WaxMapArt.ImageProcessing.Dithering;
 
@@ -33,7 +35,7 @@ public class Generator
             colors.Add(new BlockColor(baseColor, info));
         }
 
-        var blocks = new List<Block>();
+        var blocks = new ConcurrentBag<Block>();
 
         Parallel.For(0, pImage.Width, x =>
         {
@@ -101,11 +103,18 @@ public class Generator
                 if (supports.ContainsKey(i)) supports[i].Y -= minY;
             }
 
-            blocks.AddRange(row);
-            blocks.AddRange(supports.Values);
+            foreach (var b in row) blocks.Add(b);
+            foreach (var b in supports.Values) blocks.Add(b);
         });
 
         outImage.Mutate(ctx => ctx.Resize(OutputSize.X, OutputSize.Y));
+
+        for (int i = 0; i < blocks.Count; i++)
+        {
+            if (blocks.ElementAt(i) is not null) continue;
+            Debug.WriteLine(i);
+            Debug.WriteLine($"X: {i % size.X} | Y: {i / size.X}");
+        }
 
         return new GeneratorOutput(blocks.ToArray(), outImage);
     }
