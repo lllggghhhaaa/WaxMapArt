@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using WaxMapArt.Avalonia.ViewModels;
 using WaxMapArt.ImageProcessing.Dithering;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace WaxMapArt.Avalonia.Views;
 
@@ -171,23 +172,12 @@ public partial class MainView : UserControl
 
         Stream nbtStream = NbtGenerator.Generate(output.Blocks);
 
-        var topLevel = TopLevel.GetTopLevel(this);
-
-        var file = await topLevel!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        string? _ = await SaveFile(new FilePickerSaveOptions
         {
             Title = "Save NBT schematic",
             SuggestedFileName = "output.nbt",
             DefaultExtension = "nbt"
-        });
-
-        if (file is not null)
-        {
-            using (var fs = await file.OpenWriteAsync())
-            {
-                await nbtStream.CopyToAsync(fs);
-                await nbtStream.FlushAsync();
-            }
-        }
+        }, nbtStream);
 
         UpdateResume(ctx);
     }
@@ -202,5 +192,22 @@ public partial class MainView : UserControl
         resMethod.Text = $"Comparison method: {Enum.GetName(ctx.Comparison)}";
         resGenMethod.Text = $"Generation method: {Enum.GetName(ctx.Generate)}";
         resDithering.Text = $"Dithering: {Enum.GetName(ctx.Dithering)}";
+    }
+
+    public async Task<string?> SaveFile(FilePickerSaveOptions options, Stream stream)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+
+        var file = await topLevel!.StorageProvider.SaveFilePickerAsync(options);
+
+        if (file is null) return null;
+
+        using (var fs = await file.OpenWriteAsync())
+        {
+            await stream.CopyToAsync(fs);
+            await stream.FlushAsync();
+        }
+
+        return file.Path.ToString();
     }
 }
