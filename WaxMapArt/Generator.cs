@@ -129,7 +129,7 @@ public class Generator
         foreach (var (_, info) in ColorPalette.Colors)
             colors.Add(new BlockColor(MapColors.BaseColors[info.MapId].Multiply(MapColors.M1), info));
 
-        var blocks = new List<Block>();
+        var blocks = new ConcurrentBag<Block>();
 
         Parallel.For(0, pImage.Width, x =>
         {

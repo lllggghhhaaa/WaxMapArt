@@ -1,6 +1,7 @@
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using System.Collections.Concurrent;
 using WaxMapArt.ImageProcessing;
 using WaxMapArt.ImageProcessing.Dithering;
 
@@ -19,7 +20,7 @@ public class Preview
     public PreviewOutput GeneratePreviewStaircase(Image<Rgb24> input)
     {
         WaxSize size = MapSize * 128;
-        var usedBlocks = new List<int>();
+        var usedBlocks = new ConcurrentBag<int>();
         var outImage = new Image<Rgb24>(size.X, size.Y);
         var pImage = new ImageProcessor(size, Dithering).Process(input);
 
@@ -65,7 +66,7 @@ public class Preview
     public PreviewOutput GeneratePreviewFlat(Image<Rgb24> input)
     {
         WaxSize size = MapSize * 128;
-        var usedBlocks = new List<int>();
+        var usedBlocks = new ConcurrentBag<int>();
         var outImage = new Image<Rgb24>(size.X, size.Y);
         var pImage = new ImageProcessor(size, Dithering).Process(input);
 
