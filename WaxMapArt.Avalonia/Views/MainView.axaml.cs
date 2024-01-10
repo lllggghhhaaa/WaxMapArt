@@ -23,8 +23,14 @@ public partial class MainView : UserControl
     public MainView()
     {
         InitializeComponent();
+        CreateFiles();
         ReloadOptions();
         WatchPalettes();
+    }
+
+    public void CreateFiles()
+    {
+        if (!Directory.Exists("palettes")) Directory.CreateDirectory("palettes");
     }
 
     public void ReloadOptions()
@@ -70,8 +76,6 @@ public partial class MainView : UserControl
 
     public void ReloadPaletteList()
     {
-        if (!Directory.Exists("palettes")) Directory.CreateDirectory("palettes");
-
         _palettes.Clear();
 
         foreach (var file in Directory.GetFiles("palettes", "*.json"))
