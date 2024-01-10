@@ -10,7 +10,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  build-winx64:
 
     runs-on: ubuntu-latest
 
@@ -23,9 +23,9 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Publish
-      run: dotnet publish /home/runner/work/WaxMapArt/WaxMapArt/WaxMapArt.Avalonia.Desktop/WaxMapArt.Avalonia.Desktop.csproj -c Release -o publish
+      run: dotnet publish /home/runner/work/WaxMapArt/WaxMapArt/WaxMapArt.Avalonia.Desktop/WaxMapArt.Avalonia.Desktop.csproj -r win-x64 -c Release -o publish
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v2
       with:
         name: Application_Artifact
-        path: /home/runner/work/WaxMapArt/WaxMapArt/WaxMapArt.Avalonia.Desktop/WaxMapArt.Avalonia.Desktop/publish/
+        path: /home/runner/work/WaxMapArt/WaxMapArt/publish/
