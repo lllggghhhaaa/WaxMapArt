@@ -60,4 +60,34 @@ jobs:
       with:
         name: ${{steps.project-version.outputs.version}}
         artifacts: "/home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/*"
+
+    - name: Create Release
+      uses: actions/create-release@v1
+      id: create_release
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        tag_name: v${{ steps.project-version.outputs.version }}
+        release_name: WaxMapArt
+        draft: false
+        prerelease: false
+        
+    - name: Upload Release Asset win-x64
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/win-x64.zip
+        asset_name: WaxMapArt.Desktop-win-x64.zip
+        asset_content_type: application/zip
             
+    - name: Upload Release Asset linux-x64
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/linux-x64.zip
+        asset_name: WaxMapArt.Desktop-linux-x64.zip
+        asset_content_type: application/zip
