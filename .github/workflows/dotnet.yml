@@ -20,13 +20,6 @@ jobs:
       id: project-version
       with:
         path: /home/runner/work/WaxMapArt/WaxMapArt/WaxMapArt.Avalonia.Desktop/WaxMapArt.Avalonia.Desktop.csproj
-
-    - name: Create a Release
-      uses: elgohr/Github-Release-Action@v5
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
-      with:
-        title: ${{ steps.project-version.outputs.version }}
   
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
@@ -61,23 +54,11 @@ jobs:
         filename: 'artifacts/linux-x64.zip'
         directory: /home/runner/work/WaxMapArt/WaxMapArt/publish/
         path: linux-x64
-        
-    - name: Upload Release Asset win-x64
-      uses: actions/upload-release-asset@v1
+
+    - name: Create a Release
+      uses: elgohr/Github-Release-Action@v5
       env:
         GITHUB_TOKEN: ${{ github.token }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/win-x64.zip
-        asset_name: WaxMapArt.Desktop-win-x64.zip
-        asset_content_type: application/zip
-            
-    - name: Upload Release Asset linux-x64
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/linux-x64.zip
-        asset_name: WaxMapArt.Desktop-linux-x64.zip
-        asset_content_type: application/zip
+        title: ${{ steps.project-version.outputs.version }}
+        workdir: /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/
