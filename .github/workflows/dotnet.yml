@@ -40,14 +40,20 @@ jobs:
         mkdir /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/
 
     - name: Zip win-x64
-      uses: montudor/action-zip@v1
+      uses: thedoctor0/zip-release@0.7.5
       with:
-        args: zip -qq -r /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/win-x64.zip . -i /home/runner/work/WaxMapArt/WaxMapArt/publish/win-x64
+        type: 'zip'
+        filename: 'artifacts/win-x64.zip'
+        directory: /home/runner/work/WaxMapArt/WaxMapArt/publish/
+        path: win-x64
 
     - name: Zip linux-x64
-      uses: montudor/action-zip@v1
+      uses: thedoctor0/zip-release@0.7.5
       with:
-        args: zip -qq -r /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/linux-x64.zip . -i /home/runner/work/WaxMapArt/WaxMapArt/publish/linux-x64
+        type: 'zip'
+        filename: 'artifacts/linux-x64.zip'
+        directory: /home/runner/work/WaxMapArt/WaxMapArt/publish/
+        path: linux-x64
    
     - name: Create Release
       uses: ncipollo/release-action@v1.13.0
