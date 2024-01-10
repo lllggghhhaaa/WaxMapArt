@@ -54,12 +54,6 @@ jobs:
         filename: 'artifacts/linux-x64.zip'
         directory: /home/runner/work/WaxMapArt/WaxMapArt/publish/
         path: linux-x64
-   
-    - name: Create Release
-      uses: ncipollo/release-action@v1.13.0
-      with:
-        name: ${{steps.project-version.outputs.version}}
-        artifacts: "/home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/*"
 
     - name: Create Release
       uses: actions/create-release@v1
