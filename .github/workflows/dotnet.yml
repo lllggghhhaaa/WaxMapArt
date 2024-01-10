@@ -23,9 +23,9 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Publish
-      run: dotnet publish /home/runner/work/WaxMapArt/WaxMapArt/WaxMapArt.Avalonia.Desktop/WaxMapArt.Avalonia.Desktop.csproj -r win-x64 -c Release -o publish/win-x64 --sc
+      run: dotnet publish WaxMapArt/WaxMapArt/WaxMapArt.Avalonia.Desktop/WaxMapArt.Avalonia.Desktop.csproj -r win-x64 -c Release -o publish/win-x64 --sc
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v2
       with:
         name: Application_Artifact
-        path: /home/runner/work/WaxMapArt/WaxMapArt/publish/win-x64
+        path: WaxMapArt/WaxMapArt/publish/win-x64
