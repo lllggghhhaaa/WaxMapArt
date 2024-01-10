@@ -36,12 +36,12 @@ jobs:
       run: dotnet publish /home/runner/work/WaxMapArt/WaxMapArt/WaxMapArt.Avalonia.Desktop/WaxMapArt.Avalonia.Desktop.csproj -r linux-x64 -c Release -o publish/linux-x64 --sc
 
     - name: Zip win-x64
-    - uses: montudor/action-zip@v1
+      uses: montudor/action-zip@v1
       with:
         args: zip -qq -r /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/win-x64.zip /home/runner/work/WaxMapArt/WaxMapArt/publish/win-x64
 
     - name: Zip linux-x64
-    - uses: montudor/action-zip@v1
+      uses: montudor/action-zip@v1
       with:
         args: zip -qq -r /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/linux-x64.zip /home/runner/work/WaxMapArt/WaxMapArt/publish/linux-x64
    
