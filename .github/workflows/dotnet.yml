@@ -38,12 +38,12 @@ jobs:
     - name: Zip win-x64
       uses: montudor/action-zip@v1
       with:
-        args: zip -qq -r /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/win-x64.zip /home/runner/work/WaxMapArt/WaxMapArt/publish/win-x64
+        args: zip -qq -r /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/win-x64.zip . -i /home/runner/work/WaxMapArt/WaxMapArt/publish/win-x64
 
     - name: Zip linux-x64
       uses: montudor/action-zip@v1
       with:
-        args: zip -qq -r /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/linux-x64.zip /home/runner/work/WaxMapArt/WaxMapArt/publish/linux-x64
+        args: zip -qq -r /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/linux-x64.zip . -i /home/runner/work/WaxMapArt/WaxMapArt/publish/linux-x64
    
     - name: Create Release
       uses: ncipollo/release-action@v1.13.0
