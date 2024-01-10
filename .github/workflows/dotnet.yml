@@ -10,38 +10,44 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build-win-x64:
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 8
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Publish
-      run: dotnet publish D:\a\WaxMapArt\WaxMapArt\WaxMapArt.Avalonia.Desktop\WaxMapArt.Avalonia.Desktop.csproj -r win-x64 -c Release -o publish\win-x64 --sc
-    - name: Upload Build Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: WaxMapArt.Desktop-win-x64
-        path: D:\a\WaxMapArt\WaxMapArt\publish\win-x64
-        
-  build-linux-x64:
+  build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+
+    - name: Get project version
+      uses: lllggghhhaaa/WaxDotnetVersionFinder@release
+      id: project-version
+      with:
+        path: /home/runner/work/WaxMapArt/WaxMapArt/WaxMapArt.Avalonia.Desktop/WaxMapArt.Avalonia.Desktop.csproj
+  
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 8
+  
     - name: Restore dependencies
       run: dotnet restore
-    - name: Publish
+
+    - name: Publish win-x64
+      run: dotnet publish /home/runner/work/WaxMapArt/WaxMapArt/WaxMapArt.Avalonia.Desktop/WaxMapArt.Avalonia.Desktop.csproj -r win-x64 -c Release -o publish/win-x64 --sc
+   
+    - name: Publish linux-x64
       run: dotnet publish /home/runner/work/WaxMapArt/WaxMapArt/WaxMapArt.Avalonia.Desktop/WaxMapArt.Avalonia.Desktop.csproj -r linux-x64 -c Release -o publish/linux-x64 --sc
-    - name: Upload Build Artifact
-      uses: actions/upload-artifact@v2
+
+    - name: Zip win-x64
+    - uses: montudor/action-zip@v1
       with:
-        name: WaxMapArt.Desktop-linux-x64
-        path: /home/runner/work/WaxMapArt/WaxMapArt/publish/linux-x64
+        args: zip -qq -r /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/win-x64.zip /home/runner/work/WaxMapArt/WaxMapArt/publish/win-x64
+
+    - name: Zip linux-x64
+    - uses: montudor/action-zip@v1
+      with:
+        args: zip -qq -r /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/linux-x64.zip /home/runner/work/WaxMapArt/WaxMapArt/publish/linux-x64
+   
+    - name: Create Release
+      uses: ncipollo/release-action@v1.13.0
+      with:
+        name: ${{steps.project-version.outputs.version}}
+        artifacts: "/home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/*"
+            
