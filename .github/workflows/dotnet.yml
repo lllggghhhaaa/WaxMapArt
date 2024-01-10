@@ -25,7 +25,7 @@ jobs:
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: win-x64
+        name: WaxMapArt.Desktop-win-x64
         path: D:\a\WaxMapArt\WaxMapArt\publish\win-x64
         
   build-linux-x64:
@@ -43,5 +43,5 @@ jobs:
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: Application_Artifact
+        name: WaxMapArt.Desktop-linux-x64
         path: /home/runner/work/WaxMapArt/WaxMapArt/publish/linux-x64
