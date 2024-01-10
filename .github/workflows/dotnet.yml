@@ -44,6 +44,10 @@ jobs:
       uses: montudor/action-zip@v1
       with:
         args: zip -qq -r /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/linux-x64.zip . -i /home/runner/work/WaxMapArt/WaxMapArt/publish/linux-x64
+
+    - name: Create Folder
+      run: |
+        mkdir /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/
    
     - name: Create Release
       uses: ncipollo/release-action@v1.13.0
