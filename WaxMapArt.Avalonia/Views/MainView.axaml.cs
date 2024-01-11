@@ -13,6 +13,7 @@ using WaxMapArt.ImageProcessing.Dithering;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
+using System.Diagnostics;
 
 namespace WaxMapArt.Avalonia.Views;
 
@@ -20,6 +21,7 @@ public partial class MainView : UserControl
 {
     private Image<Rgb24>? _image = null;
     private Dictionary<string, Palette> _palettes = new();
+    private Stopwatch _generatorWatch = new Stopwatch();
 
     public MainView()
     {
@@ -124,6 +126,8 @@ public partial class MainView : UserControl
     {
         if (_image is null) return;
 
+        _generatorWatch.Restart();
+
         var ctx = DataContext as MainViewModel;
         Palette palette = _palettes.ElementAt(ctx!.PaletteIndex).Value;
 
@@ -154,12 +158,16 @@ public partial class MainView : UserControl
 
         await stream.FlushAsync();
 
+        _generatorWatch.Stop();
+
         UpdateResume(ctx);
     }
 
     public async void GenerateClick(object sender, RoutedEventArgs args)
     {
         if (_image is null) return;
+
+        _generatorWatch.Restart();
 
         var ctx = DataContext as MainViewModel;
         Palette palette = _palettes.ElementAt(ctx!.PaletteIndex).Value;
@@ -198,6 +206,8 @@ public partial class MainView : UserControl
             DefaultExtension = "nbt"
         }, nbtStream);
 
+        _generatorWatch.Stop();
+
         UpdateResume(ctx);
     }
 
@@ -211,6 +221,7 @@ public partial class MainView : UserControl
         resMethod.Text = $"Comparison method: {Enum.GetName(ctx.Comparison)}";
         resGenMethod.Text = $"Generation method: {Enum.GetName(ctx.Generate)}";
         resDithering.Text = $"Dithering: {Enum.GetName(ctx.Dithering)}";
+        resElapsed.Text = $"Elapsed time: {_generatorWatch.Elapsed:m\\:ss\\.fff}";
     }
 
     public async Task<string?> SaveFile(FilePickerSaveOptions options, Stream stream)
