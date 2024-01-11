@@ -44,17 +44,17 @@
 		<StackPanel Margin="10, 0, 0, 0">
 			<Image x:Name="inputImage" MaxWidth="384" MaxHeight="384"></Image>
 			<Image x:Name="previewImage" MaxWidth="384" MaxHeight="384"></Image>
-			<StackPanel Margin="0, 10, 0, 0">
-				<TextBlock Text="Resume"/>
-				<StackPanel Margin="3, 0, 0, 0">
-					<TextBlock x:Name="resWidth" FontSize="10" Text="Width:"/>
-					<TextBlock x:Name="resHeight" FontSize="10" Text="Height:"/>
-					<TextBlock x:Name="resPalette" FontSize="10" Text="Palette:"/>
-					<TextBlock x:Name="resMethod" FontSize="10" Text="Comparison method:"/>
-					<TextBlock x:Name="resGenMethod" FontSize="10" Text="Generation method:"/>
-					<TextBlock x:Name="resDithering" FontSize="10" Text="Dithering:"/>
-					<TextBlock x:Name="resElapsed" FontSize="10" Text="Elapsed time:"/>
-				</StackPanel>
+		</StackPanel>
+		<StackPanel Margin="10, 5, 0, 0">
+			<TextBlock Text="Resume"/>
+			<StackPanel Margin="3, 0, 0, 0">
+				<TextBlock x:Name="resWidth" FontSize="10" Text="Width:"/>
+				<TextBlock x:Name="resHeight" FontSize="10" Text="Height:"/>
+				<TextBlock x:Name="resPalette" FontSize="10" Text="Palette:"/>
+				<TextBlock x:Name="resMethod" FontSize="10" Text="Comparison method:"/>
+				<TextBlock x:Name="resGenMethod" FontSize="10" Text="Generation method:"/>
+				<TextBlock x:Name="resDithering" FontSize="10" Text="Dithering:"/>
+				<TextBlock x:Name="resElapsed" FontSize="10" Text="Elapsed time:"/>
 			</StackPanel>
 		</StackPanel>
 	</StackPanel>
