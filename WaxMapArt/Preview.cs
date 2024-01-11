@@ -103,10 +103,3 @@ public class Preview
 }
 
 public record struct PreviewOutput(Image<Rgb24> Image, Dictionary<int, int> BlockList);
-
-public record struct WaxSize(int X, int Y)
-{
-    public static WaxSize operator *(WaxSize waxSize, int multiplier) =>
-        new(waxSize.X * multiplier,
-            waxSize.Y * multiplier);
-}

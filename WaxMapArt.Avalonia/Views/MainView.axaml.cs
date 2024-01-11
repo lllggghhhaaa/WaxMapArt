@@ -12,6 +12,7 @@ using WaxMapArt.Avalonia.ViewModels;
 using WaxMapArt.ImageProcessing.Dithering;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia;
 
 namespace WaxMapArt.Avalonia.Views;
 
@@ -105,9 +106,13 @@ public partial class MainView : UserControl
         if (files.Count <= 0) return;
 
         Stream stream = await files[0].OpenReadAsync();
+        Bitmap bm = new Bitmap(stream);
 
-        inputImage.Source = new Bitmap(stream);
+        WaxSize size = new WaxSize((int)bm.Size.Width, (int)bm.Size.Height).ClampMax(256);
+        bm = bm.CreateScaledBitmap(new PixelSize(size.X, size.Y));
+        inputImage.Source = bm;
         stream.Seek(0, SeekOrigin.Begin);
+
         _image = await SixLabors.ImageSharp.Image.LoadAsync<Rgb24>(stream);
 
         await stream.FlushAsync();
@@ -126,7 +131,7 @@ public partial class MainView : UserControl
         {
             Method = ctx.Comparison,
             MapSize = ctx.MapSize,
-            OutputSize = new WaxSize(512, 512),
+            OutputSize = (ctx.MapSize * 128).ClampMax(384),
             Dithering = ctx.Dithering
         };
 
@@ -140,7 +145,13 @@ public partial class MainView : UserControl
         Stream stream = new MemoryStream();
         await output.Image.SaveAsPngAsync(stream);
         stream.Seek(0, SeekOrigin.Begin);
-        previewImage.Source = new Bitmap(stream);
+        Bitmap bm = new Bitmap(stream);
+
+        WaxSize size = new WaxSize((int)bm.Size.Width, (int)bm.Size.Height).ClampMax(384);
+        bm = bm.CreateScaledBitmap(new PixelSize(size.X, size.Y));
+        previewImage.Source = bm;
+        stream.Seek(0, SeekOrigin.Begin);
+
         await stream.FlushAsync();
 
         UpdateResume(ctx);
@@ -157,7 +168,7 @@ public partial class MainView : UserControl
         {
             Method = ctx.Comparison,
             MapSize = ctx.MapSize,
-            OutputSize = new WaxSize(512, 512),
+            OutputSize = (ctx.MapSize * 128).ClampMax(384),
             Dithering = ctx.Dithering
         };
 
@@ -171,7 +182,11 @@ public partial class MainView : UserControl
         Stream stream = new MemoryStream();
         await output.Image.SaveAsPngAsync(stream);
         stream.Seek(0, SeekOrigin.Begin);
-        previewImage.Source = new Bitmap(stream);
+        Bitmap bm = new Bitmap(stream);
+
+        WaxSize size = new WaxSize((int)bm.Size.Width, (int)bm.Size.Height).ClampMax(384);
+        bm = bm.CreateScaledBitmap(new PixelSize(size.X, size.Y));
+        previewImage.Source = bm;
         await stream.FlushAsync();
 
         Stream nbtStream = NbtGenerator.Generate(output.Blocks);
