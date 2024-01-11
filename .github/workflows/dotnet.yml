@@ -16,7 +16,7 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Get project version
-      uses: lllggghhhaaa/WaxDotnetVersionFinder@release
+      uses: lllggghhhaaa/WaxDotnetVersionFinder@2.0.1
       id: project-version
       with:
         path: /home/runner/work/WaxMapArt/WaxMapArt/WaxMapArt.Avalonia.Desktop/WaxMapArt.Avalonia.Desktop.csproj
@@ -55,33 +55,26 @@ jobs:
         directory: /home/runner/work/WaxMapArt/WaxMapArt/publish/
         path: linux-x64
 
-    - name: Create Release
-      uses: actions/create-release@v1
-      id: create_release
+    - name: Create a Release
+      uses: elgohr/Github-Release-Action@v5
       env:
         GITHUB_TOKEN: ${{ github.token }}
       with:
-        tag_name: v${{ steps.project-version.outputs.version }}
-        release_name: WaxMapArt
-        draft: false
-        prerelease: false
-        
-    - name: Upload Release Asset win-x64
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
+        title: ${{ steps.project-version.outputs.version }}
+        workdir: /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/
+
+    - name: Upload win-x64
+      uses: svenstaro/upload-release-action@2.7.0
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/win-x64.zip
+        repo_token: ${{ github.token }}
+        file: /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/win-x64.zip
         asset_name: WaxMapArt.Desktop-win-x64.zip
-        asset_content_type: application/zip
-            
-    - name: Upload Release Asset linux-x64
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
+        tag: ${{ steps.project-version.outputs.version }}
+
+    - name: Upload linux-x64
+      uses: svenstaro/upload-release-action@2.7.0
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/linux-x64.zip
+        repo_token: ${{ github.token }}
+        file: /home/runner/work/WaxMapArt/WaxMapArt/publish/artifacts/linux-x64.zip
         asset_name: WaxMapArt.Desktop-linux-x64.zip
-        asset_content_type: application/zip
+        tag: ${{ steps.project-version.outputs.version }}
