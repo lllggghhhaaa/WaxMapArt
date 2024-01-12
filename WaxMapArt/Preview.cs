@@ -19,7 +19,7 @@ public class Preview
 
     public PreviewOutput GeneratePreviewStaircase(Image<Rgb24> input)
     {
-        WaxSize size = MapSize * 128;
+        var size = MapSize * 128;
         var usedBlocks = new ConcurrentBag<int>();
         var outImage = new Image<Rgb24>(size.X, size.Y);
         var pImage = new ImageProcessor(size, Dithering).Process(input);
@@ -28,10 +28,10 @@ public class Preview
         
         foreach (var (_, info) in ColorPalette.Colors)
         {
-            Rgb24 baseColor = MapColors.BaseColors[info.MapId];
+            var baseColor = info.Color;
             
-            colors.Add(new BlockColor(baseColor.Multiply(MapColors.M0), info));
-            colors.Add(new BlockColor(baseColor.Multiply(MapColors.M1), info));
+            colors.Add(new BlockColor(baseColor * MapColors.M0, info));
+            colors.Add(new BlockColor(baseColor * MapColors.M1, info));
             colors.Add(new BlockColor(baseColor, info));
         }
 
@@ -39,11 +39,11 @@ public class Preview
         {
             for (int y = 0; y < size.Y; y++)
             {
-                Rgb24 inputColor = pImage[x, y];
-                Rgb24 nearest = inputColor.Nearest(colors.Select(blockColor => blockColor.Color), Method);
+                var inputColor = WaxColor.FromRgb24(pImage[x, y]);
+                var nearest = inputColor.Nearest(colors.Select(blockColor => blockColor.Color), Method);
 
-                outImage[x, y] = nearest;
-                BlockInfo info = colors.Find(blockColor => blockColor.Color == nearest).Info;
+                outImage[x, y] = nearest.ToRgb24();
+                var info = colors.Find(blockColor => blockColor.Color.IsEquals(nearest)).Info;
 
                 usedBlocks.Add(info.MapId);
                 if (info.GeneratorProperties.NeedSupport) usedBlocks.Add(ColorPalette.PlaceholderBlock.MapId);
@@ -65,24 +65,24 @@ public class Preview
 
     public PreviewOutput GeneratePreviewFlat(Image<Rgb24> input)
     {
-        WaxSize size = MapSize * 128;
+        var size = MapSize * 128;
         var usedBlocks = new ConcurrentBag<int>();
         var outImage = new Image<Rgb24>(size.X, size.Y);
         var pImage = new ImageProcessor(size, Dithering).Process(input);
 
         var colors = new List<BlockColor>();
         foreach (var (_, info) in ColorPalette.Colors)
-            colors.Add(new BlockColor(MapColors.BaseColors[info.MapId].Multiply(MapColors.M1), info));
+            colors.Add(new BlockColor(info.Color * MapColors.M1, info));
 
         Parallel.For(0, size.X, x =>
         {
             for (int y = 0; y < size.Y; y++)
             {
-                Rgb24 inputColor = pImage[x, y];
-                Rgb24 nearest = inputColor.Nearest(colors.Select(blockColor => blockColor.Color), Method);
+                var inputColor = WaxColor.FromRgb24(pImage[x, y]);
+                var nearest = inputColor.Nearest(colors.Select(blockColor => blockColor.Color), Method);
 
-                outImage[x, y] = nearest;
-                int id = colors.Find(blockColor => blockColor.Color == nearest).Info.MapId;
+                outImage[x, y] = nearest.ToRgb24();
+                int id = colors.Find(blockColor => blockColor.Color.IsEquals(nearest)).Info.MapId;
 
                 usedBlocks.Add(id);
             }

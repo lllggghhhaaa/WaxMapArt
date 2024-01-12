@@ -72,13 +72,6 @@ public static class MapColors
 
     public const double M0 = .71;
     public const double M1 = .86;
-
-    public static Rgb24 ShadowColor(int id, byte shadow) => shadow switch
-        {
-            0 => BaseColors[id].Multiply(M0),
-            1 => BaseColors[id].Multiply(M1),
-            _ => BaseColors[id]
-        };
 }
 
 public enum MapNames

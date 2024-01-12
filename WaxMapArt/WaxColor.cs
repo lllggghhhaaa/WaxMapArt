@@ -1,15 +1,55 @@
+using Newtonsoft.Json;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace WaxMapArt;
 
-public static class WaxColor
+public struct WaxColor
 {
-    public static Lab ToLab(this Rgb24 color)
+    [JsonProperty("r")] public byte R;
+    [JsonProperty("g")] public byte G;
+    [JsonProperty("b")] public byte B;
+
+    public WaxColor()
     {
-        double r = color.R / 255d;
-        double g = color.G / 255d;
-        double b = color.B / 255d;
-        
+        R = 0;
+        G = 0;
+        B = 0;
+    }
+
+    public WaxColor(byte r, byte g, byte b)
+    {
+        R = r;
+        G = g;
+        B = b;
+    }
+
+    public static WaxColor FromRgb24(Rgb24 color) => new WaxColor(color.R, color.G, color.B);
+
+
+    public WaxColor Nearest(IEnumerable<WaxColor> colors, ComparisonMethod method)
+    {
+        WaxColor a = this;
+
+        double ColorDistance(WaxColor color) =>
+            method switch
+            {
+                ComparisonMethod.Rgb => a.RgbDistance(color),
+                ComparisonMethod.CieDe2000 => a.CieDe2000Distance(color),
+                _ => a.Cie76Distance(color)
+            };
+
+        return colors
+            .Select(n => new { n, distance = ColorDistance(n) })
+            .OrderBy(p => p.distance)
+            .First().n;
+    }
+
+    public Lab ToLab()
+    {
+        double r = R / 255d;
+        double g = G / 255d;
+        double b = B / 255d;
+
         r = r > .04045 ? Math.Pow((r + .055) / 1.055, 2.4) : r / 12.92;
         g = g > .04045 ? Math.Pow((g + .055) / 1.055, 2.4) : g / 12.92;
         b = b > .04045 ? Math.Pow((b + .055) / 1.055, 2.4) : b / 12.92;
@@ -25,25 +65,25 @@ public static class WaxColor
         return new Lab(116 * y - 16, 500 * (x - y), 200 * (y - z));
     }
 
-    public static double CieDe2000Distance(this Rgb24 a, Rgb24 b)
+    public double CieDe2000Distance(WaxColor b)
     {
-        Lab lab1 = a.ToLab();
+        Lab lab1 = ToLab();
         Lab lab2 = b.ToLab();
-        
+
         double hAverage;
         double k257 = Math.Pow(25, 7);
 
         double c1Ab = Math.Sqrt(Math.Pow(lab1.A, 2) + Math.Pow(lab1.B, 2));
         double c2Ab = Math.Sqrt(Math.Pow(lab2.A, 2) + Math.Pow(lab2.B, 2));
         double cAbAverage = (c1Ab + c2Ab) / 2;
-        
+
         double g = 0.5 * (1 - Math.Sqrt(Math.Pow(cAbAverage, 7) / (Math.Pow(cAbAverage, 7) + k257)));
         double a1 = (1 + g) * lab1.A;
         double a2 = (1 + g) * lab2.A;
 
         double c1 = Math.Sqrt(Math.Pow(a1, 2) + Math.Pow(lab1.B, 2));
         double c2 = Math.Sqrt(Math.Pow(a2, 2) + Math.Pow(lab2.B, 2));
-        
+
         double h1;
 
         if (lab1.B == 0 && a1 == 0)
@@ -65,7 +105,7 @@ public static class WaxColor
         double dL = lab2.L - lab1.L;
         double dC = c2 - c1;
         double dh = h2 - h1;
-        
+
         if (c1 * c2 == 0)
             dh = 0;
         else if (dh > Math.PI)
@@ -78,7 +118,7 @@ public static class WaxColor
         double dh3 = Math.Abs(h1 - h2);
         double sh = h1 + h2;
         double c1C2 = c1 * c2;
-        
+
         if (dh3 <= Math.PI && c1C2 != 0)
             hAverage = (h1 + h2) / 2;
         else if (dh3 > Math.PI && sh < 2 * Math.PI && c1C2 != 0)
@@ -91,7 +131,7 @@ public static class WaxColor
         double T = 1 - 0.17 * Math.Cos(hAverage - Math.PI / 6) + 0.24 * Math.Cos(2 * hAverage) +
             0.32 * Math.Cos(3 * hAverage + Math.PI / 30) - 0.2 * Math.Cos(4 * hAverage - 63 * Math.PI / 180);
         double hAverageDeg = hAverage * 180 / Math.PI;
-        
+
         if (hAverageDeg < 0)
             hAverageDeg += 360;
         else if (hAverageDeg > 360) hAverageDeg -= 360;
@@ -110,9 +150,9 @@ public static class WaxColor
         return Math.Sqrt(Math.Pow(fL, 2) + Math.Pow(fC, 2) + Math.Pow(fH, 2) + rT * fC * fH);
     }
 
-    public static double Cie76Distance(this Rgb24 a, Rgb24 b)
+    public double Cie76Distance(WaxColor b)
     {
-        Lab labA = a.ToLab();
+        Lab labA = ToLab();
         Lab labB = b.ToLab();
 
         return Math.Sqrt(Math.Pow(labA.L - labB.L, 2) +
@@ -120,36 +160,28 @@ public static class WaxColor
                          Math.Pow(labA.B - labB.B, 2));
     }
 
-    public static double RgbDistance(this Rgb24 a, Rgb24 b)
-        => Math.Sqrt(Math.Pow((double)a.R - b.R, 2) +
-                     Math.Pow((double)a.G - b.G, 2) +
-                     Math.Pow((double)a.B - b.B, 2));
+    public double RgbDistance(WaxColor b)
+        => Math.Sqrt(Math.Pow((double)R - b.R, 2) +
+                     Math.Pow((double)G - b.G, 2) +
+                     Math.Pow((double)B - b.B, 2));
 
-    public static Rgb24 Nearest(this Rgb24 baseColor, IEnumerable<Rgb24> colors, ComparisonMethod method)
-    {
-        double ColorDistance(Rgb24 color) =>
-            method switch
-            {
-                ComparisonMethod.Rgb => baseColor.RgbDistance(color),
-                ComparisonMethod.CieDe2000 => baseColor.CieDe2000Distance(color),
-                _ => baseColor.Cie76Distance(color)
-            };
-        
-        return colors
-            .Select(n => new { n, distance = ColorDistance(n) })
-            .OrderBy(p => p.distance)
-            .First().n;
-    }
 
-    public static Rgb24 Multiply(this Rgb24 color, double multiplier) =>
-        new((byte)(color.R * multiplier),
+    public static WaxColor operator *(WaxColor color, double multiplier)
+    => new ((byte)(color.R * multiplier),
             (byte)(color.G * multiplier),
             (byte)(color.B * multiplier));
 
-    public static bool IsEquals(this Rgb24 a, Rgb24 b) =>
-        a.R == b.R &&
-        a.G == b.G &&
-        a.B == b.B;
+    public bool IsEquals(WaxColor b) =>
+        R == b.R &&
+        G == b.G &&
+        B == b.B;
+
+    public Rgb24 ToRgb24() => new Rgb24(R, G, B);
+}
+
+public static class Rgb24ExtensionMethods
+{
+   
 }
 
 public struct Lab

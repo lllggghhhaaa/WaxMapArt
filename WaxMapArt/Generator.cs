@@ -28,33 +28,33 @@ public class Generator
 
         foreach (var (_, info) in ColorPalette.Colors)
         {
-            Rgb24 baseColor = MapColors.BaseColors[info.MapId];
+            WaxColor baseColor = info.Color;
 
-            colors.Add(new BlockColor(baseColor.Multiply(MapColors.M0), info));
-            colors.Add(new BlockColor(baseColor.Multiply(MapColors.M1), info));
-            colors.Add(new BlockColor(baseColor, info));
+            colors.Add(new(baseColor * MapColors.M0, info));
+            colors.Add(new(baseColor * MapColors.M1, info));
+            colors.Add(new(baseColor, info));
         }
 
         var blocks = new ConcurrentBag<Block>();
 
         Parallel.For(0, pImage.Width, x =>
         {
-            Block[] row = new Block[pImage.Height + 1];
+            var row = new Block[pImage.Height + 1];
             var supports = new Dictionary<int, Block>();
 
             Tuple<int, Block>? previous = null;
 
             for (int y = pImage.Height; y > 0; y--)
             {
-                Rgb24 inputColor = pImage[x, y - 1];
-                Rgb24 nearest = inputColor.Nearest(colors.Select(blockColor => blockColor.Color), Method);
+                var inputColor = WaxColor.FromRgb24(pImage[x, y - 1]);
+                var nearest = inputColor.Nearest(colors.Select(blockColor => blockColor.Color), Method);
 
-                outImage[x, y - 1] = nearest;
-                int index = colors.FindIndex(blockColor => blockColor.Color == nearest);
-                BlockInfo info = colors[index].Info;
+                outImage[x, y - 1] = nearest.ToRgb24();
+                int index = colors.FindIndex(blockColor => blockColor.Color.IsEquals(nearest));
+                var info = colors[index].Info;
                 int shadow = index % 3;
 
-                Block block = new Block
+                var block = new Block
                 {
                     X = x,
                     Z = y,
@@ -109,13 +109,6 @@ public class Generator
 
         outImage.Mutate(ctx => ctx.Resize(OutputSize.X, OutputSize.Y));
 
-        for (int i = 0; i < blocks.Count; i++)
-        {
-            if (blocks.ElementAt(i) is not null) continue;
-            Debug.WriteLine(i);
-            Debug.WriteLine($"X: {i % size.X} | Y: {i / size.X}");
-        }
-
         return new GeneratorOutput(blocks.ToArray(), outImage);
     }
 
@@ -127,7 +120,7 @@ public class Generator
 
         var colors = new List<BlockColor>();
         foreach (var (_, info) in ColorPalette.Colors)
-            colors.Add(new BlockColor(MapColors.BaseColors[info.MapId].Multiply(MapColors.M1), info));
+            colors.Add(new BlockColor(info.Color * MapColors.M1, info));
 
         var blocks = new ConcurrentBag<Block>();
 
@@ -135,11 +128,11 @@ public class Generator
         {
             for (int y = 0; y < size.Y; y++)
             {
-                var inputColor = pImage[x, y];
+                var inputColor = WaxColor.FromRgb24(pImage[x, y]);
                 var nearest = inputColor.Nearest(colors.Select(color => color.Color), Method);
-                outImage[x, y] = nearest;
+                outImage[x, y] = nearest.ToRgb24();
 
-                var blockInfo = colors.Find(color => color.Color == nearest).Info;
+                var blockInfo = colors.Find(color => color.Color.IsEquals(nearest)).Info;
 
                 blocks.Add(new Block
                 {
