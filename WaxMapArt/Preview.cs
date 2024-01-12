@@ -20,7 +20,7 @@ public class Preview
     public PreviewOutput GeneratePreviewStaircase(Image<Rgb24> input)
     {
         var size = MapSize * 128;
-        var usedBlocks = new ConcurrentBag<int>();
+        var usedBlocks = new ConcurrentBag<BlockInfo>();
         var outImage = new Image<Rgb24>(size.X, size.Y);
         var pImage = new ImageProcessor(size, Dithering).Process(input);
 
@@ -45,14 +45,14 @@ public class Preview
                 outImage[x, y] = nearest.ToRgb24();
                 var info = colors.Find(blockColor => blockColor.Color.IsEquals(nearest)).Info;
 
-                usedBlocks.Add(info.MapId);
-                if (info.GeneratorProperties.NeedSupport) usedBlocks.Add(ColorPalette.PlaceholderBlock.MapId);
+                usedBlocks.Add(info);
+                if (info.GeneratorProperties.NeedSupport) usedBlocks.Add(ColorPalette.PlaceholderBlock);
             }
         });
         
         outImage.Mutate(ctx => ctx.Resize(OutputSize.X, OutputSize.Y));
 
-        var blockCount = new Dictionary<int, int> { { ColorPalette.PlaceholderBlock.MapId, size.X } };
+        var blockCount = new Dictionary<BlockInfo, int> { { ColorPalette.PlaceholderBlock, size.X } };
         foreach (var block in usedBlocks)
         {
             if (blockCount.ContainsKey(block)) blockCount[block]++;
@@ -66,7 +66,7 @@ public class Preview
     public PreviewOutput GeneratePreviewFlat(Image<Rgb24> input)
     {
         var size = MapSize * 128;
-        var usedBlocks = new ConcurrentBag<int>();
+        var usedBlocks = new ConcurrentBag<BlockInfo>();
         var outImage = new Image<Rgb24>(size.X, size.Y);
         var pImage = new ImageProcessor(size, Dithering).Process(input);
 
@@ -82,15 +82,15 @@ public class Preview
                 var nearest = inputColor.Nearest(colors.Select(blockColor => blockColor.Color), Method);
 
                 outImage[x, y] = nearest.ToRgb24();
-                int id = colors.Find(blockColor => blockColor.Color.IsEquals(nearest)).Info.MapId;
+                var info = colors.Find(blockColor => blockColor.Color.IsEquals(nearest)).Info;
 
-                usedBlocks.Add(id);
+                usedBlocks.Add(info);
             }
         });
 
         outImage.Mutate(ctx => ctx.Resize(OutputSize.X, OutputSize.Y));
 
-        var blockCount = new Dictionary<int, int>();
+        var blockCount = new Dictionary<BlockInfo, int>();
 
         foreach (var block in usedBlocks)
         {
@@ -102,4 +102,4 @@ public class Preview
     }
 }
 
-public record struct PreviewOutput(Image<Rgb24> Image, Dictionary<int, int> BlockList);
+public record struct PreviewOutput(Image<Rgb24> Image, Dictionary<BlockInfo, int> BlockList);

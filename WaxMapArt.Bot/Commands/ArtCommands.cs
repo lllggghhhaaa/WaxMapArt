@@ -67,14 +67,14 @@ public class ArtCommands : ApplicationCommandModule
         Stream outStream = await output.Image.SaveAsStreamAsync(new PngEncoder());
         
         StringBuilder sb = new StringBuilder("Blocks: \n");
-        foreach (var (mapId, count) in output.BlockList)
+        foreach (var (info, count) in output.BlockList)
         {
             int packs = count / 64;
             int rem = count % 64;
             double shulkers = Math.Truncate(packs / 27f * 100) / 100;
 
             string packCount = packs > 0 ? $"{packs} packs + {rem}" : count.ToString();
-            string id = palette.Value.Colors[mapId.ToString()].BlockId;
+            string id = info.BlockId;
             
             sb.Append($"  {id}: {count} ({packCount} blocks) ({shulkers}SB)\n");
         }

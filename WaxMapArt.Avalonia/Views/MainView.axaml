@@ -55,6 +55,7 @@
 				<TextBlock x:Name="resGenMethod" FontSize="10" Text="Generation method:"/>
 				<TextBlock x:Name="resDithering" FontSize="10" Text="Dithering:"/>
 				<TextBlock x:Name="resElapsed" FontSize="10" Text="Elapsed time:"/>
+				<TextBlock x:Name="resBlocks" FontSize="10" Text="Used blocks:"/>
 			</StackPanel>
 		</StackPanel>
 	</StackPanel>

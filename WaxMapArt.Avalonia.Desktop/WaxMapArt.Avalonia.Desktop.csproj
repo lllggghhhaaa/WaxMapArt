@@ -8,7 +8,7 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
 	  <PublishSingleFile>true</PublishSingleFile>
-	<Version>1.0.2</Version>
+	<Version>1.0.3</Version>
   </PropertyGroup>
 
   <ItemGroup>

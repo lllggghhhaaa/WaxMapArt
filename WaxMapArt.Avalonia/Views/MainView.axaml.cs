@@ -14,6 +14,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using System.Diagnostics;
+using System.Text;
 
 namespace WaxMapArt.Avalonia.Views;
 
@@ -160,7 +161,7 @@ public partial class MainView : UserControl
 
         _generatorWatch.Stop();
 
-        UpdateResume(ctx);
+        UpdateResume(ctx, output.BlockList);
     }
 
     public async void GenerateClick(object sender, RoutedEventArgs args)
@@ -208,12 +209,25 @@ public partial class MainView : UserControl
 
         _generatorWatch.Stop();
 
-        UpdateResume(ctx);
+        UpdateResume(ctx, output.CountBlocks());
     }
 
-    public void UpdateResume(MainViewModel ctx)
+    public void UpdateResume(MainViewModel ctx, Dictionary<BlockInfo, int> blockList)
     {
         var size = ctx.MapSize;
+
+        StringBuilder sb = new StringBuilder("Used Blocks: \n");
+        foreach (var (info, count) in blockList)
+        {
+            int packs = count / 64;
+            int rem = count % 64;
+            double shulkers = Math.Truncate(packs / 27f * 100) / 100;
+
+            string packCount = packs > 0 ? $"{packs} packs + {rem}" : count.ToString();
+            string id = info.BlockId.Replace("minecraft:", "");
+
+            sb.Append($"  {id}: {count} ({packCount} blocks) ({shulkers}SB)\n");
+        }
 
         resPalette.Text = $"Palette: {_palettes.ElementAt(ctx.PaletteIndex).Value.Name}";
         resWidth.Text = $"Width: {size.X}";
@@ -222,6 +236,7 @@ public partial class MainView : UserControl
         resGenMethod.Text = $"Generation method: {Enum.GetName(ctx.Generate)}";
         resDithering.Text = $"Dithering: {Enum.GetName(ctx.Dithering)}";
         resElapsed.Text = $"Elapsed time: {_generatorWatch.Elapsed:m\\:ss\\.fff}";
+        resBlocks.Text = sb.ToString();
     }
 
     public async Task<string?> SaveFile(FilePickerSaveOptions options, Stream stream)
