@@ -3,8 +3,8 @@
 ![Render](./Assets/render.png)
 
 >## Table of content
->- [Generating Preview](#rendering-preview-of-map)
->- [Generating Schematic](#generating-schematic-file--nbt-)
+>- [Generating Preview](#rendering-preview-of-map-c)
+>- [Generating Schematic](#generating-schematic-file-nbt-c)
 
 ### Rendering preview of map (C#)
 ```csharp
