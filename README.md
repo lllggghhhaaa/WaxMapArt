@@ -3,34 +3,10 @@
 ![Render](./Assets/render.png)
 
 >## Table of content
->- [Console](#console)<br/>
 >- [Generating Preview](#rendering-preview-of-map)
 >- [Generating Schematic](#generating-schematic-file--nbt-)
->- [Using the bot](#using-the-bot)
->- [Generating Schematic](#generating-schematic)
 
-
-### Console
-
-
-```sh
-./waxmapart.exe -i "image.png" -o "output.nbt" -p "preview.png" -c "pallete.json"
-```
-
-#### Options
-- *`--image | -i`
-- *`--output | -o`
-- *`--preview | -p`
-- *`--palette | -c`
-- `--method | -m`
-- `--dithering | -d`
-- `--staircase | -s`
-- `--width | -w`
-- `--height | -h`
-
-> \* Required
-
-### Rendering preview of map
+### Rendering preview of map (C#)
 ```csharp
 using Newtonsoft.Json;
 using SixLabors.ImageSharp;
@@ -78,7 +54,7 @@ foreach (var (mapId, count) in previewOutput.BlockList)
 }
 ```
 
-### Generating schematic file (NBT)
+### Generating schematic file (NBT) (C#)
 
 ```csharp
 using Newtonsoft.Json;
@@ -135,18 +111,3 @@ stream.CopyTo(fs);
 stream.Close();
 fs.Close();
 ```
-
-## Using the bot
-
-### Generating schematic
-`/generate`
-
-> #### Args
-> `image` The image that will be transformed <br/>
-> `palette` The name of the palette (default is **default**) <br/>
-> `color_comparator` The color comparison algorithm (optional) (default is **CIE76**) <br/>
-> `width` & `height` The number of maps (optional) (default is **1 x 1**) <br/>
-> `dithering` The dithering algorithm (optional) (default is None) <br/>
-> `method` The generation method (optional) (default is Staircase)
-
-![generate](./Assets/Bot/generate.png)
