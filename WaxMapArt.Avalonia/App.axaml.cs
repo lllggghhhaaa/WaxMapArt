@@ -1,7 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-
 using WaxMapArt.Avalonia.ViewModels;
 using WaxMapArt.Avalonia.Views;
 

@@ -13,16 +13,18 @@ using WaxMapArt.ImageProcessing.Dithering;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Layout;
 using System.Diagnostics;
 using System.Text;
+using WaxMapArt.Avalonia.Controls;
 
 namespace WaxMapArt.Avalonia.Views;
 
 public partial class MainView : UserControl
 {
-    private Image<Rgb24>? _image = null;
+    private Image<Rgb24>? _image;
     private Dictionary<string, Palette> _palettes = new();
-    private Stopwatch _generatorWatch = new Stopwatch();
+    private Stopwatch _generatorWatch = new();
 
     public MainView()
     {
@@ -30,6 +32,7 @@ public partial class MainView : UserControl
         CreateFiles();
         ReloadOptions();
         WatchPalettes();
+        InitializePaletteEditor();
     }
 
     public void CreateFiles()
@@ -64,7 +67,7 @@ public partial class MainView : UserControl
 
         watcher.Created += (sender, args) =>
         {
-            Palette palette = JsonConvert.DeserializeObject<Palette>(File.ReadAllText(args.FullPath));
+            var palette = JsonConvert.DeserializeObject<Palette>(File.ReadAllText(args.FullPath));
             _palettes.Add(args.Name!, palette);
             ReloadPalettes();
         };
@@ -84,9 +87,11 @@ public partial class MainView : UserControl
 
         foreach (var file in Directory.GetFiles("palettes", "*.json"))
         {
-            Palette palette = JsonConvert.DeserializeObject<Palette>(File.ReadAllText(file));
+            var palette = JsonConvert.DeserializeObject<Palette>(File.ReadAllText(file));
             _palettes.Add(Path.GetFileName(file), palette);
         }
+
+        ReloadPaletteEditor();
     }
 
     public void ReloadPalettes()
@@ -108,10 +113,10 @@ public partial class MainView : UserControl
 
         if (files.Count <= 0) return;
 
-        Stream stream = await files[0].OpenReadAsync();
-        Bitmap bm = new Bitmap(stream);
+        var stream = await files[0].OpenReadAsync();
+        var bm = new Bitmap(stream);
 
-        WaxSize size = new WaxSize((int)bm.Size.Width, (int)bm.Size.Height).ClampMax(256);
+        var size = new WaxSize((int)bm.Size.Width, (int)bm.Size.Height).ClampMax(256);
         bm = bm.CreateScaledBitmap(new PixelSize(size.X, size.Y));
         inputImage.Source = bm;
         stream.Seek(0, SeekOrigin.Begin);
@@ -130,7 +135,7 @@ public partial class MainView : UserControl
         _generatorWatch.Restart();
 
         var ctx = DataContext as MainViewModel;
-        Palette palette = _palettes.ElementAt(ctx!.PaletteIndex).Value;
+        var palette = _palettes.ElementAt(ctx!.PaletteIndex).Value;
 
         var preview = new Preview(palette)
         {
@@ -140,19 +145,19 @@ public partial class MainView : UserControl
             Dithering = ctx.Dithering
         };
 
-        PreviewOutput output = ctx.Generate switch
+        var output = ctx.Generate switch
         {
             GenerateMethod.Staircase => preview.GeneratePreviewStaircase(_image),
             GenerateMethod.Flat => preview.GeneratePreviewFlat(_image),
             _ => preview.GeneratePreviewStaircase(_image)
         };
 
-        Stream stream = new MemoryStream();
+        var stream = new MemoryStream();
         await output.Image.SaveAsPngAsync(stream);
         stream.Seek(0, SeekOrigin.Begin);
-        Bitmap bm = new Bitmap(stream);
+        var bm = new Bitmap(stream);
 
-        WaxSize size = new WaxSize((int)bm.Size.Width, (int)bm.Size.Height).ClampMax(384);
+        var size = new WaxSize((int)bm.Size.Width, (int)bm.Size.Height).ClampMax(384);
         bm = bm.CreateScaledBitmap(new PixelSize(size.X, size.Y));
         previewImage.Source = bm;
         stream.Seek(0, SeekOrigin.Begin);
@@ -171,7 +176,7 @@ public partial class MainView : UserControl
         _generatorWatch.Restart();
 
         var ctx = DataContext as MainViewModel;
-        Palette palette = _palettes.ElementAt(ctx!.PaletteIndex).Value;
+        var palette = _palettes.ElementAt(ctx!.PaletteIndex).Value;
 
         var generator = new Generator(palette)
         {
@@ -181,24 +186,24 @@ public partial class MainView : UserControl
             Dithering = ctx.Dithering
         };
 
-        GeneratorOutput output = ctx.Generate switch
+        var output = ctx.Generate switch
         {
             GenerateMethod.Staircase => generator.GenerateStaircase(_image),
             GenerateMethod.Flat => generator.GenerateFlat(_image),
             _ => generator.GenerateStaircase(_image)
         };
 
-        Stream stream = new MemoryStream();
+        var stream = new MemoryStream();
         await output.Image.SaveAsPngAsync(stream);
         stream.Seek(0, SeekOrigin.Begin);
-        Bitmap bm = new Bitmap(stream);
+        var bm = new Bitmap(stream);
 
-        WaxSize size = new WaxSize((int)bm.Size.Width, (int)bm.Size.Height).ClampMax(384);
+        var size = new WaxSize((int)bm.Size.Width, (int)bm.Size.Height).ClampMax(384);
         bm = bm.CreateScaledBitmap(new PixelSize(size.X, size.Y));
         previewImage.Source = bm;
         await stream.FlushAsync();
 
-        Stream nbtStream = NbtGenerator.Generate(output.Blocks);
+        var nbtStream = NbtGenerator.Generate(output.Blocks);
 
         string? _ = await SaveFile(new FilePickerSaveOptions
         {
@@ -216,7 +221,7 @@ public partial class MainView : UserControl
     {
         var size = ctx.MapSize;
 
-        StringBuilder sb = new StringBuilder("Used Blocks: \n");
+        var sb = new StringBuilder("Used Blocks: \n");
         foreach (var (info, count) in blockList)
         {
             int packs = count / 64;
@@ -239,12 +244,13 @@ public partial class MainView : UserControl
         resBlocks.Text = sb.ToString();
     }
 
-    public async Task<string?> SaveFile(FilePickerSaveOptions options, Stream stream)
+    public async Task<string?> SaveFile(FilePickerSaveOptions options, Stream stream, string? startFolder = null)
     {
         var topLevel = TopLevel.GetTopLevel(this);
-
+        
+        if (startFolder is not null) options.SuggestedStartLocation = await topLevel!.StorageProvider.TryGetFolderFromPathAsync(startFolder);
+        
         var file = await topLevel!.StorageProvider.SaveFilePickerAsync(options);
-
         if (file is null) return null;
 
         using (var fs = await file.OpenWriteAsync())
@@ -254,5 +260,86 @@ public partial class MainView : UserControl
         }
 
         return file.Path.ToString();
+    }
+
+    // Palette Editor
+
+    public void InitializePaletteEditor()
+    {
+        ReloadPaletteEditor();
+    }
+
+    public void ReloadPaletteEditor()
+    {
+        pePalettes.Children.Clear();
+
+        foreach (var palette in _palettes.Values)
+        {
+            var eHeader = new TextBlock { Text = palette.Name };
+            var eContent = new StackPanel();
+
+            foreach (var block in palette.Colors.Values)
+            {
+                var pElement = new BlockInfoControl { Value = block };
+                pElement.Deleted += (_, _) =>
+                {
+                    eContent.Children.Remove(pElement);
+                    palette.Colors.Remove(block.MapId.ToString());
+                };
+                eContent.Children.Add(pElement);
+            }
+
+            var addButton = new Button { Content = "Add" };
+            var saveButton = new Button { Content = "Save" };
+
+            saveButton.Click += async (_, _) =>
+            {
+                foreach (var control in eContent.Children)
+                {
+                    var biControl = control as BlockInfoControl;
+                    if (biControl is null) continue;
+
+                    var block = biControl.Value;
+                    palette.Colors[block.MapId.ToString()] = block;
+                }
+
+                string content = JsonConvert.SerializeObject(palette);
+                var ms = new MemoryStream(Encoding.UTF8.GetBytes(content));
+
+                await SaveFile(new FilePickerSaveOptions
+                {
+                    Title = "Save Palette",
+                    SuggestedFileName = $"{palette.Name}.json",
+                    DefaultExtension = "json"
+                }, ms, Path.Combine(Directory.GetCurrentDirectory(), "palettes"));
+            };
+            addButton.Click += (_, _) =>
+            {
+                var pElement = new BlockInfoControl { Value = new BlockInfo { MapId = 0 } };
+                pElement.Deleted += (_, _) =>
+                {
+                    eContent.Children.Remove(pElement);
+                    palette.Colors.Remove(pElement.Value.MapId.ToString());
+                };
+                
+                eContent.Children.Insert(0, pElement);
+            };
+
+            var buttons = new StackPanel { Orientation = Orientation.Horizontal };
+            buttons.Children.Add(addButton);
+            buttons.Children.Add(saveButton);
+                        
+            eContent.Children.Add(buttons);
+
+            pePalettes.Children.Add(new Expander
+            {
+                Name = palette.Name,
+                ExpandDirection = ExpandDirection.Down,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                Margin = new Thickness(0, 0, 0, 1),
+                Header = eHeader,
+                Content = eContent
+            });
+        }
     }
 }
