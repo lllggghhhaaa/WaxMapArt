@@ -12,7 +12,7 @@ public static class NbtGenerator
         
         BlockInfo[] palette = blocks.GroupBy(block => block.Info.BlockId).Select(grouping => grouping.First().Info).ToArray();
 
-        var paletteTag = new NbtList<NbtCompound>("palette");
+        var paletteTag = new NbtList("palette");
         
         foreach (var block in palette)
         {
@@ -26,44 +26,37 @@ public static class NbtGenerator
                 blockInfo.Add(properties);
             }
 
-            paletteTag.Data.Add(blockInfo);
+            paletteTag.Add(blockInfo);
         }
 
-        var blocksTag = new NbtList<NbtCompound>("blocks");
+        var blocksTag = new NbtList("blocks");
         foreach (Block block in blocks)
         {
             var blockTag = new NbtCompound();
-            blockTag.Add(new NbtList<NbtInt>("pos")
+            blockTag.Add(new NbtList("pos")
             {
-                Data = new List<NbtInt>
-                {
-                    new(block.X),
-                    new(block.Y), 
-                    new(block.Z)
-                }
+                new NbtInt(block.X),
+                new NbtInt(block.Y),
+                new NbtInt(block.Z)
             });
             
             int index = Array.FindIndex(palette, info => info.MapId == block.Info.MapId);
             blockTag.Add(new NbtInt("state", index));
 
-            blocksTag.Data.Add(blockTag);
+            blocksTag.Add(blockTag);
         }
 
         var nbt = new NbtFile();
-        
         
         nbt.Root.Add(new NbtString("author", "lllggghhhaaa"));
         nbt.Root.Add(new NbtInt("DataVersion", 2586));
         nbt.Root.Add(blocksTag);
         nbt.Root.Add(paletteTag);
-        nbt.Root.Add(new NbtList<NbtInt>("size")
+        nbt.Root.Add(new NbtList("size")
         {
-            Data = new List<NbtInt>
-            {
-                new(size.Item1),
-                new(size.Item2), 
-                new(size.Item3)
-            }
+            new NbtInt(size.Item1),
+            new NbtInt(size.Item2), 
+            new NbtInt(size.Item3)
         });
 
         Stream stream = nbt.Serialize();
@@ -74,7 +67,7 @@ public static class NbtGenerator
         stream.Close();
         gz.Close();
 
-        ms.Position = 0;
+        ms.Seek(0, SeekOrigin.Begin);
         return ms;
     }
 }
