@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WaxMapArt.Avalonia.Desktop"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WaxMapArt.Tests", "WaxMapArt.Tests\WaxMapArt.Tests.csproj", "{C0D4170A-DEF5-4864-98C5-4B72A41EDEA9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WaxMapArt.Maui", "WaxMapArt.Maui\WaxMapArt.Maui.csproj", "{A7DE1971-C8AF-49DB-A2BE-0A20667F123C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{C0D4170A-DEF5-4864-98C5-4B72A41EDEA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0D4170A-DEF5-4864-98C5-4B72A41EDEA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C0D4170A-DEF5-4864-98C5-4B72A41EDEA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7DE1971-C8AF-49DB-A2BE-0A20667F123C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7DE1971-C8AF-49DB-A2BE-0A20667F123C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7DE1971-C8AF-49DB-A2BE-0A20667F123C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7DE1971-C8AF-49DB-A2BE-0A20667F123C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
