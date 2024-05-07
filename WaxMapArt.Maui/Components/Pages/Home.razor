@@ -165,14 +165,15 @@
         await output.Image.SaveAsPngAsync(ms);
         _previewImageUrl = ImageToUrl(ms);
 
-        Stream stream = NbtGenerator.Generate(output.Blocks);
-        await using FileStream fs = File.Create("schematic.nbt");
+        var stream = NbtGenerator.Generate(output.Blocks);
+        string path = Path.Combine(FileSystem.Current.AppDataDirectory, "schematic.nbt");
+        await using FileStream fs = File.Create(path);
         await stream.CopyToAsync(fs);
 
         stream.Close();
         fs.Close();
 
-        Snackbar.Add($"File saved to {Path.GetFullPath("schematic.nbt")}");
+        Snackbar.Add($"File saved to {path}");
         
         StateHasChanged();
     }

@@ -21,10 +21,10 @@
         <Nullable>enable</Nullable>
 
         <!-- Display name -->
-        <ApplicationTitle>WaxMapArt.Maui</ApplicationTitle>
+        <ApplicationTitle>WaxMapArt</ApplicationTitle>
 
         <!-- App Identifier -->
-        <ApplicationId>com.companyname.waxmapart.maui</ApplicationId>
+        <ApplicationId>WaxMapArt</ApplicationId>
 
         <!-- Versions -->
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
