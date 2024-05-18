@@ -1,7 +1,5 @@
 ﻿using System;
 using WaxMapArt.ImageProcessing.Dithering;
-using Avalonia.Media;
-using System.Collections.ObjectModel;
 
 namespace WaxMapArt.Avalonia.ViewModels;
 

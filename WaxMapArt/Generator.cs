@@ -1,32 +1,28 @@
+using System.Collections.Concurrent;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using System.Collections.Concurrent;
-using System.Diagnostics;
 using WaxMapArt.ImageProcessing;
 using WaxMapArt.ImageProcessing.Dithering;
 
 namespace WaxMapArt;
 
-public class Generator
+public class Generator(Palette colorPalette)
 {
     public ComparisonMethod Method = ComparisonMethod.Cie76;
     public WaxSize MapSize = new(1, 1);
     public WaxSize OutputSize = new(128, 128);
     public DitheringType Dithering = DitheringType.None;
-    public Palette ColorPalette;
-
-    public Generator(Palette colorPalette) => ColorPalette = colorPalette;
 
     public GeneratorOutput GenerateStaircase(Image<Rgb24> input)
     {
         WaxSize size = MapSize * 128;
         var outImage = new Image<Rgb24>(size.X, size.Y);
-        var pImage = new ImageProcessor(size, Dithering).Process(input);
+        var pImage = new ImageProcessor(size).Process(input);
 
         var colors = new List<BlockColor>();
 
-        foreach (var (_, info) in ColorPalette.Colors)
+        foreach (var (_, info) in colorPalette.Colors)
         {
             WaxColor baseColor = info.Color;
 
@@ -34,6 +30,18 @@ public class Generator
             colors.Add(new(baseColor * MapColors.M1, info));
             colors.Add(new(baseColor, info));
         }
+        
+        List<WaxColor> ditherPalette = colors.Select(b => b.Color).ToList();
+        IWaxDithering dithering = Dithering switch
+        {
+            DitheringType.None => new NoDithering(ditherPalette, Method),
+            DitheringType.BayerOrdered4X4 => new BayerOrderedDithering(ditherPalette, Method, BayerOrderedDithering.Bayer4X4),
+            DitheringType.BayerOrdered8X8 => new BayerOrderedDithering(ditherPalette, Method, BayerOrderedDithering.Bayer8X8),
+            DitheringType.BayerOrdered16X16 => new BayerOrderedDithering(ditherPalette, Method, BayerOrderedDithering.Bayer16X16),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+        
+        dithering.ApplyDither(ref pImage);
 
         var blocks = new ConcurrentBag<Block>();
 
@@ -47,10 +55,9 @@ public class Generator
             for (int y = pImage.Height; y > 0; y--)
             {
                 var inputColor = WaxColor.FromRgb24(pImage[x, y - 1]);
-                var nearest = inputColor.Nearest(colors.Select(blockColor => blockColor.Color), Method);
-
-                outImage[x, y - 1] = nearest.ToRgb24();
-                int index = colors.FindIndex(blockColor => blockColor.Color.IsEquals(nearest));
+                outImage[x, y - 1] = inputColor.ToRgb24();
+                
+                int index = colors.FindIndex(blockColor => blockColor.Color.IsEquals(inputColor));
                 var info = colors[index].Info;
                 int shadow = index % 3;
 
@@ -69,7 +76,7 @@ public class Generator
 
                 if (info.GeneratorProperties.NeedSupport) supports.Add(y, new Block
                 {
-                    Info = ColorPalette.PlaceholderBlock,
+                    Info = colorPalette.PlaceholderBlock,
                     X = x,
                     Y = block.Y - 1,
                     Z = y
@@ -89,7 +96,7 @@ public class Generator
                 X = x,
                 Y = ly,
                 Z = 0,
-                Info = ColorPalette.PlaceholderBlock
+                Info = colorPalette.PlaceholderBlock
             };
 
             int minY = supports.Count <= 0
@@ -100,7 +107,7 @@ public class Generator
             {
                 row[i].Y -= minY;
 
-                if (supports.ContainsKey(i)) supports[i].Y -= minY;
+                if (supports.TryGetValue(i, out var support)) support.Y -= minY;
             }
 
             foreach (var b in row) blocks.Add(b);
@@ -116,12 +123,24 @@ public class Generator
     {
         WaxSize size = MapSize * 128;
         var outImage = new Image<Rgb24>(size.X, size.Y);
-        var pImage = new ImageProcessor(size, Dithering).Process(input);
+        var pImage = new ImageProcessor(size).Process(input);
 
         var colors = new List<BlockColor>();
-        foreach (var (_, info) in ColorPalette.Colors)
+        foreach (var (_, info) in colorPalette.Colors)
             colors.Add(new BlockColor(info.Color * MapColors.M1, info));
 
+        List<WaxColor> ditherPalette = colors.Select(b => b.Color).ToList();
+        IWaxDithering dithering = Dithering switch
+        {
+            DitheringType.None => new NoDithering(ditherPalette, Method),
+            DitheringType.BayerOrdered4X4 => new BayerOrderedDithering(ditherPalette, Method, BayerOrderedDithering.Bayer4X4),
+            DitheringType.BayerOrdered8X8 => new BayerOrderedDithering(ditherPalette, Method, BayerOrderedDithering.Bayer8X8),
+            DitheringType.BayerOrdered16X16 => new BayerOrderedDithering(ditherPalette, Method, BayerOrderedDithering.Bayer16X16),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+        
+        dithering.ApplyDither(ref pImage);
+        
         var blocks = new ConcurrentBag<Block>();
 
         Parallel.For(0, pImage.Width, x =>
@@ -129,10 +148,9 @@ public class Generator
             for (int y = 0; y < size.Y; y++)
             {
                 var inputColor = WaxColor.FromRgb24(pImage[x, y]);
-                var nearest = inputColor.Nearest(colors.Select(color => color.Color), Method);
-                outImage[x, y] = nearest.ToRgb24();
+                outImage[x, y] = inputColor.ToRgb24();
 
-                var blockInfo = colors.Find(color => color.Color.IsEquals(nearest)).Info;
+                var blockInfo = colors.Find(color => color.Color.IsEquals(inputColor)).Info;
 
                 blocks.Add(new Block
                 {
@@ -150,7 +168,7 @@ public class Generator
     }
 }
 
-public record struct GeneratorOutput(Block[] Blocks, Image<Rgb24> Image)
+public readonly record struct GeneratorOutput(Block[] Blocks, Image<Rgb24> Image)
 {
     public Dictionary<BlockInfo, int> CountBlocks()
     {
@@ -158,8 +176,7 @@ public record struct GeneratorOutput(Block[] Blocks, Image<Rgb24> Image)
 
         foreach (var block in Blocks) 
         {
-            if (blockCount.ContainsKey(block.Info)) blockCount[block.Info]++;
-            else blockCount.Add(block.Info, 1);
+            if (!blockCount.TryAdd(block.Info, 1)) blockCount[block.Info]++;
         }
 
         return blockCount.OrderByDescending(bc => bc.Value).ToDictionary();

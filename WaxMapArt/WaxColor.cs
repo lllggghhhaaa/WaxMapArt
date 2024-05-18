@@ -3,24 +3,14 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace WaxMapArt;
 
-public struct WaxColor
+public struct WaxColor(byte r, byte g, byte b)
 {
-    [JsonProperty("r")] public byte R;
-    [JsonProperty("g")] public byte G;
-    [JsonProperty("b")] public byte B;
+    [JsonProperty("r")] public byte R = r;
+    [JsonProperty("g")] public byte G = g;
+    [JsonProperty("b")] public byte B = b;
 
-    public WaxColor()
+    public WaxColor() : this(0, 0, 0)
     {
-        R = 0;
-        G = 0;
-        B = 0;
-    }
-
-    public WaxColor(byte r, byte g, byte b)
-    {
-        R = r;
-        G = g;
-        B = b;
     }
 
     public static WaxColor FromRgb24(Rgb24 color) => new WaxColor(color.R, color.G, color.B);
@@ -184,25 +174,11 @@ public static class Rgb24ExtensionMethods
    
 }
 
-public struct Lab
+public struct Lab(double l, double a, double b)
 {
-    public double L;
-    public double A;
-    public double B;
-
-    public Lab(double l, double a, double b)
-    {
-        L = l;
-        A = a;
-        B = b;
-    }
-
-    public Lab(double[] lab)
-    {
-        L = lab[0];
-        A = lab[1];
-        B = lab[2];
-    }
+    public double L = l;
+    public double A = a;
+    public double B = b;
 
     public override string ToString() => $"lab({L}, {A}, {B})";
 }

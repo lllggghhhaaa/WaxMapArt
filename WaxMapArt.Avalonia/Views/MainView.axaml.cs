@@ -1,22 +1,23 @@
-﻿using Avalonia.Controls;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Newtonsoft.Json;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using System;
-using System.IO;
-using System.Collections.Generic;
+using WaxMapArt.Avalonia.Controls;
 using WaxMapArt.Avalonia.ViewModels;
 using WaxMapArt.ImageProcessing.Dithering;
-using System.Linq;
-using System.Threading.Tasks;
-using Avalonia;
-using Avalonia.Layout;
-using System.Diagnostics;
-using System.Text;
-using WaxMapArt.Avalonia.Controls;
+using Image = SixLabors.ImageSharp.Image;
 
 namespace WaxMapArt.Avalonia.Views;
 
@@ -121,7 +122,7 @@ public partial class MainView : UserControl
         inputImage.Source = bm;
         stream.Seek(0, SeekOrigin.Begin);
 
-        _image = await SixLabors.ImageSharp.Image.LoadAsync<Rgb24>(stream);
+        _image = await Image.LoadAsync<Rgb24>(stream);
 
         await stream.FlushAsync();
     }

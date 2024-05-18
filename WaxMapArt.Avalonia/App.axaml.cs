@@ -6,7 +6,7 @@ using WaxMapArt.Avalonia.Views;
 
 namespace WaxMapArt.Avalonia;
 
-public partial class App : Application
+public class App : Application
 {
     public override void Initialize()
     {
