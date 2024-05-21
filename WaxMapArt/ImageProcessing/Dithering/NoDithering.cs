@@ -3,9 +3,9 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace WaxMapArt.ImageProcessing.Dithering;
 
-public class NoDithering(List<WaxColor> palette, ComparisonMethod comparisonMethod) : IWaxDithering
+public class NoDithering : IWaxDithering
 {
-    public void ApplyDither(ref Image<Rgb24> image)
+    public void ApplyDither(ref Image<Rgb24> image, List<WaxColor> palette, ComparisonMethod comparisonMethod)
     {
         for(int x = 0; x < image.Width; x++)
         for (int y = 0; y < image.Height; y++)

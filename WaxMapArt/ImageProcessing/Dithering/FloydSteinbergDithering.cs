@@ -3,9 +3,9 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace WaxMapArt.ImageProcessing.Dithering;
 
-public class FloydSteinbergDithering(List<WaxColor> palette, ComparisonMethod comparisonMethod) : IWaxDithering
+public class FloydSteinbergDithering : IWaxDithering
 {
-    public void ApplyDither(ref Image<Rgb24> image)
+    public void ApplyDither(ref Image<Rgb24> image, List<WaxColor> palette, ComparisonMethod comparisonMethod)
     {
         int width = image.Width;
         int height = image.Height;

@@ -5,5 +5,5 @@ namespace WaxMapArt.ImageProcessing.Dithering;
 
 public interface IWaxDithering
 {
-    public void ApplyDither(ref Image<Rgb24> image); 
+    public void ApplyDither(ref Image<Rgb24> image, List<WaxColor> palette, ComparisonMethod comparisonMethod);
 }

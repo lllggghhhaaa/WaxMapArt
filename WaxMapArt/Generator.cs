@@ -34,15 +34,15 @@ public class Generator(Palette colorPalette)
         List<WaxColor> ditherPalette = colors.Select(b => b.Color).ToList();
         IWaxDithering dithering = Dithering switch
         {
-            DitheringType.None => new NoDithering(ditherPalette, Method),
-            DitheringType.FloydSteinberg => new FloydSteinbergDithering(ditherPalette, Method),
-            DitheringType.BayerOrdered4X4 => new BayerOrderedDithering(ditherPalette, Method, BayerOrderedDithering.Bayer4X4),
-            DitheringType.BayerOrdered8X8 => new BayerOrderedDithering(ditherPalette, Method, BayerOrderedDithering.Bayer8X8),
-            DitheringType.BayerOrdered16X16 => new BayerOrderedDithering(ditherPalette, Method, BayerOrderedDithering.Bayer16X16),
+            DitheringType.None => new NoDithering(),
+            DitheringType.FloydSteinberg => new FloydSteinbergDithering(),
+            DitheringType.BayerOrdered4X4 => new BayerOrderedDithering(BayerOrderedDithering.Bayer4X4),
+            DitheringType.BayerOrdered8X8 => new BayerOrderedDithering(BayerOrderedDithering.Bayer8X8),
+            DitheringType.BayerOrdered16X16 => new BayerOrderedDithering(BayerOrderedDithering.Bayer16X16),
             _ => throw new ArgumentOutOfRangeException()
         };
         
-        dithering.ApplyDither(ref pImage);
+        dithering.ApplyDither(ref pImage, ditherPalette, Method);
 
         var blocks = new ConcurrentBag<Block>();
 
@@ -133,15 +133,15 @@ public class Generator(Palette colorPalette)
         List<WaxColor> ditherPalette = colors.Select(b => b.Color).ToList();
         IWaxDithering dithering = Dithering switch
         {
-            DitheringType.None => new NoDithering(ditherPalette, Method),
-            DitheringType.FloydSteinberg => new FloydSteinbergDithering(ditherPalette, Method),
-            DitheringType.BayerOrdered4X4 => new BayerOrderedDithering(ditherPalette, Method, BayerOrderedDithering.Bayer4X4),
-            DitheringType.BayerOrdered8X8 => new BayerOrderedDithering(ditherPalette, Method, BayerOrderedDithering.Bayer8X8),
-            DitheringType.BayerOrdered16X16 => new BayerOrderedDithering(ditherPalette, Method, BayerOrderedDithering.Bayer16X16),
+            DitheringType.None => new NoDithering(),
+            DitheringType.FloydSteinberg => new FloydSteinbergDithering(),
+            DitheringType.BayerOrdered4X4 => new BayerOrderedDithering(BayerOrderedDithering.Bayer4X4),
+            DitheringType.BayerOrdered8X8 => new BayerOrderedDithering(BayerOrderedDithering.Bayer8X8),
+            DitheringType.BayerOrdered16X16 => new BayerOrderedDithering(BayerOrderedDithering.Bayer16X16),
             _ => throw new ArgumentOutOfRangeException()
         };
         
-        dithering.ApplyDither(ref pImage);
+        dithering.ApplyDither(ref pImage, ditherPalette, Method);
         
         var blocks = new ConcurrentBag<Block>();
 

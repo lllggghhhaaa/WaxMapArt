@@ -3,7 +3,7 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace WaxMapArt.ImageProcessing.Dithering;
 
-public class BayerOrderedDithering(List<WaxColor> palette, ComparisonMethod comparisonMethod, WaxMatrix matrix)
+public class BayerOrderedDithering(WaxMatrix matrix)
     : IWaxDithering
 {
     #region Matrix
@@ -45,7 +45,7 @@ public class BayerOrderedDithering(List<WaxColor> palette, ComparisonMethod comp
     }, 16);
     #endregion
 
-    private WaxColor DitherPixel(int x, int y, WaxColor color)
+    private WaxColor DitherPixel(int x, int y, WaxColor color, List<WaxColor> palette, ComparisonMethod comparisonMethod)
     {
         float mapValue = matrix.Matrix[x % matrix.Size, y % matrix.Size];
 
@@ -56,13 +56,13 @@ public class BayerOrderedDithering(List<WaxColor> palette, ComparisonMethod comp
         return new WaxColor(r, g, b).Nearest(palette, comparisonMethod);
     }
 
-    public void ApplyDither(ref Image<Rgb24> image)
+    public void ApplyDither(ref Image<Rgb24> image, List<WaxColor> palette, ComparisonMethod comparisonMethod)
     {
         for(int x = 0; x < image.Width; x++)
         for (int y = 0; y < image.Height; y++)
         {
             var color = WaxColor.FromRgb24(image[x, y]);
-            image[x, y] = DitherPixel(x, y, color).ToRgb24();
+            image[x, y] = DitherPixel(x, y, color, palette, comparisonMethod).ToRgb24();
         }
     }
 }
