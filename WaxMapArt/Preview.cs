@@ -33,17 +33,7 @@ public class Preview(Palette colorPalette)
         }
         
         List<WaxColor> ditherPalette = colors.Select(b => b.Color).ToList();
-        IWaxDithering dithering = Dithering switch
-        {
-            DitheringType.None => new NoDithering(),
-            DitheringType.FloydSteinberg => new FloydSteinbergDithering(),
-            DitheringType.BayerOrdered4X4 => new BayerOrderedDithering(BayerOrderedDithering.Bayer4X4),
-            DitheringType.BayerOrdered8X8 => new BayerOrderedDithering(BayerOrderedDithering.Bayer8X8),
-            DitheringType.BayerOrdered16X16 => new BayerOrderedDithering(BayerOrderedDithering.Bayer16X16),
-            _ => throw new ArgumentOutOfRangeException()
-        };
-        
-        dithering.ApplyDither(ref pImage, ditherPalette, Method);
+        ImageProcessor.ApplyDither(ref pImage, Dithering, ditherPalette, Method);
 
         Parallel.For(0, size.X, x =>
         {
@@ -82,17 +72,7 @@ public class Preview(Palette colorPalette)
             colors.Add(new BlockColor(info.Color * MapColors.M1, info));
         
         List<WaxColor> ditherPalette = colors.Select(b => b.Color).ToList();
-        IWaxDithering dithering = Dithering switch
-        {
-            DitheringType.None => new NoDithering(),
-            DitheringType.FloydSteinberg => new FloydSteinbergDithering(),
-            DitheringType.BayerOrdered4X4 => new BayerOrderedDithering(BayerOrderedDithering.Bayer4X4),
-            DitheringType.BayerOrdered8X8 => new BayerOrderedDithering(BayerOrderedDithering.Bayer8X8),
-            DitheringType.BayerOrdered16X16 => new BayerOrderedDithering(BayerOrderedDithering.Bayer16X16),
-            _ => throw new ArgumentOutOfRangeException()
-        };
-        
-        dithering.ApplyDither(ref pImage, ditherPalette, Method);
+        ImageProcessor.ApplyDither(ref pImage, Dithering, ditherPalette, Method);
 
         Parallel.For(0, size.X, x =>
         {
