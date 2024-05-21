@@ -7,10 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WaxMapArt", "WaxMapArt\WaxM
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WaxMapArt.Bot", "WaxMapArt.Bot\WaxMapArt.Bot.csproj", "{00335FE4-90E7-467F-AEE1-6CE86901D51B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WaxMapArt.Avalonia", "WaxMapArt.Avalonia\WaxMapArt.Avalonia.csproj", "{1212F64D-0983-4508-838D-B97650CE2AF9}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WaxMapArt.Avalonia.Desktop", "WaxMapArt.Avalonia.Desktop\WaxMapArt.Avalonia.Desktop.csproj", "{1D3EE79C-FB07-484C-9F19-7A0B1171209A}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WaxMapArt.Tests", "WaxMapArt.Tests\WaxMapArt.Tests.csproj", "{C0D4170A-DEF5-4864-98C5-4B72A41EDEA9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WaxMapArt.Maui", "WaxMapArt.Maui\WaxMapArt.Maui.csproj", "{A7DE1971-C8AF-49DB-A2BE-0A20667F123C}"
@@ -29,14 +25,6 @@ Global
 		{00335FE4-90E7-467F-AEE1-6CE86901D51B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{00335FE4-90E7-467F-AEE1-6CE86901D51B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{00335FE4-90E7-467F-AEE1-6CE86901D51B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1212F64D-0983-4508-838D-B97650CE2AF9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1212F64D-0983-4508-838D-B97650CE2AF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1212F64D-0983-4508-838D-B97650CE2AF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1212F64D-0983-4508-838D-B97650CE2AF9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1D3EE79C-FB07-484C-9F19-7A0B1171209A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1D3EE79C-FB07-484C-9F19-7A0B1171209A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1D3EE79C-FB07-484C-9F19-7A0B1171209A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1D3EE79C-FB07-484C-9F19-7A0B1171209A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C0D4170A-DEF5-4864-98C5-4B72A41EDEA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C0D4170A-DEF5-4864-98C5-4B72A41EDEA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0D4170A-DEF5-4864-98C5-4B72A41EDEA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
