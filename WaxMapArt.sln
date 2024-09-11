@@ -3,13 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34414.90
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WaxMapArt", "WaxMapArt\WaxMapArt.csproj", "{203A8B46-D036-4158-9E25-B05A2C638806}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WaxMapArt.Bot", "WaxMapArt.Bot\WaxMapArt.Bot.csproj", "{00335FE4-90E7-467F-AEE1-6CE86901D51B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WaxMapArt.Tests", "WaxMapArt.Tests\WaxMapArt.Tests.csproj", "{C0D4170A-DEF5-4864-98C5-4B72A41EDEA9}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WaxMapArt.Maui", "WaxMapArt.Maui\WaxMapArt.Maui.csproj", "{A7DE1971-C8AF-49DB-A2BE-0A20667F123C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WaxMapArt", "WaxMapArt\WaxMapArt.csproj", "{0EF9A028-55F7-4F60-A372-51C86EDE8305}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,22 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{203A8B46-D036-4158-9E25-B05A2C638806}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{203A8B46-D036-4158-9E25-B05A2C638806}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{203A8B46-D036-4158-9E25-B05A2C638806}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{203A8B46-D036-4158-9E25-B05A2C638806}.Release|Any CPU.Build.0 = Release|Any CPU
-		{00335FE4-90E7-467F-AEE1-6CE86901D51B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{00335FE4-90E7-467F-AEE1-6CE86901D51B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{00335FE4-90E7-467F-AEE1-6CE86901D51B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{00335FE4-90E7-467F-AEE1-6CE86901D51B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C0D4170A-DEF5-4864-98C5-4B72A41EDEA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C0D4170A-DEF5-4864-98C5-4B72A41EDEA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C0D4170A-DEF5-4864-98C5-4B72A41EDEA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C0D4170A-DEF5-4864-98C5-4B72A41EDEA9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A7DE1971-C8AF-49DB-A2BE-0A20667F123C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A7DE1971-C8AF-49DB-A2BE-0A20667F123C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A7DE1971-C8AF-49DB-A2BE-0A20667F123C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A7DE1971-C8AF-49DB-A2BE-0A20667F123C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0EF9A028-55F7-4F60-A372-51C86EDE8305}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0EF9A028-55F7-4F60-A372-51C86EDE8305}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0EF9A028-55F7-4F60-A372-51C86EDE8305}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0EF9A028-55F7-4F60-A372-51C86EDE8305}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
