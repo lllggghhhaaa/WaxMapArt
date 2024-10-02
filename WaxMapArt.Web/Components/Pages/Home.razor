@@ -5,6 +5,7 @@
 @using Microsoft.EntityFrameworkCore
 @using SixLabors.ImageSharp
 @using SixLabors.ImageSharp.PixelFormats
+@using SixLabors.ImageSharp.Processing
 @using WaxMapArt.Comparison
 @using WaxMapArt.Dithering
 @inject IDbContextFactory<DatabaseContext> DbContextFactory
@@ -63,6 +64,16 @@ else
                 }
             </InputSelect>
         </div>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Largura</label>
+            <InputNumber @bind-Value="_formModel.WidthMultiplier" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Altura</label>
+            <InputNumber @bind-Value="_formModel.HeightMultiplier" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
+        </div>
 
         @if (_inputImageUrl is not null)
         {
@@ -113,9 +124,25 @@ else
         await using var ms = new MemoryStream();
         await e.File.OpenReadStream().CopyToAsync(ms);
         var data = ms.ToArray();
-
-        _inputImageUrl = ConvertStreamToBase64Url(data);
+        
         _inputImage = Image.Load<Rgb24>(data);
+    }
+
+    private async Task<Image<Rgb24>?> ResizeImageAsync()
+    {
+        if (_inputImage is null) return null;
+        
+        var image = _inputImage.Clone();
+        
+        var newWidth = _formModel.WidthMultiplier * 128;
+        var newHeight = _formModel.HeightMultiplier * 128;
+        image.Mutate(x => x.Resize(newWidth, newHeight));
+            
+        var resizedImageStream = new MemoryStream();
+        await image.SaveAsPngAsync(resizedImageStream);
+        _inputImageUrl = ConvertStreamToBase64Url(resizedImageStream.ToArray());
+
+        return image;
     }
 
     private async Task OnValidSubmit()
@@ -140,9 +167,11 @@ else
 
         var palette = _palettes!.Find(p => p.Id == _formModel.SelectedPaletteId);
         if (palette is null) return;
+
+        var image = await ResizeImageAsync();
         
         var ms = new MemoryStream();
-        var generatedImage = dithering.ApplyDithering(_inputImage, palette, colorComparison, _formModel.GeneratorType == GeneratorType.Staircase);
+        var generatedImage = dithering.ApplyDithering(image!, palette, colorComparison, _formModel.GeneratorType == GeneratorType.Staircase);
         await generatedImage.SaveAsPngAsync(ms);
         _generatedImageUrl = ConvertStreamToBase64Url(ms.ToArray());
     }
@@ -155,6 +184,8 @@ else
         public ComparisonMode ComparisonMode { get; set; }
         public GeneratorType GeneratorType { get; set; }
         public Guid SelectedPaletteId { get; set; }
+        public int WidthMultiplier { get; set; } = 1;
+        public int HeightMultiplier { get; set; } = 1;
     }
     
     private enum GeneratorType
