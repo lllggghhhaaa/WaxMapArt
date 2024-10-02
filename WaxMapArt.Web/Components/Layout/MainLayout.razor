@@ -1,0 +1,16 @@
+﻿@inherits LayoutComponentBase
+
+<div class="flex min-h-screen">
+    <!-- Main Content Area -->
+    <main class="flex flex-col flex-grow">
+        <!-- Top Bar -->
+        <div class="p-4 shadow-lg">
+            <NavMenu/>
+        </div>
+
+        <!-- Body Content -->
+        <article class="p-6 bg-white flex-grow shadow-inner">
+            @Body
+        </article>
+    </main>
+</div>

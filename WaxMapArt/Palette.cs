@@ -13,7 +13,6 @@ public struct PaletteColor
 {
     [JsonProperty("id")] public string Id;
     [JsonProperty("map_id")] public int MapId;
-    [JsonProperty("color")] public WaxColor Color;
     [JsonProperty("properties")] public Dictionary<string, string> Properties { get; set; }
     [JsonProperty("generator_properties")] public GeneratorProperties GeneratorProperties { get; set; }
 }

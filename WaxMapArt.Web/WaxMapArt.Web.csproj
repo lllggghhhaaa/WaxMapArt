@@ -1,0 +1,76 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UseRazorSourceGenerator>true</UseRazorSourceGenerator>
+        <UserSecretsId>6817e0df-61c2-4e33-9eae-07c0203a3f15</UserSecretsId>
+  </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\WaxMapArt\WaxMapArt.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.0-rc.1.24452.1" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0-rc.1.24451.1">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0-rc.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Manage\ChangePassword.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Manage\DeletePersonalData.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Manage\Disable2fa.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Manage\Email.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Manage\EnableAuthenticator.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Manage\ExternalLogins.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Manage\GenerateRecoveryCodes.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Manage\Index.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Manage\PersonalData.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Manage\ResetAuthenticator.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Manage\SetPassword.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Manage\TwoFactorAuthentication.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Manage\_Imports.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\AccessDenied.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\ConfirmEmail.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\ConfirmEmailChange.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\ExternalLogin.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\ForgotPassword.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\ForgotPasswordConfirmation.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\InvalidPasswordReset.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\InvalidUser.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\Lockout.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\Login.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\LoginWith2fa.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\LoginWithRecoveryCode.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\Manage\ChangePassword.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\Manage\DeletePersonalData.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\Manage\Disable2fa.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\Manage\Email.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\Manage\EnableAuthenticator.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\Manage\ExternalLogins.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\Manage\GenerateRecoveryCodes.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\Manage\Index.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\Manage\PersonalData.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\Manage\ResetAuthenticator.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\Manage\SetPassword.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\Manage\TwoFactorAuthentication.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\Manage\_Imports.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\Register.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\RegisterConfirmation.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\ResendEmailConfirmation.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\ResetPassword.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\ResetPasswordConfirmation.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\Shared\ExternalLoginPicker.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\Shared\ManageLayout.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\Shared\ManageNavMenu.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\Shared\RedirectToLogin.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\Shared\ShowRecoveryCodes.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Authentication\Pages\Shared\StatusMessage.razor" />
+    </ItemGroup>
+
+</Project>

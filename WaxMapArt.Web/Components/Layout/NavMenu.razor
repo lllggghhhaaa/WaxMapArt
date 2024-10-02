@@ -1,0 +1,72 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
+<div class="bg-white shadow-md">
+    <div class="container mx-auto flex justify-between items-center py-4">
+        <a class="text-lg font-bold text-gray-800 hover:text-gray-600 transition-colors" href="/">
+            WaxMapArt.Web
+        </a>
+        <nav class="hidden md:flex space-x-6">
+            <NavLink class="text-gray-600 hover:text-gray-900 transition-colors" href="/">
+                <i class="ri-artboard-2-line"></i> Map Generator
+            </NavLink>
+            <NavLink class="text-gray-600 hover:text-gray-900 transition-colors" href="palettes">
+                <i class="ri-palette-line"></i> Palettes
+            </NavLink>
+            <NavLink class="text-gray-600 hover:text-gray-900 transition-colors" href="blocks">
+                <i class="ri-box-2-fill"></i> Blocks
+            </NavLink>
+        </nav>
+
+        <div class="hidden md:flex space-x-4">
+            <AuthorizeView>
+                <Authorized>
+                    <div class="flex items-center space-x-2">
+                        <i class="ri-user-line"></i>
+                        <span class="text-gray-800 font-medium">@_userName</span>
+                        @if (_isDev)
+                        {
+                            <span class="inline-flex items-center rounded-md bg-pink-50 px-2 py-1 text-xs font-medium text-pink-700 ring-1 ring-pink-700/10">
+                                Developer
+                            </span>
+                        }
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <div class="flex space-x-2">
+                        <NavLink class="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 transition-colors" href="login">
+                            Log In
+                        </NavLink>
+                        <NavLink class="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors" href="signin">
+                            Sign In
+                        </NavLink>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <input type="checkbox" class="hidden" id="nav-toggle" />
+        <label for="nav-toggle" class="md:hidden cursor-pointer">
+            <svg class="w-6 h-6 text-gray-800" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+            </svg>
+        </label>
+    </div>
+</div>
+
+@code {
+    private string? _userName;
+    private bool _isDev = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = await UserManager.GetUserAsync(authState.User);
+
+        _userName = user?.UserName ?? "Guest";
+        _isDev = user != null && (await UserManager.GetRolesAsync(user)).Contains("Developer");
+    }
+}
