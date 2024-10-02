@@ -7,9 +7,9 @@ namespace WaxMapArt.Dithering;
 
 public class NoneDithering : IDithering
 {
-    public Image<Rgb24> ApplyDithering(Image<Rgb24> image, Palette palette, IColorComparison colorComparison)
+    public Image<Rgb24> ApplyDithering(Image<Rgb24> image, Palette palette, IColorComparison colorComparison, bool staircase)
     {
-        var colors = palette.Colors.Select(color => ColorUtils.MapIdToInfo(color.MapId).Color).ToArray();
+        var colors = ColorUtils.GetPaletteColors(palette, staircase);
         
         for (var y = 0; y < image.Height; y++)
         for (var x = 0; x < image.Width; x++)

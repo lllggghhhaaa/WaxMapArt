@@ -8,24 +8,44 @@ public static class ColorUtils
 {
     internal static Rgb24 FindNearestColor(Rgb24 originalColor, Rgb24[] palette, IColorComparison colorComparison)
     {
-        Rgb24 nearestColor = palette.First();
-        double shortestDistance = double.MaxValue;
+        var nearestColor = palette.First();
+        var shortestDistance = double.MaxValue;
 
         foreach (var color in palette)
         {
-            double distance = colorComparison.GetColorDifference(originalColor, color);
-            if (distance < shortestDistance)
-            {
-                shortestDistance = distance;
-                nearestColor = color;
-            }
+            var distance = colorComparison.GetColorDifference(originalColor, color);
+            if (!(distance < shortestDistance)) continue;
+            shortestDistance = distance;
+            nearestColor = color;
         }
 
         return nearestColor;
     }
 
+    public static Rgb24[] GetPaletteColors(Palette palette, bool staircase = false)
+    {
+        return staircase
+            ? palette.Colors
+                .SelectMany(color =>
+                {
+                    var baseColor = MapIdToInfo(color.MapId).Color;
+                    return new[]
+                    {
+                        baseColor,
+                        baseColor.Multiply(0.86d),
+                        baseColor.Multiply(0.71d)
+                    };
+                }).ToArray()
+            : palette.Colors
+                .Select(color => MapIdToInfo(color.MapId).Color.Multiply(0.86d))
+                .ToArray();
+    }
+
     public static string ToHexColor(this Rgb24 color)
         => $"#{color.R:X2}{color.G:X2}{color.B:X2}";
+    
+    public static Rgb24 Multiply(this Rgb24 color, double factor)
+        => new((byte)(color.R * factor), (byte)(color.G * factor), (byte)(color.B * factor));
 
     public static MapIdInfo MapIdToInfo(int id)
     {

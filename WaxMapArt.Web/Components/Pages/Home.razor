@@ -33,6 +33,16 @@ else
                 }
             </InputSelect>
         </div>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Gerador</label>
+            <InputSelect @bind-Value="_formModel.GeneratorType" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2">
+                @foreach (var generator in Enum.GetValues<GeneratorType>())
+                {
+                    <option value="@generator">@Enum.GetName(generator)</option>
+                }
+            </InputSelect>
+        </div>
 
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700">Algoritmo</label>
@@ -132,7 +142,7 @@ else
         if (palette is null) return;
         
         var ms = new MemoryStream();
-        var generatedImage = dithering.ApplyDithering(_inputImage, palette, colorComparison);
+        var generatedImage = dithering.ApplyDithering(_inputImage, palette, colorComparison, _formModel.GeneratorType == GeneratorType.Staircase);
         await generatedImage.SaveAsPngAsync(ms);
         _generatedImageUrl = ConvertStreamToBase64Url(ms.ToArray());
     }
@@ -143,6 +153,13 @@ else
     {
         public DitheringMode DitheringMode { get; set; }
         public ComparisonMode ComparisonMode { get; set; }
+        public GeneratorType GeneratorType { get; set; }
         public Guid SelectedPaletteId { get; set; }
+    }
+    
+    private enum GeneratorType
+    {
+        Flat,
+        Staircase
     }
 }
