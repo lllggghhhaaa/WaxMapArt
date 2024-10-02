@@ -122,6 +122,7 @@ else
 
         IDithering dithering = _formModel.DitheringMode switch
         {
+            DitheringMode.None => new NoneDithering(),
             DitheringMode.Atkinson => new AtkinsonDithering(),
             DitheringMode.FloydSteinberg => new FloydSteinbergDithering(),
             _ => throw new ArgumentOutOfRangeException()

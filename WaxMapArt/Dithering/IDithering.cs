@@ -11,6 +11,7 @@ public interface IDithering
 
 public enum DitheringMode
 {
+    None,
     Atkinson,
     FloydSteinberg,
 }
