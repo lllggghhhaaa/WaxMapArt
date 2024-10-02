@@ -18,7 +18,7 @@ public class FlatGenerator : IGenerator
             {
                 var pixel = image[x, y];
 
-                var blockInfo = palette.Colors.First(color => ColorUtils.MapIdToInfo(color.MapId).Color.Equals(pixel));
+                var blockInfo = palette.Colors.First(color => ColorUtils.MapIdToInfo(color.MapId).Color.Multiply(0.86d).Equals(pixel));
                 
                 blocks.Add(new BlockInfo
                 {

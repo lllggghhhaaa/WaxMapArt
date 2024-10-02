@@ -21,7 +21,9 @@ public class LitematicaExporter : IExporter
         file.Root
             .Add(metadata)
             .Add(regions)
-            .Add(new NbtInt("MinecraftDataVersion", 3955));
+            .Add(new NbtInt("MinecraftDataVersion", 3955))
+            .Add(new NbtInt("Version", 7))
+            .Add(new NbtInt("SubVersion", 1));
 
         return file.Serialize();
     }
@@ -60,7 +62,7 @@ public class LitematicaExporter : IExporter
 
     private static NbtList CreateBlockStatePalette(Palette palette)
     {
-        var blockStatePalette = new NbtList("BlockStatePalette");
+        var blockStatePalette = new NbtList("BlockStatePalette") { new NbtCompound("0").Add(new NbtString("Name", "minecraft:air")) };
         foreach (var color in palette.Colors) blockStatePalette.Add(new NbtCompound(color.MapId.ToString()).Add(new NbtString("Name", color.Id)));
         return blockStatePalette;
     }
@@ -68,11 +70,12 @@ public class LitematicaExporter : IExporter
     private static long[] CreateBlockStates(BlockInfo[] blocks, (int width, int height, int depth) dimensions, Palette palette)
     {
         var blockStates = new long[dimensions.width * dimensions.height * dimensions.depth];
-
+        var colors = palette.Colors.ToList();
+        
         foreach (var block in blocks)
         {
             var index = block.X + dimensions.width * (block.Y + dimensions.height * block.Z);
-            blockStates[index] = palette.Colors.First(color => color.Id == block.Id).MapId;
+            blockStates[index] = colors.FindIndex(color => color.Id == block.Id) + 1;
         }
 
         return blockStates;
@@ -82,6 +85,10 @@ public class LitematicaExporter : IExporter
         new NbtCompound("Map")
             .Add(blockStatePalette)
             .Add(new NbtLongArray("BlockStates", blockStates))
+            .Add(new NbtList("Entities"))
+            .Add(new NbtList("TileEntities"))
+            .Add(new NbtList("PendingBlockTicks"))
+            .Add(new NbtList("PendingFluidTicks"))
             .Add(new NbtCompound("Position")
                 .Add(new NbtInt("x", 0))
                 .Add(new NbtInt("y", 0))

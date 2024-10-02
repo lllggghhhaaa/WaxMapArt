@@ -8,6 +8,8 @@
 @using SixLabors.ImageSharp.Processing
 @using WaxMapArt.Comparison
 @using WaxMapArt.Dithering
+@using WaxMapArt.Exporter
+@using WaxMapArt.Generator
 @inject IDbContextFactory<DatabaseContext> DbContextFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserManager<ApplicationUser> UserManager
@@ -93,18 +95,30 @@ else
             </div>
         }
 
-        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Gerar Preview</button>
+        <div class="flex space-x-4">
+            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded" @onclick="() => _generate = false">Gerar Preview</button>
+
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded" @onclick="() => _generate = true">Gerar Mapa</button>
+        </div>
     </EditForm>
+    @if (_exportUrl != null)
+    {
+        <a id="exportMap" class="btn" href="@_exportUrl" download="map.nbt"
+           role="button" target="=_top">Download</a>
+    }
 }
 
 @code {
     private string? _inputImageUrl;
     private string? _generatedImageUrl;
+    private string? _exportUrl;
     private Image<Rgb24>? _inputImage;
 
     private List<Palette>? _palettes;
 
     private readonly FormModel _formModel = new();
+
+    private bool _generate;
 
     protected override async Task OnInitializedAsync()
     {
@@ -174,9 +188,21 @@ else
         var generatedImage = dithering.ApplyDithering(image!, palette, colorComparison, _formModel.GeneratorType == GeneratorType.Staircase);
         await generatedImage.SaveAsPngAsync(ms);
         _generatedImageUrl = ConvertStreamToBase64Url(ms.ToArray());
+        
+        if (!_generate) return;
+
+        var generator = new FlatGenerator();
+        var generatorOutput = generator.Generate(generatedImage, palette);
+
+        var exporter = new LitematicaExporter();
+        var outStream = exporter.SaveAsStream(palette, generatorOutput.Blocks);
+        var outMs = new MemoryStream();
+        await outStream.CopyToAsync(outMs);
+
+        _exportUrl = ConvertStreamToBase64Url(outMs.ToArray(), "application/octet-stream");
     }
 
-    private static string ConvertStreamToBase64Url(byte[] data) => $"data:image/png;base64,{Convert.ToBase64String(data)}";
+    private static string ConvertStreamToBase64Url(byte[] data, string contentType = "image/png") => $"data:{contentType};base64,{Convert.ToBase64String(data)}";
 
     private class FormModel
     {
