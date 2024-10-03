@@ -14,9 +14,18 @@ public class FlatGenerator : IGenerator
 
         Parallel.For(0, image.Width, x =>
         {
-            for (var y = 0; y < image.Height; y++)
+            blocks.Add(new BlockInfo
             {
-                var pixel = image[x, y];
+                X = x,
+                Y = 0,
+                Z = 0,
+                Id = palette.PlaceholderColor.Id,
+                Properties = palette.PlaceholderColor.Properties
+            });
+            
+            for (var y = 1; y < image.Height + 1; y++)
+            {
+                var pixel = image[x, y - 1];
 
                 var blockInfo = palette.Colors.First(color => ColorUtils.MapIdToInfo(color.MapId).Color.Multiply(0.86d).Equals(pixel));
                 
