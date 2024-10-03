@@ -191,7 +191,12 @@ else
         
         if (!_generate) return;
 
-        var generator = new FlatGenerator();
+        IGenerator generator = _formModel.GeneratorType switch
+        {
+            GeneratorType.Flat => new FlatGenerator(),
+            GeneratorType.Staircase => new StaircaseGenerator(),
+            _ => throw new ArgumentOutOfRangeException()
+        };
         var generatorOutput = generator.Generate(generatedImage, palette);
 
         var exporter = new VanillaExporter();

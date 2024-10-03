@@ -6,6 +6,9 @@ namespace WaxMapArt.Utils;
 
 public static class ColorUtils
 {
+    public const double M0 = .71;
+    public const double M1 = .86;
+    
     internal static Rgb24 FindNearestColor(Rgb24 originalColor, Rgb24[] palette, IColorComparison colorComparison)
     {
         var nearestColor = palette.First();
@@ -31,14 +34,43 @@ public static class ColorUtils
                     var baseColor = MapIdToInfo(color.MapId).Color;
                     return new[]
                     {
-                        baseColor,
-                        baseColor.Multiply(0.86d),
-                        baseColor.Multiply(0.71d)
+                        baseColor.Multiply(M0),
+                        baseColor.Multiply(M1),
+                        baseColor
                     };
                 }).ToArray()
             : palette.Colors
                 .Select(color => MapIdToInfo(color.MapId).Color.Multiply(0.86d))
                 .ToArray();
+    }
+    
+    public static List<MapIdInfo> GetPaletteBlocks(Palette palette, bool staircase = false)
+    {
+        return staircase
+            ? palette.Colors
+                .SelectMany(color =>
+                {
+                    var baseColor = MapIdToInfo(color.MapId);
+                    baseColor.Name = color.Id;
+                    baseColor.Properties = color.Properties;
+                    var paletteColor1 = baseColor.Clone();
+                    var paletteColor2 = baseColor.Clone();
+
+                    paletteColor1.Color = baseColor.Color.Multiply(M1);
+                    paletteColor1.Shading = 1;
+                    paletteColor2.Color = baseColor.Color.Multiply(M0);
+                    paletteColor2.Shading = 0;
+                    
+                    return new[] {paletteColor2, paletteColor1, baseColor};
+                }).ToList()
+            : palette.Colors
+                .Select(color =>
+                {
+                    var paletteColor = MapIdToInfo(color.MapId);
+                    paletteColor.Color = paletteColor.Color.Multiply(M1);
+                    paletteColor.Shading = 1;
+                    return paletteColor;
+                }).ToList();
     }
 
     public static string ToHexColor(this Rgb24 color)
