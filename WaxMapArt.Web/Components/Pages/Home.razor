@@ -194,7 +194,7 @@ else
         var generator = new FlatGenerator();
         var generatorOutput = generator.Generate(generatedImage, palette);
 
-        var exporter = new LitematicaExporter();
+        var exporter = new VanillaExporter();
         var outStream = exporter.SaveAsStream(palette, generatorOutput.Blocks);
         var outMs = new MemoryStream();
         await outStream.CopyToAsync(outMs);
