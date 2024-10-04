@@ -45,7 +45,7 @@ public class StaircaseGenerator : IGenerator
                     Properties = blockInfo.Properties
                 });
                 
-                if (blockInfo.GeneratorProperties.NeedSupport) Console.WriteLine(blockInfo.Id);
+                
 
                 if (blockInfo.GeneratorProperties.NeedSupport)
                     row.Add(new BlockInfo
