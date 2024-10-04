@@ -15,13 +15,6 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options, IConfigu
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
-        modelBuilder.Entity<Block>()
-            .Property(b => b.Id);
-
-        modelBuilder.Entity<Palette>()
-            .Property(p => p.Id);
-
         
         modelBuilder.Entity<Block>()
             .HasIndex(b => b.MinecraftId)
