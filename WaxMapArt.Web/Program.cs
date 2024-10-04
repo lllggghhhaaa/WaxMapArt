@@ -5,6 +5,8 @@ using WaxMapArt.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddEnvironmentVariables();
+
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
