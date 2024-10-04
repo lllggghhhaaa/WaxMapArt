@@ -7,7 +7,7 @@ namespace WaxMapArt.Web.Database;
 
 public class DatabaseContext(DbContextOptions<DatabaseContext> options, IConfiguration config) : IdentityDbContext<ApplicationUser>(options)
 {
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.UseNpgsql(config["Database:ConnectionString"]);
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.UseNpgsql(config["DatabaseConnectionString"]);
 
     public DbSet<Block> Blocks { get; set; }
     public DbSet<Palette> Palettes { get; set; }
