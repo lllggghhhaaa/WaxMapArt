@@ -181,7 +181,7 @@ else
 
         var palette = _palettes!.Find(p => p.Id == _formModel.SelectedPaletteId);
         if (palette is null) return;
-
+        
         var image = await ResizeImageAsync();
         
         var ms = new MemoryStream();

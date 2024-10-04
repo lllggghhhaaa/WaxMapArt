@@ -15,15 +15,16 @@ public class StaircaseGenerator : IGenerator
         
         Parallel.For(0, image.Width, x =>
         {
-            var row = new BlockInfo[image.Height + 1];
-            
-            row[0] = new BlockInfo
+            var row = new List<BlockInfo>(129)
             {
-                X = x,
-                Y = 0,
-                Z = 0,
-                Id = palette.PlaceholderColor.Id,
-                Properties = palette.PlaceholderColor.Properties
+                new()
+                {
+                    X = x,
+                    Y = 0,
+                    Z = 0,
+                    Id = palette.PlaceholderColor.Id,
+                    Properties = palette.PlaceholderColor.Properties
+                }
             };
 
             var lastY = 0;
@@ -35,18 +36,36 @@ public class StaircaseGenerator : IGenerator
                 var blockInfo = colors.First(info => info.Color.Equals(pixel));
                 lastY += blockInfo.Shading - 1;
                 
-                row[y] = new BlockInfo
+                row.Add(new BlockInfo
                 {
                     X = x,
                     Y = lastY,
                     Z = y,
                     Id = blockInfo.Id,
                     Properties = blockInfo.Properties
-                };
+                });
+                
+                if (blockInfo.GeneratorProperties.NeedSupport) Console.WriteLine(blockInfo.Id);
+
+                if (blockInfo.GeneratorProperties.NeedSupport)
+                    row.Add(new BlockInfo
+                    {
+                        X = x,
+                        Y = lastY - 1,
+                        Z = y,
+                        Id = palette.PlaceholderColor.Id,
+                        Properties = palette.PlaceholderColor.Properties
+                    });
             }
 
             var minY = row.MinBy(block => block.Y).Y;
-            for (var i = 0; i < row.Length; i++) row[i].Y -= minY;
+            foreach (var t in row)
+            {
+                var blockInfo = t;
+                ref var element = ref blockInfo;
+                element.Y -= minY;
+            }
+
             
             foreach (var b in row) blocks.Add(b);
         });

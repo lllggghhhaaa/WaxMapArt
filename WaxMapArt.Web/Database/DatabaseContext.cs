@@ -17,12 +17,10 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options, IConfigu
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<Block>()
-            .Property(b => b.Id)
-            .ValueGeneratedOnAdd();
+            .Property(b => b.Id);
 
         modelBuilder.Entity<Palette>()
-            .Property(p => p.Id)
-            .ValueGeneratedOnAdd();
+            .Property(p => p.Id);
 
         
         modelBuilder.Entity<Block>()
@@ -71,14 +69,19 @@ public class Block
     public string? ImageUrl { get; set; }
 
     public Dictionary<string, string> Properties { get; set; } = new();
-    public Dictionary<string, string> GeneratorProperties { get; set; } = new();
+    public bool NeedSupport { get; set; }
 
     public List<Palette> Palettes { get; set; } = [];
 
     public PaletteColor ToPaletteColor() => new()
     {
         Id = MinecraftId,
-        MapId = MapId
+        MapId = MapId,
+        Properties = Properties,
+        GeneratorProperties = new()
+        {
+            NeedSupport = NeedSupport
+        }
     };
 }
 
