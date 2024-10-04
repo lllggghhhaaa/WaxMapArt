@@ -13,15 +13,13 @@ RUN dotnet restore "WaxMapArt.Web/WaxMapArt.Web.csproj"
 COPY . .
 WORKDIR "/src/WaxMapArt.Web"
 RUN dotnet build "WaxMapArt.Web.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet tool install --global dotnet-ef
+ENV PATH="$PATH:/root/.dotnet/tools"
+RUN dotnet-ef database update
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "WaxMapArt.Web.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
-
-FROM publish as migrations
-RUN dotnet tool install --global dotnet-ef
-ENV PATH="$PATH:/root/.dotnet/tools"
-ENTRYPOINT dotnet-ef database update
 
 FROM base AS final
 WORKDIR /app
