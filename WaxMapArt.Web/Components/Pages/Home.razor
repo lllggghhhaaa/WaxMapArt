@@ -1,0 +1,227 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using SixLabors.ImageSharp
+@using SixLabors.ImageSharp.PixelFormats
+@using SixLabors.ImageSharp.Processing
+@using WaxMapArt.Comparison
+@using WaxMapArt.Dithering
+@using WaxMapArt.Exporter
+@using WaxMapArt.Generator
+@inject IDbContextFactory<DatabaseContext> DbContextFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>Home</PageTitle>
+
+@if (_palettes is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <EditForm Model="_formModel" OnValidSubmit="OnValidSubmit" class="flex flex-col items-center space-y-4">
+        <InputFile OnChange="LoadFiles" class="border p-2" />
+
+        <ValidationSummary />
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Dithering</label>
+            <InputSelect @bind-Value="_formModel.DitheringMode" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2">
+                @foreach (var ditheringMode in Enum.GetValues<DitheringMode>())
+                {
+                    <option value="@ditheringMode">@Enum.GetName(ditheringMode)</option>
+                }
+            </InputSelect>
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Gerador</label>
+            <InputSelect @bind-Value="_formModel.GeneratorType" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2">
+                @foreach (var generator in Enum.GetValues<GeneratorType>())
+                {
+                    <option value="@generator">@Enum.GetName(generator)</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Algoritmo</label>
+            <InputSelect @bind-Value="_formModel.ComparisonMode" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2">
+                @foreach (var algorithm in Enum.GetValues<ComparisonMode>())
+                {
+                    <option value="@algorithm">@Enum.GetName(algorithm)</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Palete</label>
+            <InputSelect @bind-Value="_formModel.SelectedPaletteId" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2">
+                @foreach (var palette in _palettes)
+                {
+                    <option value="@palette.Id">@palette.Name</option>
+                }
+            </InputSelect>
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Largura</label>
+            <InputNumber @bind-Value="_formModel.WidthMultiplier" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Altura</label>
+            <InputNumber @bind-Value="_formModel.HeightMultiplier" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
+        </div>
+
+        @if (_inputImageUrl is not null)
+        {
+            <div class="flex space-x-4">
+                <div>
+                    <h2 class="text-lg font-semibold">Imagem Original</h2>
+                    <img src="@_inputImageUrl" class="border mt-2 max-w-xs" alt="Input Image"/>
+                </div>
+
+                <div>
+                    <h2 class="text-lg font-semibold">Imagem Gerada</h2>
+                    @if (_generatedImageUrl is not null)
+                    {
+                        <img src="@_generatedImageUrl" class="border mt-2 max-w-xs" alt="Output Image"/>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="flex space-x-4">
+            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded" @onclick="() => _generate = false">Gerar Preview</button>
+
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded" @onclick="() => _generate = true">Gerar Mapa</button>
+        </div>
+    </EditForm>
+    @if (_exportUrl != null)
+    {
+        <a id="exportMap" class="btn" href="@_exportUrl" download="map.nbt"
+           role="button" target="=_top">Download</a>
+    }
+}
+
+@code {
+    private string? _inputImageUrl;
+    private string? _generatedImageUrl;
+    private string? _exportUrl;
+    private Image<Rgb24>? _inputImage;
+
+    private List<Palette>? _palettes;
+
+    private readonly FormModel _formModel = new();
+
+    private bool _generate;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = await UserManager.GetUserAsync(authState.User);
+
+        if (user is null) return;
+
+        var dbContext = await DbContextFactory.CreateDbContextAsync();
+        _palettes = await dbContext.Palettes.Where(p => p.UserId == user.Id)
+            .Include(palette => palette.Blocks)
+            .Include(palette => palette.PlaceholderBlock).ToListAsync();
+    }
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        await using var ms = new MemoryStream();
+        await e.File.OpenReadStream().CopyToAsync(ms);
+        var data = ms.ToArray();
+        
+        _inputImage = Image.Load<Rgb24>(data);
+    }
+
+    private async Task<Image<Rgb24>?> ResizeImageAsync()
+    {
+        if (_inputImage is null) return null;
+        
+        var image = _inputImage.Clone();
+        
+        var newWidth = _formModel.WidthMultiplier * 128;
+        var newHeight = _formModel.HeightMultiplier * 128;
+        image.Mutate(x => x.Resize(newWidth, newHeight));
+            
+        var resizedImageStream = new MemoryStream();
+        await image.SaveAsPngAsync(resizedImageStream);
+        _inputImageUrl = ConvertStreamToBase64Url(resizedImageStream.ToArray());
+
+        return image;
+    }
+
+    private async Task OnValidSubmit()
+    {
+        if (_inputImage is null) return;
+
+        IColorComparison colorComparison = _formModel.ComparisonMode switch
+        {
+            ComparisonMode.Rgb => new RgbColorComparison(),
+            ComparisonMode.Cie76 => new Cie76ColorComparison(),
+            ComparisonMode.CieDe2000 => new CieDe2000ColorComparison(),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        IDithering dithering = _formModel.DitheringMode switch
+        {
+            DitheringMode.None => new NoneDithering(),
+            DitheringMode.Atkinson => new AtkinsonDithering(),
+            DitheringMode.FloydSteinberg => new FloydSteinbergDithering(),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        var palette = _palettes!.Find(p => p.Id == _formModel.SelectedPaletteId);
+        if (palette is null) return;
+        
+        var image = await ResizeImageAsync();
+        
+        var ms = new MemoryStream();
+        var generatedImage = dithering.ApplyDithering(image!, palette, colorComparison, _formModel.GeneratorType == GeneratorType.Staircase);
+        await generatedImage.SaveAsPngAsync(ms);
+        _generatedImageUrl = ConvertStreamToBase64Url(ms.ToArray());
+        
+        if (!_generate) return;
+
+        IGenerator generator = _formModel.GeneratorType switch
+        {
+            GeneratorType.Flat => new FlatGenerator(),
+            GeneratorType.Staircase => new StaircaseGenerator(),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+        var generatorOutput = generator.Generate(generatedImage, palette);
+
+        var exporter = new VanillaExporter();
+        var outStream = exporter.SaveAsStream(palette, generatorOutput.Blocks);
+        var outMs = new MemoryStream();
+        await outStream.CopyToAsync(outMs);
+
+        _exportUrl = ConvertStreamToBase64Url(outMs.ToArray(), "application/octet-stream");
+    }
+
+    private static string ConvertStreamToBase64Url(byte[] data, string contentType = "image/png") => $"data:{contentType};base64,{Convert.ToBase64String(data)}";
+
+    private class FormModel
+    {
+        public DitheringMode DitheringMode { get; set; }
+        public ComparisonMode ComparisonMode { get; set; }
+        public GeneratorType GeneratorType { get; set; }
+        public Guid SelectedPaletteId { get; set; }
+        public int WidthMultiplier { get; set; } = 1;
+        public int HeightMultiplier { get; set; } = 1;
+    }
+    
+    private enum GeneratorType
+    {
+        Flat,
+        Staircase
+    }
+}

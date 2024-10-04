@@ -1,0 +1,127 @@
+﻿@page "/blocks"
+@rendermode InteractiveServer
+@using WaxMapArt.Utils
+@using WaxMapArt.Web.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject BlockService BlockService
+@inject NavigationManager NavigationManager
+
+<div class="container mx-auto px-4 py-6">
+    <h1 class="text-3xl font-semibold mb-4">Lista de Blocos</h1>
+
+    <!-- Botão de Adicionar Bloco -->
+    <AuthorizeView>
+        <div class="mb-4 flex justify-end">
+            <button class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" @onclick="NavigateToAddBlock">
+                <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Adicionar Bloco
+            </button>
+        </div>
+    </AuthorizeView>
+
+    @if (_blocks is null)
+    {
+        <div class="text-center text-gray-500">
+            <p>Carregando blocos...</p>
+        </div>
+    }
+    else if (_blocks.Count == 0)
+    {
+        <div class="text-center text-gray-500">
+            <p>Nenhum bloco encontrado.</p>
+        </div>
+    }
+    else
+    {
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white rounded-lg border border-separate border-tools-table-outline border-gray-200">
+                <thead>
+                    <tr class="bg-gray-100">
+                        @foreach (var header in _headers)
+                        {
+                            <th class="text-center px-4 py-2 text-gray-600 font-semibold">
+                                @header
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var block in _blocks)
+                    {
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-4 py-2">
+                                <div class="flex items-center space-x-2">
+                                    <img src="@block.ImageUrl" alt="@block.MinecraftId" class="w-10 h-10 object-cover rounded-md border border-gray-300" />
+                                    <span>@block.MinecraftId</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-2 text-center">
+                                <div class="flex items-center justify-center">
+                                    @{
+                                        var color = ColorUtils.MapIdToInfo(block.MapId).Color.ToHexColor();
+
+                                        <svg class="w-5 h-5 rounded-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" title="@color">
+                                            <circle cx="10" cy="10" r="9" fill="@color"/>
+                                        </svg>
+                                    }
+                                    <span class="ml-2 text-gray-700">@block.MapId</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-2">
+                                @foreach (var prop in block.Properties)
+                                {
+                                    <div class="text-sm text-gray-700">@prop.Key: @prop.Value</div>
+                                }
+                            </td>
+                            <td class="px-4 py-2">
+                                <div class="flex justify-center space-x-4">
+                                    <!-- Editar -->
+                                    <button class="flex items-center space-x-1 text-blue-500 hover:text-blue-700" @onclick="() => NavigateToEdit(block.Id)">
+                                        <i class="text-2xl ri-pencil-line" title="Editar"></i>
+                                        <span>Editar</span>
+                                    </button>
+
+                                    <!-- Deletar -->
+                                    <button class="flex items-center space-x-1 text-red-500 hover:text-red-700" @onclick="() => DeleteBlock(block.Id)">
+                                        <i class="text-2xl ri-delete-bin-2-line" title="Deletar"></i>
+                                        <span>Deletar</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<Block>? _blocks;
+    private readonly List<string> _headers = ["Bloco", "Cor", "Propriedades", "Ações"];
+
+    protected override async Task OnInitializedAsync() => _blocks = await BlockService.GetBlocksAsync();
+
+    private void NavigateToEdit(Guid blockId)
+    {
+        // Redireciona para o EditForm, passando o BlockId na URL
+        NavigationManager.NavigateTo($"/block/{blockId}");
+    }
+
+    // Redireciona para o EditForm em modo de criação
+    private void NavigateToAddBlock()
+    {
+        // Passa um BlockId nulo para criar um novo bloco
+        NavigationManager.NavigateTo("/block");
+    }
+
+    // Excluir o bloco
+    private async Task DeleteBlock(Guid blockId)
+    {
+        await BlockService.DeleteBlockAsync(blockId);
+        _blocks = await BlockService.GetBlocksAsync(); // Atualiza a lista após deletar
+    }
+    
+}

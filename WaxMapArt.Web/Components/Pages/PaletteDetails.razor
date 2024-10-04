@@ -1,0 +1,152 @@
+﻿@page "/palette/{PaletteId:guid?}"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using WaxMapArt.Utils
+@inject NavigationManager NavigationManager
+@inject IDbContextFactory<DatabaseContext> DbContextFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
+<div class="container mx-auto px-4 py-6">
+    <h1 class="text-3xl font-semibold mb-4">@SubmitButtonText Paleta</h1>
+
+    @if (Value is null)
+    {
+        <div class="text-center text-gray-500">
+            <p>Carregando...</p>
+        </div>
+    }
+    else
+    {
+        <EditForm Model="Value" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-4">
+                <label for="name" class="block text-sm font-medium text-gray-700">Nome</label>
+                <InputText id="name" @bind-Value="Value.Name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Bloco Placeholder</label>
+                <InputSelect @bind-Value="Value.PlaceholderBlockId" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2">
+                    @foreach (var block in _blocks)
+                    {
+                        <option value="@block.Id">@block.MinecraftId</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Blocos Selecionados</label>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white rounded-lg border border-separate border-tools-table-outline border-gray-200">
+                        <thead>
+                        <tr class="bg-gray-100">
+                            <th class="text-center px-4 py-2 text-gray-600 font-semibold">Bloco</th>
+                            <th class="text-center px-4 py-2 text-gray-600 font-semibold">Cor</th>
+                            <th class="text-center px-4 py-2 text-gray-600 font-semibold">Selecionar</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var block in _blocks)
+                        {
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="px-4 py-2">
+                                    <div class="flex items-center space-x-2">
+                                        <img src="@block.ImageUrl" alt="@block.MinecraftId" class="w-10 h-10 object-cover rounded-md border border-gray-300" />
+                                        <span>@block.MinecraftId</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-2 h-full flex justify-center items-center">
+                                    @{
+                                        var color = ColorUtils.MapIdToInfo(block.MapId).Color.ToHexColor();
+                                    }
+                                    <svg class="w-5 h-5 rounded-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" title="@color">
+                                        <circle cx="10" cy="10" r="9" fill="@color" stroke="black" />
+                                    </svg>
+                                </td>
+                                <td class="px-4 py-2 text-center">
+                                    <input type="checkbox" class="form-checkbox h-5 w-5 text-indigo-600"
+                                           checked="@IsBlockSelected(block)"
+                                           @onchange="e => ToggleBlockSelection(block, (bool)e.Value!)" />
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">@SubmitButtonText</button>
+        </EditForm>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid? PaletteId { get; set; }
+
+    private Palette? Value { get; set; }
+    private List<Block> _blocks = [];
+
+    private DatabaseContext? _database;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _database = await DbContextFactory.CreateDbContextAsync();
+
+        _blocks = await _database.Blocks.OrderBy(block => block.MapId).ToListAsync();
+            
+        Value = PaletteId.HasValue
+            ? await _database.Palettes
+            .Include(p => p.Blocks)
+            .Include(p => p.PlaceholderBlock)
+            .FirstOrDefaultAsync(p => p.Id == PaletteId)
+            : new Palette
+            {
+                Blocks = [],
+                PlaceholderBlockId = _blocks.First().Id
+            };
+    }
+
+    private bool IsBlockSelected(Block block) => Value?.Blocks.Any(b => b.MinecraftId == block.MinecraftId) ?? false;
+
+    private void ToggleBlockSelection(Block block, bool isSelected)
+    {
+        if (Value is null) return;
+
+        if (isSelected)
+        {
+            if (!IsBlockSelected(block)) Value.Blocks.Add(block);
+            return;
+        }
+        
+        Value.Blocks.RemoveAll(b => b.MinecraftId == block.MinecraftId);
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = await UserManager.GetUserAsync(authState.User);
+        
+        if (user is null) return;
+        
+        Value!.PlaceholderBlock = _blocks.FirstOrDefault(b => b.Id == Value.PlaceholderBlockId)!;
+
+        if (!PaletteId.HasValue)
+        {
+            Value.UserId = user.Id;
+            _database!.Palettes.Add(Value);
+        }
+
+        await _database!.SaveChangesAsync();
+
+        NavigationManager.NavigateTo("/palettes");
+    }
+
+    private string SubmitButtonText => PaletteId.HasValue ? "Atualizar" : "Criar";
+}

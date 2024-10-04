@@ -1,0 +1,141 @@
+﻿@page "/block/{BlockId:guid?}"
+@attribute [Authorize(Roles = "Developer")]
+@rendermode InteractiveServer
+@inject IDbContextFactory<DatabaseContext> DbContextFactory
+@inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using WaxMapArt.Utils
+@using WaxMapArt.Web.Services
+
+<div class="container mx-auto px-4 py-6">
+    <h3 class="text-2xl font-semibold mb-4">@(_isEditMode ? "Editar Bloco" : "Criar Bloco")</h3>
+
+    @if (Value is null)
+    {
+        <div class="text-center text-gray-500">
+            <h1>Carregando...</h1>
+        </div>
+    }
+    else
+    {
+        <EditForm Model="Value" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-4">
+                <label for="minecraftId" class="block text-sm font-medium text-gray-700">Minecraft ID</label>
+                <InputText id="minecraftId" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" @bind-Value="Value.MinecraftId" />
+            </div>
+
+            <div class="mb-4">
+                <label for="mapId" class="block text-sm font-medium text-gray-700">Map ID</label>
+                <div class="flex items-center space-x-4">
+                    <InputNumber id="mapId" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" @bind-Value="Value.MapId" />
+                    
+                    @{
+                        var color = ColorUtils.MapIdToInfo(Value.MapId).Color.ToHexColor();
+                        
+                        <svg class="w-5 h-5 rounded-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" title="@color">
+                            <circle cx="10" cy="10" r="9" fill="@color" />
+                        </svg>
+                    }
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label for="imageUrl" class="block text-sm font-medium text-gray-700">Image URL</label>
+                <InputText id="imageUrl" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" @bind-Value="Value.ImageUrl" />
+            </div>
+
+            <div class="mb-4">
+                <label for="properties" class="block text-sm font-medium text-gray-700">Propriedades (Key: Value)</label>
+
+                <div class="flex space-x-2 mb-2">
+                    <InputText id="properties" class="block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" @bind-Value="_newProperty.Key" placeholder="Property Key" />
+                    <InputText id="propertiesValue" class="block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" @bind-Value="_newProperty.Value" placeholder="Property Value" />
+                    <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" @onclick="AddProperty">Adicionar</button>
+                </div>
+
+                <ul class="space-y-1">
+                    @foreach (var prop in Value.Properties)
+                    {
+                        <li class="flex justify-between items-center border px-2 py-1 rounded-md">
+                            <span>@prop.Key: @prop.Value</span>
+                            <button type="button" class="text-red-500 hover:text-red-700" @onclick="() => RemoveProperty(prop.Key)">Remover</button>
+                        </li>
+                    }
+                </ul>
+            </div>
+            
+            <div class="mb-4">
+                <label for="properties" class="block text-sm font-medium text-gray-700">Propriedades do gerador (Key: Value)</label>
+
+                <ul class="space-y-1">
+                    <li class="flex justify-between items-center border px-2 py-1 rounded-md">
+                        <span>Need Support</span>
+                        <input type="checkbox" class="form-checkbox h-5 w-5 text-indigo-600"
+                               checked="@Value?.NeedSupport" @onchange="args => Value!.NeedSupport = (bool)(args.Value ?? false)" />
+                    </li>
+                </ul>
+            </div>
+
+            <div class="flex space-x-2">
+                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">@SubmitButtonText</button>
+                <button type="button" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" @onclick="GoBack">Cancelar</button>
+            </div>
+        </EditForm>
+    }
+</div>
+
+@code {
+    [Parameter] public Block? Value { get; set; }
+    [Parameter] public Guid? BlockId { get; set; }
+
+    private bool _isEditMode;
+    private BlockProperty _newProperty = new();
+
+    private DatabaseContext? _database;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _database = await DbContextFactory.CreateDbContextAsync();
+        
+        if (BlockId.HasValue)
+        {
+            Value = await _database.Blocks.FirstOrDefaultAsync(b => b.Id == BlockId);
+            _isEditMode = Value is not null;
+        }
+
+        Value ??= new Block();
+    }
+
+    private async void HandleValidSubmit()
+    {
+        if (!BlockId.HasValue)
+            await _database!.Blocks.AddAsync(Value!);
+
+        await _database!.SaveChangesAsync();
+
+        GoBack();
+    }
+
+    private void AddProperty()
+    {
+        if (Value is null || string.IsNullOrWhiteSpace(_newProperty.Key) || string.IsNullOrWhiteSpace(_newProperty.Value)) return;
+        Value.Properties[_newProperty.Key] = _newProperty.Value;
+        _newProperty = new BlockProperty();
+    }
+
+    private void RemoveProperty(string key) => Value?.Properties.Remove(key);
+
+    private void GoBack() => NavigationManager.NavigateTo("/blocks");
+
+    private string SubmitButtonText => _isEditMode ? "Atualizar Bloco" : "Criar Bloco";
+
+    public class BlockProperty
+    {
+        public string Key { get; set; } = string.Empty;
+        public string Value { get; set; } = string.Empty;
+    }
+}
