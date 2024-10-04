@@ -2,8 +2,12 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
 @inject IDbContextFactory<DatabaseContext> DbContextFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
 @inject NavigationManager NavigationManager
 
 <div class="container mx-auto px-4 py-6">
@@ -72,14 +76,20 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = await UserManager.GetUserAsync(authState.User);
+
+        if (user is null) return;
+
         await using var dbContext = await DbContextFactory.CreateDbContextAsync();
-        _palettes = await dbContext.Palettes.Include(p => p.Blocks.OrderBy(block => block.MapId)).ToListAsync();
+        _palettes = await dbContext.Palettes.Where(p => p.UserId == user.Id).Include(p => p.Blocks.OrderBy(block => block.MapId)).ToListAsync();
     }
 
     private async Task DeletePalette(Guid paletteId)
     {
         await using var dbContext = await DbContextFactory.CreateDbContextAsync();
         var palette = await dbContext.Palettes.FindAsync(paletteId);
+        
         if (palette is not null)
         {
             dbContext.Palettes.Remove(palette);
