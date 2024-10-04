@@ -12,7 +12,7 @@ public class StaircaseGenerator : IGenerator
     {
         var blocks = new ConcurrentBag<BlockInfo>();
         var colors = ColorUtils.GetPaletteBlocks(palette, true);
-
+        
         Parallel.For(0, image.Width, x =>
         {
             var row = new BlockInfo[image.Height + 1];
@@ -40,7 +40,7 @@ public class StaircaseGenerator : IGenerator
                     X = x,
                     Y = lastY,
                     Z = y,
-                    Id = blockInfo.Name,
+                    Id = blockInfo.Id,
                     Properties = blockInfo.Properties
                 };
             }

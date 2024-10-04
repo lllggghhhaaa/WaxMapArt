@@ -44,15 +44,14 @@ public static class ColorUtils
                 .ToArray();
     }
     
-    public static List<MapIdInfo> GetPaletteBlocks(Palette palette, bool staircase = false)
+    public static List<BlockData> GetPaletteBlocks(Palette palette, bool staircase = false)
     {
         return staircase
             ? palette.Colors
                 .SelectMany(color =>
                 {
-                    var baseColor = MapIdToInfo(color.MapId);
-                    baseColor.Name = color.Id;
-                    baseColor.Properties = color.Properties;
+                    var baseColor = new BlockData(color.Id, MapIdToInfo(color.MapId).Color, 2,
+                        color.GeneratorProperties, color.Properties);
                     var paletteColor1 = baseColor.Clone();
                     var paletteColor2 = baseColor.Clone();
 
@@ -60,17 +59,12 @@ public static class ColorUtils
                     paletteColor1.Shading = 1;
                     paletteColor2.Color = baseColor.Color.Multiply(M0);
                     paletteColor2.Shading = 0;
-                    
-                    return new[] {paletteColor2, paletteColor1, baseColor};
+
+                    return new[] { paletteColor2, paletteColor1, baseColor };
                 }).ToList()
             : palette.Colors
-                .Select(color =>
-                {
-                    var paletteColor = MapIdToInfo(color.MapId);
-                    paletteColor.Color = paletteColor.Color.Multiply(M1);
-                    paletteColor.Shading = 1;
-                    return paletteColor;
-                }).ToList();
+                .Select(color => new BlockData(color.Id, MapIdToInfo(color.MapId).Color, 1, color.GeneratorProperties,
+                    color.Properties)).ToList();
     }
 
     public static string ToHexColor(this Rgb24 color)
@@ -148,4 +142,16 @@ public static class ColorUtils
             _ => new MapIdInfo(-1, "Unknown", new Rgb24(255, 255, 255))
         };
     }
+}
+
+public struct BlockData(string id, Rgb24 color, byte shading, GeneratorProperties generatorProperties, Dictionary<string, string> properties)
+{
+    public string Id = id;
+    public Rgb24 Color = color;
+    public byte Shading = shading;
+    public Dictionary<string, string> Properties = properties;
+    public GeneratorProperties GeneratorProperties = generatorProperties;
+
+    public BlockData Clone() => new(id: Id, color: Color, shading: Shading, properties: Properties,
+        generatorProperties: GeneratorProperties);
 }

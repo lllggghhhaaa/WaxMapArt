@@ -52,13 +52,9 @@
     {
         var result = await SignInManager.PasswordSignInAsync(Model.Username, Model.Password, Model.RememberMe, false);
         if (result.Succeeded)
-        {
             NavigationManager.NavigateTo("/");
-        }
         else
-        {
             _errorMessage = "Username ou senha invalidos.";
-        }
     }
 
     private class LoginModel
