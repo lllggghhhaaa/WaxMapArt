@@ -113,19 +113,19 @@
             };
     }
 
-    private bool IsBlockSelected(Block block) => Value?.Blocks.Any(b => b.MinecraftId == block.MinecraftId) ?? false;
+    private bool IsBlockSelected(Block block) => Value?.Blocks.Any(b => b.Id == block.Id) ?? false;
 
     private void ToggleBlockSelection(Block block, bool isSelected)
     {
         if (Value is null) return;
-
-        if (isSelected)
+        if (!isSelected && IsBlockSelected(block))
         {
-            if (!IsBlockSelected(block)) Value.Blocks.Add(block);
+            Value.Blocks.Remove(block);
             return;
         }
         
-        Value.Blocks.RemoveAll(b => b.MinecraftId == block.MinecraftId);
+        Value.Blocks.RemoveAll(b => b.MapId == block.MapId);
+        if (!IsBlockSelected(block)) Value.Blocks.Add(block);
     }
 
     private async Task HandleValidSubmit()
