@@ -45,13 +45,15 @@
                     {
                         <tr class="border-b hover:bg-gray-50">
                             <td class="px-4 py-2 text-center">@palette.Name</td>
-                            <td class="px-4 py-2 justify-center flex flex-row">
-                                @foreach (var block in palette.Blocks)
-                                {
-                                    <div class="flex justify-center items-center">
-                                        <img src="@block.ImageUrl" alt="@block.MinecraftId" title="@block.MinecraftId" class="w-10 h-10 object-cover rounded-md border border-gray-300" />
-                                    </div>
-                                }
+                            <td class="px-4 py-2">
+                                <div class="flex flex-row overflow-x-hidden">
+                                    @foreach (var block in palette.Blocks)
+                                    {
+                                        <div class="flex-shrink-0">
+                                            <img src="@block.ImageUrl" alt="@block.MinecraftId" title="@block.MinecraftId" class="w-10 h-10 object-cover rounded-md border border-gray-300" />
+                                        </div>
+                                    }
+                                </div>
                             </td>
                             <td class="px-4 py-2 text-center">
                                 <button class="text-blue-500 hover:text-blue-700" @onclick='() => NavigationManager.NavigateTo($"/palette/{palette.Id}")'>
