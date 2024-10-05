@@ -8,7 +8,7 @@ public class BlockService(IDbContextFactory<DatabaseContext> dbContextFactory)
     public async Task<List<Block>> GetBlocksAsync()
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        return await context.Blocks.OrderBy(block => block.MapId).ToListAsync();
+        return await context.Blocks.OrderBy(block => block.MapId).ThenBy(block => block.MinecraftId).ToListAsync();
     }
 
     public async Task<Block?> GetBlockByIdAsync(Guid blockId)
