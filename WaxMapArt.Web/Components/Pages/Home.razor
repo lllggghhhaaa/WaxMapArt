@@ -1,8 +1,5 @@
 ﻿@page "/"
 @rendermode InteractiveServer
-@using Microsoft.AspNetCore.Components.Authorization
-@using Microsoft.AspNetCore.Identity
-@using Microsoft.EntityFrameworkCore
 @using SixLabors.ImageSharp
 @using SixLabors.ImageSharp.PixelFormats
 @using SixLabors.ImageSharp.Processing
@@ -10,9 +7,6 @@
 @using WaxMapArt.Dithering
 @using WaxMapArt.Exporter
 @using WaxMapArt.Generator
-@inject IDbContextFactory<DatabaseContext> DbContextFactory
-@inject AuthenticationStateProvider AuthenticationStateProvider
-@inject UserManager<ApplicationUser> UserManager
 
 <PageTitle>Home</PageTitle>
 
@@ -122,15 +116,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = await UserManager.GetUserAsync(authState.User);
-
-        if (user is null) return;
-
-        var dbContext = await DbContextFactory.CreateDbContextAsync();
-        _palettes = await dbContext.Palettes.Where(p => p.UserId == user.Id)
-            .Include(palette => palette.Blocks)
-            .Include(palette => palette.PlaceholderBlock).ToListAsync();
+        
     }
 
     private async Task LoadFiles(InputFileChangeEventArgs e)

@@ -1,9 +1,7 @@
 ﻿@page "/signin"
 @using System.ComponentModel.DataAnnotations
-@using Microsoft.AspNetCore.Identity
-@inject UserManager<ApplicationUser> UserManager
-@inject IUserStore<ApplicationUser> UserStore
-@inject SignInManager<ApplicationUser> SignInManager
+@using WaxMapArt.Web.Services
+@inject AuthService Auth
 @inject NavigationManager NavigationManager
 
 <div class="flex items-center justify-center min-h-screen bg-gray-100">
@@ -60,25 +58,20 @@
     {       
         if (Model.Password != Model.ConfirmPassword)
         {
-            _errorMessage = "As senhas não combinam";
+            _errorMessage = "The passwords don't match.";
             return;
         }
 
-        var user = new ApplicationUser();
-
-        await UserStore.SetUserNameAsync(user, Model.Username, CancellationToken.None);
-        var result = await UserManager.CreateAsync(user, Model.Password);
-
-        if (!result.Succeeded)
-        {
-            _errorMessage = "Esse usuário ja existe";
-            return;
-        }
-
-        await UserManager.AddToRoleAsync(user, "User");
+        var result = await Auth.RegisterAsync(Model.Username, Model.Password);
         
-        await SignInManager.SignInAsync(user, Model.RememberMe);
-        NavigationManager.NavigateTo("/");
+        if (result)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            _errorMessage = "vbhssdfasgzdfe wsreasrfgedtdthn vbrfd";
+        }
     }
 
     private class SignInModel

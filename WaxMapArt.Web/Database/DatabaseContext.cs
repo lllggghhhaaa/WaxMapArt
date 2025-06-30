@@ -1,14 +1,15 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace WaxMapArt.Web.Database;
 
-public class DatabaseContext(DbContextOptions<DatabaseContext> options, IConfiguration config) : IdentityDbContext<ApplicationUser>(options)
+public class DatabaseContext(IConfiguration config, ILogger<DatabaseContext> logger) : DbContext
 {
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.UseNpgsql(config["DatabaseConnectionString"]);
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {                               
+        optionsBuilder.UseNpgsql(config["DatabaseConnectionString"]);
+    }
 
+    public DbSet<User> Users { get; set; }
     public DbSet<Block> Blocks { get; set; }
     public DbSet<Palette> Palettes { get; set; }
 
@@ -18,6 +19,10 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options, IConfigu
         
         modelBuilder.Entity<Block>()
             .HasIndex(b => b.MinecraftId)
+            .IsUnique();
+        
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.Name)
             .IsUnique();
 
         modelBuilder.Entity<Palette>()
@@ -30,32 +35,37 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options, IConfigu
             .WithMany()
             .HasForeignKey(p => p.PlaceholderBlockId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<ApplicationUser>()
-            .HasMany(u => u.Palettes)
-            .WithOne(p => p.User)
-            .HasForeignKey(p => p.UserId);
         
-        modelBuilder.Entity<IdentityUserLogin<string>>(entity =>
-        {
-            entity.HasKey(l => new { l.LoginProvider, l.ProviderKey });
-        });
-
-        modelBuilder.Entity<IdentityUserRole<string>>(entity =>
-        {
-            entity.HasKey(r => new { r.UserId, r.RoleId });
-        });
-
-        modelBuilder.Entity<IdentityUserToken<string>>(entity =>
-        {
-            entity.HasKey(t => new { t.UserId, t.LoginProvider, t.Name });
-        });
+        modelBuilder.Entity<Palette>()
+            .HasOne(p => p.User)
+            .WithMany(u => u.Palettes)
+            .HasForeignKey(p => p.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
 
+public class User
+{
+    public Guid Id { get; set; } = Guid.CreateVersion7();
+    public string? Name { get; set; }
+    public string? ImageUrl { get; set; }
+    public UserRole Role { get; set; } = UserRole.User;
+    
+    public byte[] PasswordHash { get; set; }
+    public byte[] PasswordSalt { get; set; }
+
+    public List<Palette> Palettes { get; set; } = [];
+}
+
+public enum UserRole
+{
+    User,
+    Developer,
+}
+
+
 public class Block
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.None)]
     public Guid Id { get; set; } = Guid.CreateVersion7();
     public string MinecraftId { get; set; }
     public int MapId { get; set; }
@@ -80,7 +90,6 @@ public class Block
 
 public class Palette
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.None)]
     public Guid Id { get; set; } = Guid.CreateVersion7();
     public string Name { get; set; }
 
@@ -89,8 +98,8 @@ public class Palette
 
     public List<Block> Blocks { get; set; } = [];
 
-    public string UserId { get; set; }
-    public ApplicationUser User { get; set; }
+    public Guid UserId { get; set; }
+    public User User { get; set; }
 
     public static implicit operator WaxMapArt.Palette(Palette value) => new()
     {
@@ -98,9 +107,4 @@ public class Palette
         PlaceholderColor = value.PlaceholderBlock.ToPaletteColor(),
         Colors = value.Blocks.Select(b => b.ToPaletteColor()).ToArray()
     };
-}
-
-public class ApplicationUser : IdentityUser
-{
-    public List<Palette> Palettes { get; set; } = [];
 }

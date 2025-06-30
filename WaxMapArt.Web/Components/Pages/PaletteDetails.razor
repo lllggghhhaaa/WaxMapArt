@@ -9,7 +9,6 @@
 @inject NavigationManager NavigationManager
 @inject IDbContextFactory<DatabaseContext> DbContextFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject UserManager<ApplicationUser> UserManager
 
 <div class="container mx-auto px-4 py-6">
     <h1 class="text-3xl font-semibold mb-4">@SubmitButtonText Paleta</h1>
@@ -100,6 +99,8 @@
         _database = await DbContextFactory.CreateDbContextAsync();
 
         _blocks = await _database.Blocks.OrderBy(block => block.MapId).ToListAsync();
+
+        Console.WriteLine(PaletteId);
             
         Value = PaletteId.HasValue
             ? await _database.Palettes
@@ -109,7 +110,7 @@
             : new Palette
             {
                 Blocks = [],
-                PlaceholderBlockId = _blocks.First().Id
+                PlaceholderBlockId = _blocks.FirstOrDefault()?.Id ?? Guid.Empty
             };
     }
 
@@ -130,22 +131,7 @@
 
     private async Task HandleValidSubmit()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = await UserManager.GetUserAsync(authState.User);
         
-        if (user is null) return;
-        
-        Value!.PlaceholderBlock = _blocks.FirstOrDefault(b => b.Id == Value.PlaceholderBlockId)!;
-
-        if (!PaletteId.HasValue)
-        {
-            Value.UserId = user.Id;
-            _database!.Palettes.Add(Value);
-        }
-
-        await _database!.SaveChangesAsync();
-
-        NavigationManager.NavigateTo("/palettes");
     }
 
     private string SubmitButtonText => PaletteId.HasValue ? "Atualizar" : "Criar";

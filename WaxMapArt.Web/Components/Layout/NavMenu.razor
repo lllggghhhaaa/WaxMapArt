@@ -1,8 +1,6 @@
 ﻿@using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
-@using Microsoft.AspNetCore.Identity
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject UserManager<ApplicationUser> UserManager
 
 <div class="bg-white shadow-md">
     <div class="container mx-auto flex justify-between items-center py-4">
@@ -60,5 +58,7 @@
         
         _userName = authState.User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Name)?.Value ?? "Guest";
         _isDev = authState.User.Claims.Any(claim => claim is { Type: ClaimTypes.Role, Value: "Developer" });
+        
+        StateHasChanged();
     }
 }

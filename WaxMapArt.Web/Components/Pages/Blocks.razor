@@ -1,15 +1,12 @@
 ﻿@page "/blocks"
 @rendermode InteractiveServer
 @using WaxMapArt.Utils
-@using WaxMapArt.Web.Services
 @using Microsoft.AspNetCore.Components.Authorization
-@inject BlockService BlockService
 @inject NavigationManager NavigationManager
 
 <div class="container mx-auto px-4 py-6">
     <h1 class="text-3xl font-semibold mb-4">Lista de Blocos</h1>
 
-    <!-- Botão de Adicionar Bloco -->
     <AuthorizeView>
         <div class="mb-4 flex justify-end">
             <button class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" @onclick="NavigateToAddBlock">
@@ -77,13 +74,11 @@
                             </td>
                             <td class="px-4 py-2">
                                 <div class="flex justify-center space-x-4">
-                                    <!-- Editar -->
                                     <button class="flex items-center space-x-1 text-blue-500 hover:text-blue-700" @onclick="() => NavigateToEdit(block.Id)">
                                         <i class="text-2xl ri-pencil-line" title="Editar"></i>
                                         <span>Editar</span>
                                     </button>
 
-                                    <!-- Deletar -->
                                     <button class="flex items-center space-x-1 text-red-500 hover:text-red-700" @onclick="() => DeleteBlock(block.Id)">
                                         <i class="text-2xl ri-delete-bin-2-line" title="Deletar"></i>
                                         <span>Deletar</span>
@@ -102,26 +97,23 @@
     private List<Block>? _blocks;
     private readonly List<string> _headers = ["Bloco", "Cor", "Propriedades", "Ações"];
 
-    protected override async Task OnInitializedAsync() => _blocks = await BlockService.GetBlocksAsync();
+    protected override Task OnInitializedAsync()
+    {
+        return base.OnInitializedAsync();
+    }
 
     private void NavigateToEdit(Guid blockId)
     {
-        // Redireciona para o EditForm, passando o BlockId na URL
         NavigationManager.NavigateTo($"/block/{blockId}");
     }
 
-    // Redireciona para o EditForm em modo de criação
     private void NavigateToAddBlock()
     {
-        // Passa um BlockId nulo para criar um novo bloco
         NavigationManager.NavigateTo("/block");
     }
 
-    // Excluir o bloco
     private async Task DeleteBlock(Guid blockId)
     {
-        await BlockService.DeleteBlockAsync(blockId);
-        _blocks = await BlockService.GetBlocksAsync(); // Atualiza a lista após deletar
+        
     }
-    
 }
