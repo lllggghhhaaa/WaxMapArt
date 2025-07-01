@@ -1,5 +1,8 @@
 ﻿@page "/"
 @rendermode InteractiveServer
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
 @using SixLabors.ImageSharp
 @using SixLabors.ImageSharp.PixelFormats
 @using SixLabors.ImageSharp.Processing
@@ -7,6 +10,10 @@
 @using WaxMapArt.Dithering
 @using WaxMapArt.Exporter
 @using WaxMapArt.Generator
+@using WaxMapArt.Utils
+@inject NavigationManager NavigationManager
+@inject IDbContextFactory<DatabaseContext> DbContextFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Home</PageTitle>
 
@@ -103,6 +110,8 @@ else
 }
 
 @code {
+    private DatabaseContext? _database;
+
     private string? _inputImageUrl;
     private string? _generatedImageUrl;
     private string? _exportUrl;
@@ -116,16 +125,38 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        _database = await DbContextFactory.CreateDbContextAsync();
         
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated != true)
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+        var userId = Guid.Parse(authState.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty);
+        if (userId == Guid.Empty)
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+        
+        _palettes = await _database.Palettes
+            .Include(p => p.Blocks)
+            .Include(p => p.PlaceholderBlock)
+            .Where(p => p.UserId == userId)
+            .ToListAsync();
     }
 
     private async Task LoadFiles(InputFileChangeEventArgs e)
     {
+        const long maxFileSize = 25 * 1024 * 1024;
+
         await using var ms = new MemoryStream();
-        await e.File.OpenReadStream().CopyToAsync(ms);
+        await e.File.OpenReadStream(maxFileSize).CopyToAsync(ms);
         var data = ms.ToArray();
         
         _inputImage = Image.Load<Rgb24>(data);
+        StateHasChanged();
     }
 
     private async Task<Image<Rgb24>?> ResizeImageAsync()
@@ -148,7 +179,7 @@ else
     private async Task OnValidSubmit()
     {
         if (_inputImage is null) return;
-
+        
         IColorComparison colorComparison = _formModel.ComparisonMode switch
         {
             ComparisonMode.Rgb => new RgbColorComparison(),
