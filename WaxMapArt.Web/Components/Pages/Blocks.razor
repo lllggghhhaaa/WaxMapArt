@@ -2,7 +2,9 @@
 @rendermode InteractiveServer
 @using WaxMapArt.Utils
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
 @inject NavigationManager NavigationManager
+@inject IDbContextFactory<DatabaseContext> DbContextFactory
 
 <div class="container mx-auto px-4 py-6">
     <h1 class="text-3xl font-semibold mb-4">Lista de Blocos</h1>
@@ -94,12 +96,17 @@
 </div>
 
 @code {
+    private DatabaseContext? _database;
     private List<Block>? _blocks;
     private readonly List<string> _headers = ["Bloco", "Cor", "Propriedades", "Ações"];
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        return base.OnInitializedAsync();
+        _database = await DbContextFactory.CreateDbContextAsync();
+
+        _blocks = await _database.Blocks
+            .OrderBy(block => block.MapId)
+            .ToListAsync();
     }
 
     private void NavigateToEdit(Guid blockId)
@@ -112,8 +119,18 @@
         NavigationManager.NavigateTo("/block");
     }
 
-    private async Task DeleteBlock(Guid blockId)
+    private async Task<bool> DeleteBlock(Guid blockId)
     {
+        if (_database is null)
+            return false;
         
+        var block = await _database.Blocks.FindAsync(blockId);
+        if (block is null)
+            return false;
+        
+        _database.Blocks.Remove(block);
+        await _database.SaveChangesAsync();
+        _blocks?.Remove(block);
+        return true;
     }
 }
