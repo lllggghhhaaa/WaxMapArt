@@ -1,6 +1,7 @@
 ﻿@page "/palettes"
 @attribute [Authorize]
 @rendermode InteractiveServer
+@using System.Security.Claims
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Identity
@@ -73,12 +74,27 @@
 </div>
 
 @code {
+    private DatabaseContext? _database;
     private List<Palette>? _palettes = [];
 
     protected override async Task OnInitializedAsync()
     {
+        _database = await DbContextFactory.CreateDbContextAsync();
         
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userId = Guid.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty);
+    
+        if (userId == Guid.Empty)
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+    
+        _database = await DbContextFactory.CreateDbContextAsync();
+        _palettes = await _database.Palettes.Where(palette => palette.UserId == userId).Include(palette => palette.Blocks).ToListAsync();
     }
+
 
     private async Task DeletePalette(Guid paletteId)
     {
@@ -89,7 +105,7 @@
         {
             dbContext.Palettes.Remove(palette);
             await dbContext.SaveChangesAsync();
-            _palettes = await dbContext.Palettes.Include(p => p.Blocks).ToListAsync();
+            _palettes?.Remove(palette);
         }
     }
 

@@ -1,6 +1,7 @@
 ﻿@page "/palette/{PaletteId:guid?}"
 @attribute [Authorize]
 @rendermode InteractiveServer
+@using System.Security.Claims
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Identity
@@ -99,8 +100,6 @@
         _database = await DbContextFactory.CreateDbContextAsync();
 
         _blocks = await _database.Blocks.OrderBy(block => block.MapId).ToListAsync();
-
-        Console.WriteLine(PaletteId);
             
         Value = PaletteId.HasValue
             ? await _database.Palettes
@@ -131,7 +130,38 @@
 
     private async Task HandleValidSubmit()
     {
+        if (_database is null || Value is null) return;
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userId = Guid.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty);
         
+        if (userId == Guid.Empty)
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+        
+        Value.UserId = userId;
+
+        if (PaletteId.HasValue)
+        {
+            var existingPalette = await _database.Palettes
+                .Include(p => p.Blocks)
+                .FirstOrDefaultAsync(p => p.Id == PaletteId);
+            if (existingPalette != null)
+            {
+                existingPalette.Name = Value.Name;
+                existingPalette.PlaceholderBlockId = Value.PlaceholderBlockId;
+                existingPalette.Blocks = Value.Blocks;
+            }
+        }
+        else
+        { 
+            await _database.Palettes.AddAsync(Value);
+        }
+
+        await _database.SaveChangesAsync();
+        NavigationManager.NavigateTo("/palettes");
     }
 
     private string SubmitButtonText => PaletteId.HasValue ? "Atualizar" : "Criar";
