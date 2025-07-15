@@ -67,15 +67,90 @@ else
                 }
             </InputSelect>
         </div>
-        
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Largura</label>
-            <InputNumber @bind-Value="_formModel.WidthMultiplier" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
+
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Largura (mapas)</label>
+                <InputNumber @bind-Value="_formModel.WidthMultiplier" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Altura (mapas)</label>
+                <InputNumber @bind-Value="_formModel.HeightMultiplier" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
+            </div>
         </div>
 
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Altura</label>
-            <InputNumber @bind-Value="_formModel.HeightMultiplier" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
+        <div class="bg-gray-50 p-4 rounded-md w-full">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Processamento de Imagem</h3>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Tipo de Redimensionamento</label>
+                <InputSelect @bind-Value="_formModel.ResizeMode" @bind-Value:after="OnResizeModeChanged" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2">
+                    @foreach (var mode in Enum.GetValues<ResizeType>())
+                    {
+                        <option value="@mode">@GetResizeModeDisplayName(mode)</option>
+                    }
+                </InputSelect>
+            </div>
+
+            @if (_formModel.ResizeMode == ResizeType.Crop)
+            {
+                <div class="mb-4 p-3 bg-blue-50 rounded-md">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Offset de Corte (centralizado)</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs text-gray-600">Offset X</label>
+                            <InputNumber @bind-Value="_formModel.CropOffsetX" class="block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600">Offset Y</label>
+                            <InputNumber @bind-Value="_formModel.CropOffsetY" class="block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Valores positivos movem o corte para direita/baixo, negativos para esquerda/cima</p>
+                </div>
+            }
+
+            @if (_formModel.ResizeMode == ResizeType.Pad)
+            {
+                <div class="mb-4 p-3 bg-green-50 rounded-md">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Cor de Preenchimento</label>
+                    <input type="color" @bind="_formModel.PadColor" class="w-full h-10 border border-gray-300 rounded-md" />
+                </div>
+            }
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Saturação</label>
+                    <div class="flex items-center space-x-2">
+                        <InputNumber @bind-Value="_formModel.Saturation" step="0.1" min="0" max="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
+                        <span class="text-sm text-gray-600">(@_formModel.Saturation.ToString("F1"))</span>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Brilho</label>
+                    <div class="flex items-center space-x-2">
+                        <InputNumber @bind-Value="_formModel.Brightness" step="0.1" min="0" max="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
+                        <span class="text-sm text-gray-600">(@_formModel.Brightness.ToString("F1"))</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Contraste</label>
+                    <div class="flex items-center space-x-2">
+                        <InputNumber @bind-Value="_formModel.Contrast" step="0.1" min="0" max="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
+                        <span class="text-sm text-gray-600">(@_formModel.Contrast.ToString("F1"))</span>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Desfoque (Blur)</label>
+                    <div class="flex items-center space-x-2">
+                        <InputNumber @bind-Value="_formModel.BlurRadius" step="0.1" min="0" max="10" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
+                        <span class="text-sm text-gray-600">(@_formModel.BlurRadius.ToString("F1"))</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         @if (_inputImageUrl is not null)
@@ -84,13 +159,18 @@ else
                 <div>
                     <h2 class="text-lg font-semibold">Imagem Original</h2>
                     <img src="@_inputImageUrl" class="border mt-2 max-w-xs" alt="Input Image"/>
+                    @if (_inputImage is not null)
+                    {
+                        <p class="text-sm text-gray-600 mt-1">Tamanho: @_inputImage.Width x @_inputImage.Height</p>
+                    }
                 </div>
 
                 <div>
-                    <h2 class="text-lg font-semibold">Imagem Gerada</h2>
+                    <h2 class="text-lg font-semibold">Imagem Processada</h2>
                     @if (_generatedImageUrl is not null)
                     {
                         <img src="@_generatedImageUrl" class="border mt-2 max-w-xs" alt="Output Image"/>
+                        <p class="text-sm text-gray-600 mt-1">Tamanho final: @(_formModel.WidthMultiplier * 128) x @(_formModel.HeightMultiplier * 128)</p>
                     }
                 </div>
             </div>
@@ -159,19 +239,86 @@ else
         StateHasChanged();
     }
 
-    private async Task<Image<Rgb24>?> ResizeImageAsync()
+    private async Task<Image<Rgb24>?> ProcessImageAsync()
     {
         if (_inputImage is null) return null;
         
         var image = _inputImage.Clone();
         
-        var newWidth = _formModel.WidthMultiplier * 128;
-        var newHeight = _formModel.HeightMultiplier * 128;
-        image.Mutate(x => x.Resize(newWidth, newHeight));
+        if (_formModel.Saturation != 1.0f || _formModel.Brightness != 1.0f || _formModel.Contrast != 1.0f || _formModel.BlurRadius > 0)
+        {
+            image.Mutate(x => x
+                .Saturate(_formModel.Saturation)
+                .Brightness(_formModel.Brightness)
+                .Contrast(_formModel.Contrast));
+                
+            if (_formModel.BlurRadius > 0)
+            {
+                image.Mutate(x => x.GaussianBlur(_formModel.BlurRadius));
+            }
+        }
+
+        var targetWidth = _formModel.WidthMultiplier * 128;
+        var targetHeight = _formModel.HeightMultiplier * 128;
+        
+        var resizeOptions = new ResizeOptions
+        {
+            Size = new Size(targetWidth, targetHeight)
+        };
+
+        switch (_formModel.ResizeMode)
+        {
+            case ResizeType.Crop:
+                resizeOptions.Mode = ResizeMode.Crop;
+                var sourceAspect = (float)image.Width / image.Height;
+                var targetAspect = (float)targetWidth / targetHeight;
+                
+                int cropWidth, cropHeight, cropX, cropY;
+                
+                if (sourceAspect > targetAspect)
+                {
+                    cropHeight = image.Height;
+                    cropWidth = (int)(image.Height * targetAspect);
+                    cropX = (image.Width - cropWidth) / 2 + _formModel.CropOffsetX;
+                    cropY = _formModel.CropOffsetY;
+                }
+                else
+                {
+                    cropWidth = image.Width;
+                    cropHeight = (int)(image.Width / targetAspect);
+                    cropX = _formModel.CropOffsetX;
+                    cropY = (image.Height - cropHeight) / 2 + _formModel.CropOffsetY;
+                }
+                
+                cropX = Math.Max(0, Math.Min(cropX, image.Width - cropWidth));
+                cropY = Math.Max(0, Math.Min(cropY, image.Height - cropHeight));
+                
+                var cropRect = new Rectangle(cropX, cropY, cropWidth, cropHeight);
+                image.Mutate(x => x.Crop(cropRect));
+                
+                image.Mutate(x => x.Resize(targetWidth, targetHeight));
+                break;
+                
+            case ResizeType.Pad:
+                resizeOptions.Mode = ResizeMode.Pad;
+                var padColor = Color.ParseHex(_formModel.PadColor);
+                resizeOptions.PadColor = padColor;
+                image.Mutate(x => x.Resize(resizeOptions));
+                break;
+                
+           case ResizeType.Min:
+                resizeOptions.Mode = ResizeMode.Min;
+                image.Mutate(x => x.Resize(resizeOptions));
+                break;
+           case ResizeType.Max:
+                resizeOptions.Mode = ResizeMode.Max;
+                image.Mutate(x => x.Resize(resizeOptions));
+                break;
+        }
             
-        var resizedImageStream = new MemoryStream();
-        await image.SaveAsPngAsync(resizedImageStream);
-        _inputImageUrl = ConvertStreamToBase64Url(resizedImageStream.ToArray());
+        var processedImageStream = new MemoryStream();
+        await image.SaveAsPngAsync(processedImageStream);
+        _inputImageUrl = ConvertStreamToBase64Url(processedImageStream.ToArray());
 
         return image;
     }
@@ -193,13 +340,14 @@ else
             DitheringMode.None => new NoneDithering(),
             DitheringMode.Atkinson => new AtkinsonDithering(),
             DitheringMode.FloydSteinberg => new FloydSteinbergDithering(),
+            DitheringMode.JarvisJudiceNinke => new JarvisJudiceNinkeDithering(),
             _ => throw new ArgumentOutOfRangeException()
         };
 
         var palette = _palettes!.Find(p => p.Id == _formModel.SelectedPaletteId);
         if (palette is null) return;
         
-        var image = await ResizeImageAsync();
+        var image = await ProcessImageAsync();
         
         var ms = new MemoryStream();
         var generatedImage = dithering.ApplyDithering(image!, palette, colorComparison, _formModel.GeneratorType == GeneratorType.Staircase);
@@ -224,6 +372,25 @@ else
         _exportUrl = ConvertStreamToBase64Url(outMs.ToArray(), "application/octet-stream");
     }
 
+    private void OnResizeModeChanged()
+    {
+        _formModel.CropOffsetX = 0;
+        _formModel.CropOffsetY = 0;
+        _formModel.PadColor = "#FFFFFF";
+        StateHasChanged();
+    }
+
+    private string GetResizeModeDisplayName(ResizeType mode) =>
+        mode switch
+        {
+            ResizeType.Stretch => "Esticar",
+            ResizeType.Crop => "Cortar (Centralizado)",
+            ResizeType.Pad => "Preenchimento",
+            ResizeType.Max => "Máximo",
+            ResizeType.Min => "Mínimo",
+            _ => mode.ToString()
+        };
+
     private static string ConvertStreamToBase64Url(byte[] data, string contentType = "image/png") => $"data:{contentType};base64,{Convert.ToBase64String(data)}";
 
     private class FormModel
@@ -234,11 +401,29 @@ else
         public Guid SelectedPaletteId { get; set; }
         public int WidthMultiplier { get; set; } = 1;
         public int HeightMultiplier { get; set; } = 1;
+        
+        public ResizeType ResizeMode { get; set; } = ResizeType.Crop;
+        public int CropOffsetX { get; set; } = 0;
+        public int CropOffsetY { get; set; } = 0;
+        public string PadColor { get; set; } = "#FFFFFF";
+        public float Saturation { get; set; } = 1.0f;
+        public float Brightness { get; set; } = 1.0f;
+        public float Contrast { get; set; } = 1.0f;
+        public float BlurRadius { get; set; } = 0.0f;
     }
     
     private enum GeneratorType
     {
         Flat,
         Staircase
+    }
+
+    private enum ResizeType
+    {
+        Stretch,
+        Pad,
+        Min,
+        Max,
+        Crop,
     }
 }

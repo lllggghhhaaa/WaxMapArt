@@ -14,4 +14,5 @@ public enum DitheringMode
     None,
     Atkinson,
     FloydSteinberg,
+    JarvisJudiceNinke
 }
