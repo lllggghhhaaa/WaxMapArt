@@ -1,0 +1,21 @@
+﻿@implements IDisposable
+
+@code {
+    [CascadingParameter] private PrelineNavCard? Parent { get; set; }
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string? Id { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (Parent is null)
+            throw new InvalidOperationException("NavigationCardTab should have a NavigationCard as a parent component.");
+
+        if (string.IsNullOrEmpty(Id))
+            Id = Guid.NewGuid().ToString("N")[..8];
+
+        Parent.AddTab(this);
+    }
+
+    public void Dispose() => Parent?.RemoveTab(this);
+}

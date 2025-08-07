@@ -1,0 +1,403 @@
+﻿@typeparam TValue where TValue : struct, IComparable, IConvertible, IFormattable
+@using System.Globalization
+
+<div class="@GetContainerClasses()" data-hs-input-number="">
+    @if (Variant == InputNumberVariant.Mini)
+    {
+        <div class="flex items-center gap-x-1.5">
+            <button type="button" 
+                    class="size-6 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800" 
+                    tabindex="-1" 
+                    aria-label="Decrease" 
+                    disabled="@IsDecrementDisabled()"
+                    @onclick="DecrementValue">
+                <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14"></path>
+                </svg>
+            </button>
+            
+            <input @ref="_inputElement"
+                   class="p-0 w-6 bg-transparent border-0 text-gray-800 text-center focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none dark:text-white" 
+                   style="-moz-appearance: textfield;" 
+                   type="number" 
+                   aria-label="@Label"
+                   aria-invalid="@(!IsValidValue(_currentInputText, out _))"
+                   value="@GetFormattedValue()" 
+                   min="@GetFormattedValue(Min)"
+                   max="@GetFormattedValue(Max)"
+                   step="@GetFormattedValue(Step)"
+                   disabled="@Disabled"
+                   @oninput="OnInputTextChanged"
+                   @onchange="OnInputChange"
+                   @onblur="OnFocusOut" />
+            
+            <button type="button" 
+                    class="size-6 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800" 
+                    tabindex="-1" 
+                    aria-label="Increase" 
+                    disabled="@IsIncrementDisabled()"
+                    @onclick="IncrementValue">
+                <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14"></path>
+                    <path d="M12 5v14"></path>
+                </svg>
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="w-full flex justify-between items-center gap-x-1">
+            @if (Variant == InputNumberVariant.Horizontal)
+            {
+                <span class="py-2.5 sm:py-3 px-4 inline-flex items-center min-w-fit w-full border border-gray-200 bg-gray-50 sm:text-sm text-gray-500 -mt-px -ms-px first:rounded-t-lg last:rounded-b-lg sm:w-auto sm:first:rounded-s-lg sm:mt-0 sm:first:ms-0 sm:first:rounded-se-none sm:last:rounded-es-none sm:last:rounded-e-lg dark:bg-neutral-700 dark:border-neutral-700 dark:text-neutral-400">@Label</span>
+            }
+            
+            <div class="grow py-2 px-3">
+                @if (Variant == InputNumberVariant.Vertical && !string.IsNullOrEmpty(Label))
+                {
+                    <span class="block text-xs text-gray-500 dark:text-neutral-400">
+                        @Label
+                    </span>
+                }
+                <input @ref="_inputElement"
+                       class="w-full p-0 bg-transparent border-0 text-gray-800 focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none dark:text-white" 
+                       style="-moz-appearance: textfield;" 
+                       type="number" 
+                       aria-label="@Label"
+                       aria-invalid="@(!IsValidValue(_currentInputText, out _))"
+                       value="@GetFormattedValue()" 
+                       min="@GetFormattedValue(Min)"
+                       max="@GetFormattedValue(Max)"
+                       step="@GetFormattedValue(Step)"
+                       disabled="@Disabled"
+                       placeholder="@Placeholder"
+                       @oninput="OnInputTextChanged"
+                       @onchange="OnInputChange"
+                       @onblur="OnFocusOut" />
+            </div>
+            
+            @if (Variant == InputNumberVariant.Vertical)
+            {
+                <div class="flex flex-col -gap-y-px divide-y divide-gray-200 border-s border-gray-200 dark:divide-neutral-700 dark:border-neutral-700">
+                    <button type="button" 
+                            class="size-7 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-se-lg bg-gray-50 text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:text-white dark:hover:bg-neutral-700 dark:focus:bg-neutral-700" 
+                            aria-label="Increase" 
+                            disabled="@IsIncrementDisabled()"
+                            @onclick="IncrementValue">
+                        <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14"></path>
+                            <path d="M12 5v14"></path>
+                        </svg>
+                    </button>
+                    <button type="button" 
+                            class="size-7 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-ee-lg bg-gray-50 text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:text-white dark:hover:bg-neutral-700 dark:focus:bg-neutral-700" 
+                            aria-label="Decrease" 
+                            disabled="@IsDecrementDisabled()"
+                            @onclick="DecrementValue">
+                        <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14"></path>
+                        </svg>
+                    </button>
+                </div>
+            }
+            else if (Variant == InputNumberVariant.Horizontal)
+            {
+                <div class="flex items-center -gap-y-px divide-x divide-gray-200 border-s border-gray-200 dark:divide-neutral-700 dark:border-neutral-700">
+                    <button type="button" 
+                            class="size-10 inline-flex justify-center items-center gap-x-2 text-sm font-medium bg-white text-gray-800 hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800" 
+                            aria-label="Decrease" 
+                            disabled="@IsDecrementDisabled()"
+                            @onclick="DecrementValue">
+                        <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14"></path>
+                        </svg>
+                    </button>
+                    <button type="button" 
+                            class="size-10 inline-flex justify-center items-center gap-x-2 text-sm font-medium last:rounded-e-lg bg-white text-gray-800 hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800" 
+                            aria-label="Increase" 
+                            disabled="@IsIncrementDisabled()"
+                            @onclick="IncrementValue">
+                        <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14"></path>
+                            <path d="M12 5v14"></path>
+                        </svg>
+                    </button>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private ElementReference _inputElement;
+    private TValue _previousValidValue;
+    private string _currentInputText = string.Empty;
+
+    [Parameter] public TValue Value { get; set; }
+    [Parameter] public EventCallback<TValue> ValueChanged { get; set; }
+    [Parameter] public InputNumberVariant Variant { get; set; } = InputNumberVariant.Vertical;
+    [Parameter] public TValue Min { get; set; }
+    [Parameter] public TValue Max { get; set; }
+    [Parameter] public TValue Step { get; set; }
+    [Parameter] public int DecimalPlaces { get; set; } = 1;
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public string Label { get; set; } = string.Empty;
+    [Parameter] public string Placeholder { get; set; } = string.Empty;
+    [Parameter] public string CssClass { get; set; } = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        if (EqualityComparer<TValue>.Default.Equals(Value, default))
+        {
+            Value = GetDefaultValue();
+        }
+        
+        if (EqualityComparer<TValue>.Default.Equals(Min, default))
+        {
+            Min = GetMinValue();
+        }
+        
+        if (EqualityComparer<TValue>.Default.Equals(Max, default))
+        {
+            Max = GetMaxValue();
+        }
+        
+        if (EqualityComparer<TValue>.Default.Equals(Step, default))
+        {
+            Step = GetDefaultStep();
+        }
+        
+        _currentInputText = GetFormattedValue();
+        _previousValidValue = Value;
+    }
+
+    private TValue GetDefaultValue()
+    {
+        return (TValue)Convert.ChangeType(0, typeof(TValue));
+    }
+
+    private TValue GetMinValue()
+    {
+        if (typeof(TValue) == typeof(int)) return (TValue)(object)int.MinValue;
+        if (typeof(TValue) == typeof(float)) return (TValue)(object)float.MinValue;
+        if (typeof(TValue) == typeof(double)) return (TValue)(object)double.MinValue;
+        if (typeof(TValue) == typeof(decimal)) return (TValue)(object)decimal.MinValue;
+        return default;
+    }
+
+    private TValue GetMaxValue()
+    {
+        if (typeof(TValue) == typeof(int)) return (TValue)(object)int.MaxValue;
+        if (typeof(TValue) == typeof(float)) return (TValue)(object)float.MaxValue;
+        if (typeof(TValue) == typeof(double)) return (TValue)(object)double.MaxValue;
+        if (typeof(TValue) == typeof(decimal)) return (TValue)(object)decimal.MaxValue;
+        return default;
+    }
+
+    private TValue GetDefaultStep()
+    {
+        if (typeof(TValue) == typeof(int)) return (TValue)(object)1;
+        if (typeof(TValue) == typeof(float)) return (TValue)(object)0.1f;
+        if (typeof(TValue) == typeof(double)) return (TValue)(object)0.1;
+        if (typeof(TValue) == typeof(decimal)) return (TValue)(object)0.1m;
+        return default;
+    }
+
+    private string GetFormattedValue(TValue value = default)
+    {
+        if (EqualityComparer<TValue>.Default.Equals(value, default))
+            value = Value;
+
+        var format = DecimalPlaces > 0 ? $"F{DecimalPlaces}" : "0";
+
+        try
+        {
+            return string.Format(CultureInfo.InvariantCulture, $"{{0:{format}}}", value)
+                .TrimEnd('0').TrimEnd('.');
+        }
+        catch
+        {
+            return value.ToString() ?? "0";
+        }
+    }
+
+    private bool IsValidValue(string stringValue, out TValue parsedValue)
+    {
+        parsedValue = default;
+        
+        if (string.IsNullOrWhiteSpace(stringValue))
+            return false;
+
+        try
+        {
+            var value = (TValue)Convert.ChangeType(stringValue, typeof(TValue), CultureInfo.InvariantCulture);
+            
+            // Verifica limites
+            if (value.CompareTo(Min) < 0)
+                value = Min;
+            else if (value.CompareTo(Max) > 0)
+                value = Max;
+
+            parsedValue = RoundValue(value);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private async Task RestoreValidValue()
+    {
+        Value = _previousValidValue;
+        _currentInputText = GetFormattedValue();
+        await _inputElement.FocusAsync();
+        StateHasChanged();
+    }
+
+    private string GetContainerClasses()
+    {
+        var baseClasses = Variant switch
+        {
+            InputNumberVariant.Vertical => "bg-white border border-gray-200 rounded-lg dark:bg-neutral-900 dark:border-neutral-700 w-full",
+            InputNumberVariant.Horizontal => "bg-white border border-gray-200 rounded-lg dark:bg-neutral-900 dark:border-neutral-700 w-full",
+            InputNumberVariant.Mini => "py-2 px-3 inline-block bg-white border border-gray-200 rounded-lg dark:bg-neutral-900 dark:border-neutral-700",
+            _ => "bg-white border border-gray-200 rounded-lg dark:bg-neutral-900 dark:border-neutral-700"
+        };
+
+        return string.IsNullOrEmpty(CssClass) ? baseClasses : $"{baseClasses} {CssClass}";
+    }
+
+    private bool IsIncrementDisabled()
+    {
+        return Disabled || Value.CompareTo(Max) >= 0;
+    }
+
+    private bool IsDecrementDisabled()
+    {
+        return Disabled || Value.CompareTo(Min) <= 0;
+    }
+
+    private async Task IncrementValue()
+    {
+        if (Disabled) return;
+        
+        var newValue = AddValues(Value, Step);
+        if (newValue.CompareTo(Max) > 0)
+            newValue = Max;
+        
+        newValue = RoundValue(newValue);
+        await UpdateValue(newValue);
+    }
+
+    private async Task DecrementValue()
+    {
+        if (Disabled) return;
+        
+        var newValue = SubtractValues(Value, Step);
+        if (newValue.CompareTo(Min) < 0)
+            newValue = Min;
+            
+        newValue = RoundValue(newValue);
+        await UpdateValue(newValue);
+    }
+
+    private TValue RoundValue(TValue value)
+    {
+        if (typeof(TValue) == typeof(float))
+        {
+            var floatValue = Convert.ToSingle(value);
+            return (TValue)(object)(float)Math.Round(floatValue, DecimalPlaces);
+        }
+
+        if (typeof(TValue) == typeof(double))
+        {
+            var doubleValue = Convert.ToDouble(value);
+            return (TValue)(object)Math.Round(doubleValue, DecimalPlaces);
+        }
+
+        if (typeof(TValue) == typeof(decimal))
+        {
+            var decimalValue = Convert.ToDecimal(value);
+            return (TValue)(object)Math.Round(decimalValue, DecimalPlaces);
+        }
+
+        return value;
+    }
+
+    private TValue AddValues(TValue value1, TValue value2)
+    {
+        dynamic v1 = value1;
+        dynamic v2 = value2;
+        return (TValue)(v1 + v2);
+    }
+
+    private TValue SubtractValues(TValue value1, TValue value2)
+    {
+        dynamic v1 = value1;
+        dynamic v2 = value2;
+        return (TValue)(v1 - v2);
+    }
+    
+    private void OnInputTextChanged(ChangeEventArgs e)
+    {
+        _currentInputText = e.Value?.ToString() ?? string.Empty;
+    }
+
+    private async Task OnInputChange(ChangeEventArgs e)
+    {
+        var stringValue = e.Value?.ToString();
+        _currentInputText = stringValue ?? string.Empty;
+        
+        if (string.IsNullOrEmpty(stringValue))
+            return;
+
+        if (IsValidValue(stringValue, out var newValue))
+        {
+            newValue = RoundValue(newValue);
+            
+            if (newValue.CompareTo(Min) < 0)
+                newValue = Min;
+            else if (newValue.CompareTo(Max) > 0)
+                newValue = Max;
+
+            await UpdateValue(newValue);
+        }
+    }
+
+    private async Task OnFocusOut(FocusEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(_currentInputText))
+        {
+            await RestoreValidValue();
+            return;
+        }
+
+        if (!IsValidValue(_currentInputText, out var newValue))
+        {
+            await RestoreValidValue();
+            return;
+        }
+
+        newValue = RoundValue(newValue);
+
+        if (newValue.CompareTo(Min) < 0)
+            newValue = Min;
+        else if (newValue.CompareTo(Max) > 0)
+            newValue = Max;
+
+        await UpdateValue(newValue);
+    }
+
+    private async Task UpdateValue(TValue newValue)
+    {
+        if (EqualityComparer<TValue>.Default.Equals(Value, newValue))
+            return;
+
+        _previousValidValue = Value;
+        Value = newValue;
+        _currentInputText = GetFormattedValue();
+        await ValueChanged.InvokeAsync(Value);
+        StateHasChanged();
+    }
+}

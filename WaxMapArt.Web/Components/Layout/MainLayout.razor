@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="flex min-h-screen">
+<div class="flex min-h-screen bg-white dark:bg-neutral-900">
     <!-- Main Content Area -->
     <main class="flex flex-col flex-grow">
         <!-- Top Bar -->
@@ -9,8 +9,10 @@
         </div>
 
         <!-- Body Content -->
-        <article class="p-6 bg-white flex-grow shadow-inner">
+        <article class="p-6 flex-grow shadow-inner">
             @Body
         </article>
     </main>
 </div>
+
+<AutoInit />

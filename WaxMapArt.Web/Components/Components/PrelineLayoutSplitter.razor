@@ -1,0 +1,42 @@
+﻿<div class="@((Orientation == SplitterOrientation.Horizontal ? "flex" : "flex flex-col") + $" border border-gray-200 rounded-lg {HeightClass} dark:border-neutral-700")" 
+     data-hs-layout-splitter-@(Orientation == SplitterOrientation.Horizontal ? "horizontal" : "vertical")-group="">
+    @ChildContent
+</div>
+
+@code {
+    [Parameter] public SplitterOrientation Orientation { get; set; } = SplitterOrientation.Horizontal;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string HeightClass { get; set; } = "h-50";
+
+    public enum SplitterOrientation
+    {
+        Horizontal,
+        Vertical,
+        Mixed
+    }
+
+    private string GetSplitterConfig()
+    {
+        return Orientation switch
+        {
+            SplitterOrientation.Horizontal => @"{
+                ""horizontalSplitterTemplate"": ""<div><span class=\""absolute top-1/2 start-1/2 -translate-x-1/4 -translate-y-1/4 block w-4 h-6 flex justify-center items-center bg-white border border-gray-200 text-gray-400 rounded-md cursor-col-resize hover:bg-gray-100 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-600 dark:hover:bg-neutral-900\""><svg class=\""shrink-0 size-3.5\"" xmlns=\""http://www.w3.org/2000/svg\"" width=\""24\"" height=\""24\"" viewBox=\""0 0 24 24\"" fill=\""none\"" stroke=\""currentColor\"" stroke-width=\""2\"" stroke-linecap=\""round\"" stroke-linejoin=\""round\""><circle cx=\""9\"" cy=\""12\"" r=\""1\""/><circle cx=\""9\"" cy=\""5\"" r=\""1\""/><circle cx=\""9\"" cy=\""19\"" r=\""1\""/><circle cx=\""15\"" cy=\""12\"" r=\""1\""/><circle cx=\""15\"" cy=\""5\"" r=\""1\""/><circle cx=\""15\"" cy=\""19\"" r=\""1\""/></svg></span></div>"",
+                ""horizontalSplitterClasses"": ""relative flex border-s border-gray-200 dark:border-neutral-700""
+            }",
+
+            SplitterOrientation.Vertical => @"{
+                ""verticalSplitterTemplate"": ""<div><span class=\""absolute top-1/2 start-1/2 -translate-x-1/4 -translate-y-1/4 block w-6 h-4 flex justify-center items-center bg-white border border-gray-200 text-gray-400 rounded-md cursor-row-resize hover:bg-gray-100 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-600 dark:hover:bg-neutral-900\""><svg class=\""shrink-0 size-3.5\"" xmlns=\""http://www.w3.org/2000/svg\"" width=\""24\"" height=\""24\"" viewBox=\""0 0 24 24\"" fill=\""none\"" stroke=\""currentColor\"" stroke-width=\""2\"" stroke-linecap=\""round\"" stroke-linejoin=\""round\""><circle cx=\""12\"" cy=\""9\"" r=\""1\""/><circle cx=\""19\"" cy=\""9\"" r=\""1\""/><circle cx=\""5\"" cy=\""9\"" r=\""1\""/><circle cx=\""12\"" cy=\""15\"" r=\""1\""/><circle cx=\""19\"" cy=\""15\"" r=\""1\""/><circle cx=\""5\"" cy=\""15\"" r=\""1\""/></svg></span></div>"",
+                ""verticalSplitterClasses"": ""relative flex border-t border-gray-200 dark:border-neutral-700""
+            }",
+
+            SplitterOrientation.Mixed => @"{
+                ""horizontalSplitterTemplate"": ""<div><span class=\""absolute top-1/2 start-1/2 -translate-x-1/4 -translate-y-1/4 block w-4 h-6 flex justify-center items-center bg-white border border-gray-200 text-gray-400 rounded-md cursor-col-resize hover:bg-gray-100 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-600 dark:hover:bg-neutral-900\""><svg class=\""shrink-0 size-3.5\"" xmlns=\""http://www.w3.org/2000/svg\"" width=\""24\"" height=\""24\"" viewBox=\""0 0 24 24\"" fill=\""none\"" stroke=\""currentColor\"" stroke-width=\""2\"" stroke-linecap=\""round\"" stroke-linejoin=\""round\""><circle cx=\""9\"" cy=\""12\"" r=\""1\""/><circle cx=\""9\"" cy=\""5\"" r=\""1\""/><circle cx=\""9\"" cy=\""19\"" r=\""1\""/><circle cx=\""15\"" cy=\""12\"" r=\""1\""/><circle cx=\""15\"" cy=\""5\"" r=\""1\""/><circle cx=\""15\"" cy=\""19\"" r=\""1\""/></svg></span></div>"",
+                ""horizontalSplitterClasses"": ""relative flex border-s border-gray-200 dark:border-neutral-700"",
+                ""verticalSplitterTemplate"": ""<div><span class=\""absolute top-1/2 start-1/2 -translate-x-1/4 -translate-y-1/4 block w-6 h-4 flex justify-center items-center bg-white border border-gray-200 text-gray-400 rounded-md cursor-row-resize hover:bg-gray-100 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-600 dark:hover:bg-neutral-900\""><svg class=\""shrink-0 size-3.5\"" xmlns=\""http://www.w3.org/2000/svg\"" width=\""24\"" height=\""24\"" viewBox=\""0 0 24 24\"" fill=\""none\"" stroke=\""currentColor\"" stroke-width=\""2\"" stroke-linecap=\""round\"" stroke-linejoin=\""round\""><circle cx=\""12\"" cy=\""9\"" r=\""1\""/><circle cx=\""19\"" cy=\""9\"" r=\""1\""/><circle cx=\""5\"" cy=\""9\"" r=\""1\""/><circle cx=\""12\"" cy=\""15\"" r=\""1\""/><circle cx=\""19\"" cy=\""15\"" r=\""1\""/><circle cx=\""5\"" cy=\""15\"" r=\""1\""/></svg></span></div>"",
+                ""verticalSplitterClasses"": ""relative flex border-t border-gray-200 dark:border-neutral-700""
+            }",
+
+            _ => "{}"
+        };
+    }
+}

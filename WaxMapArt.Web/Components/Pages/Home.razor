@@ -10,7 +10,7 @@
 @using WaxMapArt.Dithering
 @using WaxMapArt.Exporter
 @using WaxMapArt.Generator
-@using WaxMapArt.Utils
+@using WaxMapArt.Web.Components.Components
 @inject NavigationManager NavigationManager
 @inject IDbContextFactory<DatabaseContext> DbContextFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -24,164 +24,149 @@
 else
 {
     <EditForm Model="_formModel" OnValidSubmit="OnValidSubmit" class="flex flex-col items-center space-y-4">
-        <InputFile OnChange="LoadFiles" class="border p-2" />
-
-        <ValidationSummary />
-
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Dithering</label>
-            <InputSelect @bind-Value="_formModel.DitheringMode" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2">
-                @foreach (var ditheringMode in Enum.GetValues<DitheringMode>())
-                {
-                    <option value="@ditheringMode">@Enum.GetName(ditheringMode)</option>
-                }
-            </InputSelect>
+        <PrelineFileUpload
+            @ref="_imageUpload"
+            OnFilesSelected="FileUploaded"
+            ShowProgressBar="true"
+            MaxFileSize="Int64.MaxValue" />
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full md:w-3/4 lg:w-1/2">
+            <PrelineSelect TValue="DitheringMode"
+                           @bind-SelectedValue="_formModel.DitheringMode"
+                           Placeholder="Select Dithering Mode"
+                           SelectOptions="@(SelectOption.FromEnum<DitheringMode>())" />
+            <PrelineSelect TValue="GeneratorType"
+                           @bind-SelectedValue="_formModel.GeneratorType"
+                           Placeholder="Select Generator Type"
+                           SelectOptions="@(SelectOption.FromEnum<GeneratorType>())" />
+            <PrelineSelect TValue="ComparisonMode"
+                           @bind-SelectedValue="_formModel.ComparisonMode"
+                           Placeholder="Select Comparison Mode"
+                           SelectOptions="@(SelectOption.FromEnum<ComparisonMode>())" />
+            <PrelineSelect TValue="Palette"
+                           @bind-SelectedValue="_formModel.SelectedPalette"
+                           Placeholder="Select Palette"
+                           SelectOptions="@(_palettes.Select(palette => new SelectOption<Palette>{ Text = palette.Name.Trim().ToLower(), Value = palette }).ToList())" />
         </div>
         
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Gerador</label>
-            <InputSelect @bind-Value="_formModel.GeneratorType" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2">
-                @foreach (var generator in Enum.GetValues<GeneratorType>())
-                {
-                    <option value="@generator">@Enum.GetName(generator)</option>
-                }
-            </InputSelect>
-        </div>
+        <PrelineNavCard Class="w-full md:w-3/4 lg:w-1/2 dark:bg-neutral-800">
+            <PrelineNavCardTab Title="Size">
+                <div class="flex flex-col space-y-4">
+                    <div class="flex flex-row space-x-4">
+                        <PrelineInputNumber TValue="int"
+                                            @bind-Value="_formModel.WidthMultiplier"
+                                            Variant="InputNumberVariant.Horizontal"
+                                            Min="1"
+                                            Max="16"
+                                            Step="1"
+                                            Label="Width"/>
+                        <PrelineInputNumber TValue="int"
+                                            @bind-Value="_formModel.HeightMultiplier"
+                                            Variant="InputNumberVariant.Horizontal"
+                                            Min="1"
+                                            Max="16"
+                                            Step="1"
+                                            Label="Height"/>
+                    </div>
 
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Algoritmo</label>
-            <InputSelect @bind-Value="_formModel.ComparisonMode" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2">
-                @foreach (var algorithm in Enum.GetValues<ComparisonMode>())
-                {
-                    <option value="@algorithm">@Enum.GetName(algorithm)</option>
-                }
-            </InputSelect>
-        </div>
+                    <PrelineSelect TValue="ResizeMethod"
+                                   @bind-SelectedValue="_formModel.ResizeMethod"
+                                   Placeholder="Select Resize Method"
+                                   SelectOptions="@(SelectOption.FromEnum<ResizeMethod>())"/>
 
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Palete</label>
-            <InputSelect @bind-Value="_formModel.SelectedPaletteId" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2">
-                @foreach (var palette in _palettes)
-                {
-                    <option value="@palette.Id">@palette.Name</option>
-                }
-            </InputSelect>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4 mb-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Largura (mapas)</label>
-                <InputNumber @bind-Value="_formModel.WidthMultiplier" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Altura (mapas)</label>
-                <InputNumber @bind-Value="_formModel.HeightMultiplier" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
-            </div>
-        </div>
-
-        <div class="bg-gray-50 p-4 rounded-md w-full">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Processamento de Imagem</h3>
-            
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700">Tipo de Redimensionamento</label>
-                <InputSelect @bind-Value="_formModel.ResizeMode" @bind-Value:after="OnResizeModeChanged" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2">
-                    @foreach (var mode in Enum.GetValues<ResizeType>())
+                    @switch (_formModel.ResizeMethod)
                     {
-                        <option value="@mode">@GetResizeModeDisplayName(mode)</option>
+                        case ResizeMethod.Crop:
+                            <PrelineInputNumber TValue="int"
+                                                @bind-Value="_formModel.CropOffsetX"
+                                                Variant="InputNumberVariant.Horizontal"
+                                                Step="1"
+                                                Label="Crop Offset X"/>
+                            <PrelineInputNumber TValue="int"
+                                                @bind-Value="_formModel.CropOffsetY"
+                                                Variant="InputNumberVariant.Horizontal"
+                                                Step="1"
+                                                Label="Crop Offset Y"/>
+                            break;
+                        case ResizeMethod.Pad:
+                            <PrelineInputText @bind-Value="_formModel.PadColor"
+                                              Placeholder="Pad Color"
+                                              Label="Pad Color" />
+                            break;
                     }
-                </InputSelect>
-            </div>
-
-            @if (_formModel.ResizeMode == ResizeType.Crop)
-            {
-                <div class="mb-4 p-3 bg-blue-50 rounded-md">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Offset de Corte (centralizado)</label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-xs text-gray-600">Offset X</label>
-                            <InputNumber @bind-Value="_formModel.CropOffsetX" class="block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-600">Offset Y</label>
-                            <InputNumber @bind-Value="_formModel.CropOffsetY" class="block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
-                        </div>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-1">Valores positivos movem o corte para direita/baixo, negativos para esquerda/cima</p>
                 </div>
-            }
-
-            @if (_formModel.ResizeMode == ResizeType.Pad)
-            {
-                <div class="mb-4 p-3 bg-green-50 rounded-md">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Cor de Preenchimento</label>
-                    <input type="color" @bind="_formModel.PadColor" class="w-full h-10 border border-gray-300 rounded-md" />
+            </PrelineNavCardTab>
+            <PrelineNavCardTab Title="Pre-Processing">
+                <div class="flex flex-col gap-4">
+                    <PrelineInputNumber TValue="float"
+                                        @bind-Value="_formModel.Saturation"
+                                        Variant="InputNumberVariant.Horizontal"
+                                        Min="0.0f"
+                                        Max="2.0f"
+                                        Step="0.1f"
+                                        Label="Saturation"/>
+                    <PrelineInputNumber TValue="float"
+                                        @bind-Value="_formModel.Brightness"
+                                        Variant="InputNumberVariant.Horizontal"
+                                        Min="0.0f"
+                                        Max="2.0f"
+                                        Step="0.1f"
+                                        Label="Brightness"/>
+                    <PrelineInputNumber TValue="float"
+                                        @bind-Value="_formModel.Contrast"
+                                        Variant="InputNumberVariant.Horizontal"
+                                        Min="0.0f"
+                                        Max="2.0f"
+                                        Step="0.1f"
+                                        Label="Contrast"/>
                 </div>
-            }
-
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Saturação</label>
-                    <div class="flex items-center space-x-2">
-                        <InputNumber @bind-Value="_formModel.Saturation" step="0.1" min="0" max="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
-                        <span class="text-sm text-gray-600">(@_formModel.Saturation.ToString("F1"))</span>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Brilho</label>
-                    <div class="flex items-center space-x-2">
-                        <InputNumber @bind-Value="_formModel.Brightness" step="0.1" min="0" max="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
-                        <span class="text-sm text-gray-600">(@_formModel.Brightness.ToString("F1"))</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Contraste</label>
-                    <div class="flex items-center space-x-2">
-                        <InputNumber @bind-Value="_formModel.Contrast" step="0.1" min="0" max="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
-                        <span class="text-sm text-gray-600">(@_formModel.Contrast.ToString("F1"))</span>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Desfoque (Blur)</label>
-                    <div class="flex items-center space-x-2">
-                        <InputNumber @bind-Value="_formModel.BlurRadius" step="0.1" min="0" max="10" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
-                        <span class="text-sm text-gray-600">(@_formModel.BlurRadius.ToString("F1"))</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        @if (_inputImageUrl is not null)
+            </PrelineNavCardTab>
+        </PrelineNavCard>
+        
+        <ValidationSummary />
+        
+        @if (_originalImageUrl is not null)
         {
-            <div class="flex space-x-4">
-                <div>
-                    <h2 class="text-lg font-semibold">Imagem Original</h2>
-                    <img src="@_inputImageUrl" class="border mt-2 max-w-xs" alt="Input Image"/>
-                    @if (_inputImage is not null)
+            <div class="w-full md:w-3/4 lg:w-1/2 flex flex-col space-y-4">
+                <div class="flex flex-row space-x-4">
+                    <div class="relative w-full overflow-hidden">
+                        <img src="@_originalImageUrl"
+                             class="w-full h-full object-cover"
+                             alt="Imagem Original"/>
+                        <PrelineBadge Variant="PrelineBadgeVariant.Soft" Color="gray-800" BackgroundColor="gray-100" Class="absolute top-4 right-4 z-10">Original</PrelineBadge>
+                    </div>
+                    
+                    @if (_preProcessedImageUrl is not null)
                     {
-                        <p class="text-sm text-gray-600 mt-1">Tamanho: @_inputImage.Width x @_inputImage.Height</p>
+                        <div class="relative w-full overflow-hidden">
+                            <img src="@_preProcessedImageUrl"
+                                 class="w-full h-full object-cover"
+                                 alt="Imagem Pré-processada"/>
+                            <PrelineBadge Variant="PrelineBadgeVariant.Soft" Color="blue-600" BackgroundColor="blue-100" Class="absolute top-4 right-4 z-10 dark:bg-blue-800/30 dark:text-blue-400">Pre-Processed</PrelineBadge>
+                        </div>
                     }
                 </div>
-
-                <div>
-                    <h2 class="text-lg font-semibold">Imagem Processada</h2>
-                    @if (_generatedImageUrl is not null)
-                    {
-                        <img src="@_generatedImageUrl" class="border mt-2 max-w-xs" alt="Output Image"/>
-                        <p class="text-sm text-gray-600 mt-1">Tamanho final: @(_formModel.WidthMultiplier * 128) x @(_formModel.HeightMultiplier * 128)</p>
-                    }
-                </div>
+                
+                @if (_generatedImageUrl is not null)
+                {
+                    <div class="flex justify-center">
+                        <div class="relative w-1/2 overflow-hidden">
+                            <img src="@_generatedImageUrl"
+                                 class="w-full h-full object-cover"
+                                 alt="Imagem Gerada"/>
+                            <PrelineBadge Variant="PrelineBadgeVariant.Soft" Color="teal-500" BackgroundColor="teal-100" Class="absolute top-4 right-4 z-10 dark:bg-teal-800/30 dark:text-teal-500">Gerada</PrelineBadge>
+                        </div>
+                    </div>
+                }
             </div>
         }
 
         <div class="flex space-x-4">
             <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded" @onclick="() => _generate = false">Gerar Preview</button>
-
             <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded" @onclick="() => _generate = true">Gerar Mapa</button>
         </div>
     </EditForm>
+    
     @if (_exportUrl != null)
     {
         <a id="exportMap" class="btn" href="@_exportUrl" download="map.nbt"
@@ -191,90 +176,103 @@ else
 
 @code {
     private DatabaseContext? _database;
+    PrelineFileUpload _imageUpload = null!;
 
-    private string? _inputImageUrl;
+    private string? _originalImageUrl;
+    private string? _preProcessedImageUrl;
     private string? _generatedImageUrl;
     private string? _exportUrl;
     private Image<Rgb24>? _inputImage;
 
     private List<Palette>? _palettes;
-
     private readonly FormModel _formModel = new();
-
     private bool _generate;
 
     protected override async Task OnInitializedAsync()
     {
         _database = await DbContextFactory.CreateDbContextAsync();
-        
+
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         if (authState.User.Identity?.IsAuthenticated != true)
         {
             NavigationManager.NavigateTo("/login");
             return;
         }
+
         var userId = Guid.Parse(authState.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty);
         if (userId == Guid.Empty)
         {
             NavigationManager.NavigateTo("/login");
             return;
         }
-        
+
         _palettes = await _database.Palettes
             .Include(p => p.Blocks)
             .Include(p => p.PlaceholderBlock)
             .Where(p => p.UserId == userId)
             .ToListAsync();
+
+        _formModel.SetPreProcessingChangeCallback(OnPreProcessingChange);
     }
 
-    private async Task LoadFiles(InputFileChangeEventArgs e)
+    private async Task CreateOriginalPreviewAsync()
     {
-        const long maxFileSize = 25 * 1024 * 1024;
+        if (_inputImage is null) return;
 
-        await using var ms = new MemoryStream();
-        await e.File.OpenReadStream(maxFileSize).CopyToAsync(ms);
-        var data = ms.ToArray();
+        var image = _inputImage.Clone();
+        var targetWidth = _formModel.WidthMultiplier * 128;
+        var targetHeight = _formModel.HeightMultiplier * 128;
         
-        _inputImage = Image.Load<Rgb24>(data);
-        StateHasChanged();
+        image.Mutate(x => x.Resize(targetWidth, targetHeight, KnownResamplers.Lanczos3));
+        
+        var originalImageStream = new MemoryStream();
+        await image.SaveAsPngAsync(originalImageStream);
+        _originalImageUrl = ConvertStreamToBase64Url(originalImageStream.ToArray());
     }
 
     private async Task<Image<Rgb24>?> ProcessImageAsync()
     {
         if (_inputImage is null) return null;
-        
+
         var image = _inputImage.Clone();
-        
-        if (_formModel.Saturation != 1.0f || _formModel.Brightness != 1.0f || _formModel.Contrast != 1.0f || _formModel.BlurRadius > 0)
+
+        if (Math.Abs(_formModel.Saturation - 1.0f) > float.Epsilon
+            || Math.Abs(_formModel.Brightness - 1.0f) > float.Epsilon
+            || Math.Abs(_formModel.Contrast - 1.0f) > float.Epsilon)
         {
             image.Mutate(x => x
                 .Saturate(_formModel.Saturation)
                 .Brightness(_formModel.Brightness)
                 .Contrast(_formModel.Contrast));
-                
-            if (_formModel.BlurRadius > 0)
-            {
-                image.Mutate(x => x.GaussianBlur(_formModel.BlurRadius));
-            }
         }
 
         var targetWidth = _formModel.WidthMultiplier * 128;
         var targetHeight = _formModel.HeightMultiplier * 128;
         
-        var resizeOptions = new ResizeOptions
+        var resizeMode = _formModel.ResizeMethod switch 
         {
-            Size = new Size(targetWidth, targetHeight)
+            ResizeMethod.Stretch => ResizeMode.Stretch,
+            ResizeMethod.Pad => ResizeMode.Pad,
+            ResizeMethod.Crop => ResizeMode.Crop,
+            ResizeMethod.Min => ResizeMode.Min,
+            ResizeMethod.Max => ResizeMode.Max,
+            _ => throw new ArgumentOutOfRangeException()
         };
 
-        switch (_formModel.ResizeMode)
+        var resizeOptions = new ResizeOptions
         {
-            case ResizeType.Crop:
-                resizeOptions.Mode = ResizeMode.Crop;
+            Size = new Size(targetWidth, targetHeight),
+            Mode = resizeMode
+        };
+
+        switch (_formModel.ResizeMethod)
+        {
+            case ResizeMethod.Crop:
                 var sourceAspect = (float)image.Width / image.Height;
                 var targetAspect = (float)targetWidth / targetHeight;
-                
+
                 int cropWidth, cropHeight, cropX, cropY;
-                
+
                 if (sourceAspect > targetAspect)
                 {
                     cropHeight = image.Height;
@@ -289,38 +287,40 @@ else
                     cropX = _formModel.CropOffsetX;
                     cropY = (image.Height - cropHeight) / 2 + _formModel.CropOffsetY;
                 }
-                
+
                 cropX = Math.Max(0, Math.Min(cropX, image.Width - cropWidth));
                 cropY = Math.Max(0, Math.Min(cropY, image.Height - cropHeight));
-                
+
                 var cropRect = new Rectangle(cropX, cropY, cropWidth, cropHeight);
                 image.Mutate(x => x.Crop(cropRect));
-                
                 image.Mutate(x => x.Resize(targetWidth, targetHeight));
                 break;
-                
-            case ResizeType.Pad:
-                resizeOptions.Mode = ResizeMode.Pad;
+
+            case ResizeMethod.Pad:
                 var padColor = Color.ParseHex(_formModel.PadColor);
                 resizeOptions.PadColor = padColor;
                 image.Mutate(x => x.Resize(resizeOptions));
                 break;
-                
-           case ResizeType.Min:
-                resizeOptions.Mode = ResizeMode.Min;
-                image.Mutate(x => x.Resize(resizeOptions));
-                break;
-           case ResizeType.Max:
-                resizeOptions.Mode = ResizeMode.Max;
+
+            default:
                 image.Mutate(x => x.Resize(resizeOptions));
                 break;
         }
-            
+
         var processedImageStream = new MemoryStream();
         await image.SaveAsPngAsync(processedImageStream);
-        _inputImageUrl = ConvertStreamToBase64Url(processedImageStream.ToArray());
+        _preProcessedImageUrl = ConvertStreamToBase64Url(processedImageStream.ToArray());
 
         return image;
+    }
+
+    private async Task OnPreProcessingChange()
+    {
+        if (_inputImage is not null)
+        {
+            await ProcessImageAsync();
+            StateHasChanged();
+        }
     }
 
     private async Task OnValidSubmit()
@@ -340,17 +340,17 @@ else
             DitheringMode.None => new NoneDithering(),
             DitheringMode.Atkinson => new AtkinsonDithering(),
             DitheringMode.FloydSteinberg => new FloydSteinbergDithering(),
-            DitheringMode.JarvisJudiceNinke => new JarvisJudiceNinkeDithering(),
             _ => throw new ArgumentOutOfRangeException()
         };
 
-        var palette = _palettes!.Find(p => p.Id == _formModel.SelectedPaletteId);
+        var palette = _formModel.SelectedPalette;
         if (palette is null) return;
         
-        var image = await ProcessImageAsync();
+        var processedImage = await ProcessImageAsync();
+        if (processedImage is null) return;
         
         var ms = new MemoryStream();
-        var generatedImage = dithering.ApplyDithering(image!, palette, colorComparison, _formModel.GeneratorType == GeneratorType.Staircase);
+        var generatedImage = dithering.ApplyDithering(processedImage, palette, colorComparison, _formModel.GeneratorType == GeneratorType.Staircase);
         await generatedImage.SaveAsPngAsync(ms);
         _generatedImageUrl = ConvertStreamToBase64Url(ms.ToArray());
         
@@ -372,44 +372,63 @@ else
         _exportUrl = ConvertStreamToBase64Url(outMs.ToArray(), "application/octet-stream");
     }
 
-    private void OnResizeModeChanged()
-    {
-        _formModel.CropOffsetX = 0;
-        _formModel.CropOffsetY = 0;
-        _formModel.PadColor = "#FFFFFF";
-        StateHasChanged();
-    }
-
-    private string GetResizeModeDisplayName(ResizeType mode) =>
-        mode switch
-        {
-            ResizeType.Stretch => "Esticar",
-            ResizeType.Crop => "Cortar (Centralizado)",
-            ResizeType.Pad => "Preenchimento",
-            ResizeType.Max => "Máximo",
-            ResizeType.Min => "Mínimo",
-            _ => mode.ToString()
-        };
-
     private static string ConvertStreamToBase64Url(byte[] data, string contentType = "image/png") => $"data:{contentType};base64,{Convert.ToBase64String(data)}";
 
     private class FormModel
     {
+        private float _saturation = 1.0f;
+        private float _brightness = 1.0f;
+        private float _contrast = 1.0f;
+        private Func<Task>? _preProcessingChangeCallback;
+
         public DitheringMode DitheringMode { get; set; }
         public ComparisonMode ComparisonMode { get; set; }
         public GeneratorType GeneratorType { get; set; }
-        public Guid SelectedPaletteId { get; set; }
+        public Palette? SelectedPalette { get; set; }
         public int WidthMultiplier { get; set; } = 1;
         public int HeightMultiplier { get; set; } = 1;
-        
-        public ResizeType ResizeMode { get; set; } = ResizeType.Crop;
-        public int CropOffsetX { get; set; } = 0;
-        public int CropOffsetY { get; set; } = 0;
+        public ResizeMethod ResizeMethod { get; set; } = ResizeMethod.Crop;
+        public int CropOffsetX { get; set; }
+        public int CropOffsetY { get; set; }
         public string PadColor { get; set; } = "#FFFFFF";
-        public float Saturation { get; set; } = 1.0f;
-        public float Brightness { get; set; } = 1.0f;
-        public float Contrast { get; set; } = 1.0f;
-        public float BlurRadius { get; set; } = 0.0f;
+
+        public float Saturation 
+        { 
+            get => _saturation; 
+            set
+            {
+                if (Math.Abs(_saturation - value) < float.Epsilon) return;
+                _saturation = value;
+                _preProcessingChangeCallback?.Invoke();
+            } 
+        }
+
+        public float Brightness 
+        { 
+            get => _brightness; 
+            set
+            {
+                if (Math.Abs(_brightness - value) < float.Epsilon) return;
+                _brightness = value;
+                _preProcessingChangeCallback?.Invoke();
+            } 
+        }
+
+        public float Contrast 
+        { 
+            get => _contrast; 
+            set
+            {
+                if (Math.Abs(_contrast - value) < float.Epsilon) return;
+                _contrast = value;
+                _preProcessingChangeCallback?.Invoke();
+            } 
+        }
+
+        public void SetPreProcessingChangeCallback(Func<Task> callback)
+        {
+            _preProcessingChangeCallback = callback;
+        }
     }
     
     private enum GeneratorType
@@ -418,12 +437,41 @@ else
         Staircase
     }
 
-    private enum ResizeType
+    private enum ResizeMethod
     {
         Stretch,
         Pad,
-        Min,
-        Max,
         Crop,
+        Min,
+        Max
+    }
+
+    private async void FileUploaded(IBrowserFile[] obj)
+    {
+        var file = obj.FirstOrDefault();
+        if (file is null) return;
+        
+        await using var ms = new MemoryStream();
+        var stream = file.OpenReadStream(_imageUpload.MaxFileSize);
+        var buffer = new byte[4096];
+        int bytesRead;
+        long totalRead = 0;
+
+        while ((bytesRead = await stream.ReadAsync(buffer)) > 0)
+        {
+            await ms.WriteAsync(buffer.AsMemory(0, bytesRead));
+            totalRead += bytesRead;
+            var percentComplete = (int)((float)totalRead / stream.Length * 100);
+            _imageUpload.SetFileProgress(_imageUpload.GetSelectedFiles().First(), percentComplete);
+        }
+
+        var data = ms.ToArray();
+        _inputImage = Image.Load<Rgb24>(data);
+        
+        await CreateOriginalPreviewAsync();
+        
+        await ProcessImageAsync();
+        
+        StateHasChanged();
     }
 }

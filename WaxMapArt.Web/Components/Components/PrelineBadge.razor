@@ -1,0 +1,14 @@
+﻿@(Variant switch
+{
+    PrelineBadgeVariant.Solid => (@<span class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-@Color text-white dark:bg-white dark:text-neutral-800 @Class">@ChildContent</span>),
+    PrelineBadgeVariant.Soft => (@<span class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-@BackgroundColor text-@Color dark:bg-white/10 dark:text-white @Class">@ChildContent</span>),
+    PrelineBadgeVariant.Outline => (@<span class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium border border-@Color text-@Color @Class">@ChildContent</span>)
+})
+
+@code {
+    [Parameter] public string Color { get; set; } = "gray-800";
+    [Parameter] public string BackgroundColor { get; set; } = "gray-100";
+    [Parameter] public string Class { get; set; } = "";
+    [Parameter] public PrelineBadgeVariant Variant { get; set; } = PrelineBadgeVariant.Solid;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

@@ -1,0 +1,12 @@
+﻿<div class="overflow-hidden @(IsHorizontalGroup ? "h-full" : "")" 
+     data-hs-layout-splitter-item="@Size" 
+     style="flex: @Size 1 0px;">
+    
+    @ChildContent
+</div>
+
+@code {
+    [Parameter] public double Size { get; set; } = 33.33;
+    [Parameter] public bool IsHorizontalGroup { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

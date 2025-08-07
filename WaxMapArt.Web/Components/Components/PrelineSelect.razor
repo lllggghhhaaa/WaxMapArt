@@ -1,0 +1,201 @@
+﻿@typeparam TValue
+@inject IJSRuntime JS
+
+<div class="relative w-full">
+  <select @ref="_selectElement" 
+          class="w-full" 
+          data-hs-select='@GetSelectConfig()'
+          @onchange="OnSelectionChanged"
+          disabled="@IsDisabled">
+    
+    @if (!string.IsNullOrEmpty(DefaultOptionText))
+    {
+      <option value="">@DefaultOptionText</option>
+    }
+    
+    @if (SelectOptions != null)
+    {
+      @foreach (var option in SelectOptions)
+      {
+        var optionValue = GetSelectOptionValue(option);
+        var isSelected = EqualityComparer<TValue>.Default.Equals(option.Value, SelectedValue);
+        
+        <option value="@optionValue" selected="@isSelected" disabled="@option.IsDisabled">
+          @option.Text
+        </option>
+      }
+    }
+    else if (Options != null)
+    {
+      @foreach (var option in Options)
+      {
+        var optionValue = GetOptionValue(option);
+        var isSelected = EqualityComparer<TValue>.Default.Equals(option, SelectedValue);
+        
+        <option value="@optionValue" selected="@isSelected">
+          @GetOptionText(option)
+        </option>
+      }
+    }
+    else
+    {
+      @ChildContent
+    }
+  </select>
+
+  <div class="absolute top-2/3 end-2.5 -translate-y-1/2">
+    <svg class="shrink-0 size-4 text-gray-500 dark:text-neutral-500" 
+         xmlns="http://www.w3.org/2000/svg" 
+         width="24" height="24" 
+         viewBox="0 0 24 24"
+         stroke="currentColor" 
+         stroke-width="2" 
+         stroke-linecap="round" 
+         stroke-linejoin="round">
+      <path d="m7 15 5 5 5-5"></path>
+      <path d="m7 9 5-5 5 5"></path>
+    </svg>
+  </div>
+</div>
+
+@code {
+  private ElementReference _selectElement;
+
+  [Parameter] public TValue? SelectedValue { get; set; }
+  [Parameter] public EventCallback<TValue?> SelectedValueChanged { get; set; }
+  [Parameter] public EventCallback<TValue?> OnSelectionChange { get; set; }
+
+  [Parameter] public string Placeholder { get; set; } = "Selecione uma opção...";
+  [Parameter] public string DefaultOptionText { get; set; } = "Escolher";
+  [Parameter] public bool IsDisabled { get; set; }
+  [Parameter] public string Width { get; set; } = "w-full";
+  [Parameter] public string MaxHeight { get; set; } = "max-h-72";
+
+  [Parameter] public string ToggleClasses { get; set; } = "hs-select-disabled:pointer-events-none hs-select-disabled:opacity-50 relative py-3 ps-4 pe-9 flex gap-x-2 text-nowrap w-full cursor-pointer bg-white border border-gray-200 rounded-lg text-start text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:focus:outline-hidden dark:focus:ring-1 dark:focus:ring-neutral-600";
+  [Parameter] public string DropdownClasses { get; set; } = "mt-2 z-50 w-full max-h-72 p-1 space-y-0.5 bg-white border border-gray-200 rounded-lg overflow-hidden overflow-y-auto dark:bg-neutral-900 dark:border-neutral-700";
+  [Parameter] public string OptionClasses { get; set; } = "py-2 px-4 w-full text-sm text-gray-800 cursor-pointer hover:bg-gray-100 rounded-lg focus:outline-hidden focus:bg-gray-100 dark:bg-neutral-900 dark:hover:bg-neutral-800 dark:text-neutral-200 dark:focus:bg-neutral-800";
+
+  [Parameter] public List<TValue>? Options { get; set; }
+  [Parameter] public List<SelectOption<TValue>>? SelectOptions { get; set; }
+  [Parameter] public Func<TValue, string>? ValueSelector { get; set; }
+  [Parameter] public Func<TValue, string>? TextSelector { get; set; }
+  
+  [Parameter] public RenderFragment? ChildContent { get; set; }
+
+  [Parameter] public EventCallback OnOpen { get; set; }
+  [Parameter] public EventCallback OnClose { get; set; }
+  [Parameter] public EventCallback OnFocus { get; set; }
+  [Parameter] public EventCallback OnBlur { get; set; }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender)
+    {
+      await JS.InvokeVoidAsync("HSSelect.autoInit");
+    }
+  }
+
+  private async Task OnSelectionChanged(ChangeEventArgs e)
+  {
+    var stringValue = e.Value?.ToString() ?? string.Empty;
+    
+    TValue? newValue = default;
+    
+    if (!string.IsNullOrEmpty(stringValue))
+    {
+      if (SelectOptions != null)
+      {
+        var selectedOption = SelectOptions.FirstOrDefault(opt => GetSelectOptionValue(opt) == stringValue);
+        newValue = selectedOption != null ? selectedOption.Value : default;
+      }
+      else if (Options != null)
+      {
+        newValue = Options.FirstOrDefault(opt => GetOptionValue(opt) == stringValue);
+      }
+    }
+
+    SelectedValue = newValue;
+
+    await SelectedValueChanged.InvokeAsync(newValue);
+    await OnSelectionChange.InvokeAsync(newValue);
+  }
+
+  private string GetSelectOptionValue(SelectOption<TValue> option)
+  {
+    if (ValueSelector != null)
+      return ValueSelector(option.Value);
+    
+    return GetOptionValue(option.Value);
+  }
+
+  private string GetOptionValue(TValue option)
+  {
+    if (option == null) return string.Empty;
+    
+    if (ValueSelector != null)
+      return ValueSelector(option);
+    
+    if (typeof(TValue).IsPrimitive || typeof(TValue) == typeof(string))
+      return option.ToString() ?? string.Empty;
+    
+    var type = typeof(TValue);
+    var idProperty = type.GetProperty("Id") ?? type.GetProperty("Value") ?? type.GetProperty("Key");
+    
+    if (idProperty != null)
+      return idProperty.GetValue(option)?.ToString() ?? string.Empty;
+    
+    return option.ToString() ?? string.Empty;
+  }
+
+  private string GetOptionText(TValue option)
+  {
+    if (option == null) return string.Empty;
+    
+    if (TextSelector != null)
+      return TextSelector(option);
+    
+    if (typeof(TValue).IsPrimitive || typeof(TValue) == typeof(string))
+      return option.ToString() ?? string.Empty;
+    
+    var type = typeof(TValue);
+    var textProperty = type.GetProperty("Name") ?? type.GetProperty("Text") ?? type.GetProperty("Title") ?? type.GetProperty("Description");
+    
+    if (textProperty != null)
+      return textProperty.GetValue(option)?.ToString() ?? string.Empty;
+    
+    return option.ToString() ?? string.Empty;
+  }
+
+  private string GetSelectConfig()
+  {
+    var config = new
+    {
+      placeholder = Placeholder,
+      toggleTag = "<button type=\"button\" aria-expanded=\"false\"></button>",
+      toggleClasses = ToggleClasses,
+      dropdownClasses = DropdownClasses.Replace("max-h-72", MaxHeight),
+      optionClasses = OptionClasses,
+      optionTemplate = "<div class=\"flex justify-between items-center w-full\"><span data-title></span><span class=\"hidden hs-selected:block\"><svg class=\"shrink-0 size-3.5 text-blue-600 dark:text-blue-500\" xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"20 6 9 17 4 12\"/></svg></span></div>"
+    };
+
+    return System.Text.Json.JsonSerializer.Serialize(config);
+  }
+
+  public async Task OpenAsync()
+  {
+    await JS.InvokeVoidAsync("HSSelect.open", _selectElement);
+  }
+
+  public async Task CloseAsync()
+  {
+    await JS.InvokeVoidAsync("HSSelect.close", _selectElement);
+  }
+
+  public async Task SetValueAsync(TValue value)
+  {
+    SelectedValue = value;
+    var stringValue = GetOptionValue(value);
+    await JS.InvokeVoidAsync("HSSelect.setValue", _selectElement, stringValue);
+    StateHasChanged();
+  }
+}

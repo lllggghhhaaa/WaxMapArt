@@ -1,0 +1,127 @@
+﻿<CascadingValue Value="this">
+    @ChildContent
+</CascadingValue>
+
+<div class="flex flex-col bg-white border border-gray-200 shadow-2xs rounded-xl dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70 @Class">
+    <div class="sm:hidden">
+        <label for="@GetHashCode()" class="sr-only">Select a nav</label>
+        <select id="@GetHashCode()" @onchange="OnMobileTabChange" 
+                class="block w-full border-t-0 border-x-0 border-gray-300 rounded-t-xl focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600">
+            @foreach (var tab in _tabs)
+            {
+                <option value="@tab.Id" selected="@(tab.Id == ActiveTabId)">@tab.Title</option>
+            }
+        </select>
+    </div>
+    
+    <div class="hidden sm:block">
+        <nav class="relative z-0 flex border-b border-gray-200 rounded-xl divide-x divide-gray-200 dark:border-neutral-700 dark:divide-neutral-700">
+            @for (int i = 0; i < _tabs.Count; i++)
+            {
+                var tab = _tabs[i];
+                var isActive = tab.Id == ActiveTabId;
+                var isFirst = i == 0;
+                var isLast = i == _tabs.Count - 1;
+                
+                var cssClasses = $"group relative min-w-0 flex-1 bg-white py-4 px-4 text-sm font-medium text-center overflow-hidden hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 focus:z-10 dark:bg-neutral-900 dark:hover:bg-neutral-800 dark:focus:bg-neutral-800";
+                
+                if (isActive)
+                {
+                    cssClasses += " border-b-2 border-b-blue-600 text-gray-900 dark:border-b-blue-500 dark:text-neutral-300";
+                }
+                else
+                {
+                    cssClasses += " text-gray-500 hover:text-gray-700 dark:text-neutral-500 dark:hover:text-neutral-400 dark:focus:text-neutral-400";
+                }
+                
+                if (isFirst)
+                {
+                    cssClasses += " rounded-ss-xl";
+                }
+                
+                if (isLast)
+                {
+                    cssClasses += " rounded-se-xl";
+                }
+                
+                <a @onclick="() => SetActiveTab(tab.Id)" 
+                   @onclick:preventDefault="true"
+                   class="@cssClasses" 
+                   href="#"
+                   aria-current="@(isActive ? "page" : null)">
+                    @tab.Title
+                </a>
+            }
+        </nav>
+    </div>
+    
+    <div class="p-4 text-center md:py-7 md:px-5">
+        @if (ActiveTab != null)
+        {
+            @ActiveTab.ChildContent
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Class { get; set; } = string.Empty;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? ActiveTabId { get; set; }
+    [Parameter] public EventCallback<string> ActiveTabIdChanged { get; set; }
+
+    private readonly List<PrelineNavCardTab> _tabs = new();
+    private PrelineNavCardTab? ActiveTab => _tabs.FirstOrDefault(t => t.Id == ActiveTabId);
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender && !string.IsNullOrEmpty(ActiveTabId) == false && _tabs.Any())
+        {
+            ActiveTabId = _tabs.First().Id;
+            StateHasChanged();
+        }
+    }
+
+    internal void AddTab(PrelineNavCardTab tab)
+    {
+        _tabs.Add(tab);
+        
+        // Se for a primeira aba e não há aba ativa definida, ativa esta
+        if (_tabs.Count == 1 && string.IsNullOrEmpty(ActiveTabId))
+        {
+            ActiveTabId = tab.Id;
+        }
+        
+        StateHasChanged();
+    }
+
+    internal void RemoveTab(PrelineNavCardTab tab)
+    {
+        _tabs.Remove(tab);
+        
+        // Se a aba removida era a ativa, ativa a primeira disponível
+        if (tab.Id == ActiveTabId && _tabs.Any())
+        {
+            ActiveTabId = _tabs.First().Id;
+        }
+        
+        StateHasChanged();
+    }
+
+    private async Task SetActiveTab(string? tabId)
+    {
+        if (ActiveTabId != tabId)
+        {
+            ActiveTabId = tabId;
+            await ActiveTabIdChanged.InvokeAsync(ActiveTabId);
+        }
+    }
+
+    private async Task OnMobileTabChange(ChangeEventArgs e)
+    {
+        var selectedTab = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(selectedTab))
+        {
+            await SetActiveTab(selectedTab);
+        }
+    }
+}

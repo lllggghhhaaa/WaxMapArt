@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Extensions.FileProviders;
 using WaxMapArt.Web.Components;
 using WaxMapArt.Web.Database;
 using WaxMapArt.Web.Services;
@@ -36,14 +37,20 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
+    app.UseHttpsRedirection(); 
 }
-
-app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+var nodeModulesPath = Path.Combine(builder.Environment.ContentRootPath, "node_modules");
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(nodeModulesPath),
+    RequestPath = "/node_modules"
+});
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()

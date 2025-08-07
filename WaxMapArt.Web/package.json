@@ -1,6 +1,12 @@
 {
-  "devDependencies": {
-    "@tailwindcss/cli": "^4.1.2",
-    "tailwindcss": "^4.1.2"
+  "dependencies": {
+    "@preline/select": "^3.1.0",
+    "@tailwindcss/cli": "^4.1.11",
+    "@tailwindcss/forms": "^0.5.10",
+    "preline": "^3.1.0",
+    "tailwindcss": "^4.1.11"
+  },
+  "scripts": {
+    "build": "npx tailwindcss -i ./Styles/app.css -o ./wwwroot/css/app.css --content \"**/*.razor, **/*.html"
   }
 }

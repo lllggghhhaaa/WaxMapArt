@@ -1,3 +1,10 @@
-﻿@tailwind base;
-@tailwind components;
-@tailwind utilities;
+﻿@import "tailwindcss";
+@import "../node_modules/preline/variants.css";
+
+/* Preline UI */
+@source "../node_modules/preline/dist/*.js";
+/* Plugins */
+@plugin "@tailwindcss/forms";
+
+@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant light (&:where(.light, .light *));

@@ -80,4 +80,7 @@
       </Content>
     </ItemGroup>
 
+    <Target Name="Npm Run Build" BeforeTargets="BeforeBuild">
+      <Exec Command="npm run build" />
+    </Target>
 </Project>
