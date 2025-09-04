@@ -3,7 +3,6 @@
 @using WaxMapArt.Web.Services
 @inject AuthService Auth
 @inject NavigationManager NavigationManager
-@rendermode InteractiveServer
 
 <div class="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-neutral-900">
     <div class="mt-7 bg-white border border-gray-200 rounded-xl shadow-2xs dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70 w-full max-w-md">
@@ -21,16 +20,16 @@
             <div class="mt-5">
                 <!-- Form -->
                 <EditForm Model="Model" OnValidSubmit="HandleLogin" FormName="LoginForm">
-                    <DataAnnotationsValidator/>
+                    <DataAnnotationsValidator />
                     
                     <div class="grid gap-y-4">
                         <!-- Form Group -->
                         <div>
-                            <label for="email" class="block text-sm mb-2 dark:text-white">Email address</label>
+                            <label for="username" class="block text-sm mb-2 dark:text-white">Username</label>
                             <div class="relative">
-                                <InputText type="email" id="email" @bind-Value="Model.Username" 
+                                <InputText type="text" id="username" @bind-Value="Model.Username" 
                                           class="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" 
-                                          required aria-describedby="email-error" />
+                                          aria-describedby="username-error" />
                                 @if (HasUsernameError)
                                 {
                                     <div class="absolute inset-y-0 end-0 pointer-events-none pe-3 flex items-center">
@@ -40,7 +39,7 @@
                                     </div>
                                 }
                             </div>
-                            <ValidationMessage For="@(() => Model.Username)" class="text-xs text-red-600 mt-2" id="email-error"/>
+                            <ValidationMessage For="@(() => Model.Username)" class="text-xs text-red-600 mt-2" id="username-error"/>
                         </div>
                         <!-- End Form Group -->
 
@@ -55,7 +54,7 @@
                             <div class="relative">
                                 <InputText type="password" id="password" @bind-Value="Model.Password" 
                                           class="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" 
-                                          required aria-describedby="password-error" />
+                                          aria-describedby="password-error" />
                                 @if (HasPasswordError)
                                 {
                                     <div class="absolute inset-y-0 end-0 pointer-events-none pe-3 flex items-center">
@@ -81,47 +80,85 @@
                         </div>
                         <!-- End Checkbox -->
 
-                        <button type="submit" class="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
-                            Sign in
+                        <button type="submit" disabled="@_isSubmitting" class="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
+                            @if (_isSubmitting)
+                            {
+                                <span class="animate-spin inline-block w-4 h-4 border-[3px] border-current border-t-transparent text-white rounded-full" role="status" aria-label="loading"></span>
+                                <span>Signing in...</span>
+                            }
+                            else
+                            {
+                                <span>Sign in</span>
+                            }
                         </button>
                     </div>
                 </EditForm>
                 <!-- End Form -->
+                
+                @if (!string.IsNullOrEmpty(_errorMessage))
+                {
+                    <div class="mt-4 p-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+                        @_errorMessage
+                    </div>
+                }
             </div>
         </div>
     </div>
 </div>
 
-@if (!string.IsNullOrEmpty(_errorMessage))
-{
-    <div class="mt-4 text-center text-red-500">@_errorMessage</div>
-}
-
 @code {
-    private LoginModel Model { get; set; } = new();
+    [SupplyParameterFromForm]
+    private LoginModel? Model { get; set; }
+    
     private string? _errorMessage;
+    private bool _isSubmitting;
 
-    private bool HasUsernameError => !string.IsNullOrWhiteSpace(Model.Username) && Model.Username.Length < 5;
-    private bool HasPasswordError => !string.IsNullOrWhiteSpace(Model.Password) && Model.Password.Length < 8;
+    private bool HasUsernameError => !string.IsNullOrWhiteSpace(Model?.Username) && Model.Username.Length < 5;
+    private bool HasPasswordError => !string.IsNullOrWhiteSpace(Model?.Password) && Model.Password.Length < 8;
+
+    protected override void OnInitialized()
+    {
+        Model ??= new LoginModel();
+    }
 
     private async Task HandleLogin()
     {
-        var result = await Auth.LoginAsync(Model.Username, Model.Password);
+        _isSubmitting = true;
+        _errorMessage = null;
+        StateHasChanged();
 
-        if (result)
-            NavigationManager.NavigateTo("/", true);
-        else
-            _errorMessage = "Invalid email or password.";
+        try
+        {
+            var result = await Auth.LoginAsync(Model.Username, Model.Password);
+
+            if (result)
+            {
+                NavigationManager.NavigateTo("/");
+                return; // encerra o método sem tratar exceção de navegação
+            }
+
+            _errorMessage = "Invalid username or password.";
+        }
+        catch (Exception ex) when (ex is not NavigationException)
+        {
+            _errorMessage = $"An error occurred: {ex.Message}";
+            Console.WriteLine($"Login error: {ex}");
+        }
+        finally
+        {
+            _isSubmitting = false;
+            StateHasChanged();
+        }
     }
 
     private class LoginModel
     {
-        [Required]
-        [MinLength(5, ErrorMessage = "5+ characters required")]
-        public string Username { get; set; } = null!;
+        [Required(ErrorMessage = "Username is required")]
+        [StringLength(50, MinimumLength = 5, ErrorMessage = "Username must be between 5 and 50 characters")]
+        public string Username { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "8+ characters required")]
-        [MinLength(8, ErrorMessage = "8+ characters required")]
+        [Required(ErrorMessage = "Password is required")]
+        [StringLength(100, MinimumLength = 8, ErrorMessage = "Password must be between 8 and 100 characters")]
         public string Password { get; set; } = string.Empty;
 
         public bool RememberMe { get; set; }

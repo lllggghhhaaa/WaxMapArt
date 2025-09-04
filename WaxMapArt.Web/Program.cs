@@ -40,10 +40,10 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection(); 
 }
 
-app.UseAntiforgery();
-
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseAntiforgery();
 
 var nodeModulesPath = Path.Combine(builder.Environment.ContentRootPath, "node_modules");
 app.UseStaticFiles(new StaticFileOptions

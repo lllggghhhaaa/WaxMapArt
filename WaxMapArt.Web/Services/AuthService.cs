@@ -8,7 +8,7 @@ using WaxMapArt.Web.Database;
 
 namespace WaxMapArt.Web.Services;
 
-public class AuthService(IDbContextFactory<DatabaseContext> dbFactory, IHttpContextAccessor httpContextAccessor)
+public class AuthService(IDbContextFactory<DatabaseContext> dbFactory, IHttpContextAccessor httpContextAccessor, ILogger<AuthService> logger)
 {
     private DatabaseContext _dbContext = dbFactory.CreateDbContext();
     
