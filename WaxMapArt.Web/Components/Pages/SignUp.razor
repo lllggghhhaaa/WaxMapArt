@@ -1,4 +1,4 @@
-﻿@page "/login"
+﻿@page "/signup"
 @using System.ComponentModel.DataAnnotations
 @using WaxMapArt.Web.Services
 @inject AuthService Auth
@@ -9,18 +9,18 @@
     <div class="mt-7 bg-white border border-gray-200 rounded-xl shadow-2xs dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70 w-full max-w-md">
         <div class="p-4 sm:p-7">
             <div class="text-center">
-                <h1 class="block text-2xl font-bold text-gray-800 dark:text-white">Sign in</h1>
+                <h1 class="block text-2xl font-bold text-gray-800 dark:text-white">Sign up</h1>
                 <p class="mt-2 text-sm text-gray-600 dark:text-neutral-400">
-                    Don't have an account yet?
-                    <a class="text-blue-600 decoration-2 hover:underline focus:outline-hidden focus:underline font-medium dark:text-blue-500" href="/signup">
-                        Sign up here
+                    Already have an account?
+                    <a class="text-blue-600 decoration-2 hover:underline focus:outline-hidden focus:underline font-medium dark:text-blue-500" href="/login">
+                        Login here
                     </a>
                 </p>
             </div>
 
             <div class="mt-5">
                 <!-- Form -->
-                <EditForm Model="Model" OnValidSubmit="HandleLogin" FormName="LoginForm">
+                <EditForm Model="Model" OnValidSubmit="HandleSignUp" FormName="LoginForm">
                     <DataAnnotationsValidator/>
                     
                     <div class="grid gap-y-4">
@@ -68,6 +68,28 @@
                             <ValidationMessage For="@(() => Model.Password)" class="text-xs text-red-600 mt-2" id="password-error"/>
                         </div>
                         <!-- End Form Group -->
+                        
+                        <!-- Form Group -->
+                        <div>
+                            <div class="flex justify-between items-center">
+                                <label for="password" class="block text-sm mb-2 dark:text-white">Confirm Password</label>
+                            </div>
+                            <div class="relative">
+                                <InputText type="password" id="confirm-password" @bind-Value="Model.ConfirmPassword" 
+                                          class="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" 
+                                          required aria-describedby="password-error" />
+                                @if (HasConfirmPasswordError)
+                                {
+                                    <div class="absolute inset-y-0 end-0 pointer-events-none pe-3 flex items-center">
+                                        <svg class="size-5 text-red-500" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                                            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
+                                        </svg>
+                                    </div>
+                                }
+                            </div>
+                            <ValidationMessage For="@(() => Model.ConfirmPassword)" class="text-xs text-red-600 mt-2" id="confirm-password-error"/>
+                        </div>
+                        <!-- End Form Group -->
 
                         <!-- Checkbox -->
                         <div class="flex items-center">
@@ -98,31 +120,47 @@
 }
 
 @code {
-    private LoginModel Model { get; set; } = new();
-    private string? _errorMessage;
-
+    [SupplyParameterFromForm] private SignInModel Model { get; set; } = new();
+    
+    private string _errorMessage = string.Empty;
+    
     private bool HasUsernameError => !string.IsNullOrWhiteSpace(Model.Username) && Model.Username.Length < 5;
     private bool HasPasswordError => !string.IsNullOrWhiteSpace(Model.Password) && Model.Password.Length < 8;
+    private bool HasConfirmPasswordError => !string.IsNullOrWhiteSpace(Model.ConfirmPassword) && Model.Password != Model.ConfirmPassword;
 
-    private async Task HandleLogin()
-    {
-        var result = await Auth.LoginAsync(Model.Username, Model.Password);
+    private async Task HandleSignUp()
+    {       
+        if (Model.Password != Model.ConfirmPassword)
+        {
+            _errorMessage = "The passwords don't match.";
+            return;
+        }
 
+        var result = await Auth.RegisterAsync(Model.Username, Model.Password);
+        
         if (result)
-            NavigationManager.NavigateTo("/", true);
+        {
+            NavigationManager.NavigateTo("/");
+        }
         else
-            _errorMessage = "Invalid email or password.";
+        {
+            _errorMessage = "vbhssdfasgzdfe wsreasrfgedtdthn vbrfd";
+        }
     }
 
-    private class LoginModel
+    private class SignInModel
     {
         [Required]
-        [MinLength(5, ErrorMessage = "5+ characters required")]
         public string Username { get; set; } = null!;
 
-        [Required(ErrorMessage = "8+ characters required")]
-        [MinLength(8, ErrorMessage = "8+ characters required")]
-        public string Password { get; set; } = string.Empty;
+        [Required]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = null!;
+
+        [Required]
+        [DataType(DataType.Password)]
+        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+        public string ConfirmPassword { get; set; } = null!;
 
         public bool RememberMe { get; set; }
     }
