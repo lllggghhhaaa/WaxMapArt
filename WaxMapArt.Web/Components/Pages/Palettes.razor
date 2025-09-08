@@ -11,58 +11,64 @@
 @inject IJSRuntime JS
 
 <div class="flex flex-col">
-  <div class="-m-1.5 overflow-x-auto">
-    <div class="p-1.5 min-w-full inline-block align-middle">
-      <div class="border border-gray-200 rounded-lg overflow-hidden dark:border-neutral-700">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-          <thead>
-            <tr>
-              <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Name</th>
-              <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Blocks</th>
-              <th scope="col" class="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Action</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
-          @foreach (var palette in _palettes)
-          {
-            <tr>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">@palette.Name</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400 relative">
-                  <div @ref="_scrollContainer"
-                       @onwheel="OnScroll"
-                       @onscroll="OnScroll"
-                       class="flex flex-row gap-x-1 w-full overflow-x-auto relative
+    <div class="-m-1.5 overflow-x-auto">
+        <div class="p-1.5 min-w-full inline-block align-middle">
+            <div class="border border-gray-200 rounded-lg overflow-hidden dark:border-neutral-700">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
+                    <thead>
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Name</th>
+                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Blocks</th>
+                        <th scope="col" class="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
+                    @foreach (var palette in _palettes)
+                    {
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">@palette.Name</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400 relative">
+                                <div @ref="_scrollContainer"
+                                     @onwheel="OnScroll"
+                                     @onscroll="OnScroll"
+                                     class="flex flex-row gap-x-1 w-full overflow-x-auto relative
             [&::-webkit-scrollbar]:h-2
             [&::-webkit-scrollbar-track]:bg-gray-100
             [&::-webkit-scrollbar-thumb]:bg-gray-300
             dark:[&::-webkit-scrollbar-track]:bg-neutral-700
             dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 @_scrollClass">
         
-                      @foreach (var block in palette.Blocks)
-                      {
-                          <div class="rounded-md border border-gray-600 p-0.5 dark:border-neutral-500">
-                              <img src="@block.ImageUrl" alt="@block.MinecraftId" title="@block.MinecraftId"
-                                   class="w-10 h-10 object-cover flex-shrink-0" />
-                          </div>
-                      }
-                  </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
-                  <button @onclick="() => TogglePopover(palette.Id)" 
-                          @ref="@_buttonRefs[palette.Id]"
-                          type="button" 
-                          class="inline-flex items-center gap-x-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-neutral-300 dark:hover:text-white transition-colors duration-150">
-                      <span>Actions</span>
-                      <i class="ri-arrow-up-s-line text-gray-500 dark:text-neutral-400 transition-transform duration-150 @(_openPopovers.Contains(palette.Id) ? "rotate-90" : "")"></i>
-                  </button>
-              </td>
-            </tr>
-          }
-          </tbody>
-        </table>
-      </div>
+                                    @foreach (var block in palette.Blocks)
+                                    {
+                                        <div class="rounded-md border border-gray-600 p-0.5 dark:border-neutral-500">
+                                            <img src="@block.ImageUrl" alt="@block.MinecraftId" title="@block.MinecraftId"
+                                                 class="w-10 h-10 object-cover flex-shrink-0" />
+                                        </div>
+                                    }
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
+                                <button @onclick="() => TogglePopover(palette.Id)" 
+                                        @ref="@_buttonRefs[palette.Id]"
+                                        type="button" 
+                                        class="inline-flex items-center gap-x-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-neutral-300 dark:hover:text-white transition-colors duration-150">
+                                    <span>Actions</span>
+                                    <i class="ri-arrow-up-s-line text-gray-500 dark:text-neutral-400 transition-transform duration-150 @(_openPopovers.Contains(palette.Id) ? "rotate-90" : "")"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-  </div>
+    <div class="mt-4 flex justify-end">
+        <button @onclick="NavigateToAddPalette" type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
+            Add Palette
+        </button>
+    </div>
+
 </div>
 
 @if (_openPopovers.Any())

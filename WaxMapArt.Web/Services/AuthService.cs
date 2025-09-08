@@ -24,16 +24,7 @@ public class AuthService(IDbContextFactory<DatabaseContext> dbFactory, IHttpCont
         if (!passwordEquals)
             return false;
 
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Name, user.Name),
-            new(ClaimTypes.Role, user.Role.ToString())
-        };
-
-        var identity = new ClaimsIdentity(claims, "CustomAuth");
-        var principal = new ClaimsPrincipal(identity);
-
+        var principal = GenerateClaimsPrincipal(user);
         await httpContextAccessor.HttpContext!.SignInAsync("CustomAuth", principal);
 
         return true;
@@ -67,6 +58,10 @@ public class AuthService(IDbContextFactory<DatabaseContext> dbFactory, IHttpCont
 
         _dbContext.Users.Add(user);
         await _dbContext.SaveChangesAsync();
+        
+        var principal = GenerateClaimsPrincipal(user);
+        await httpContextAccessor.HttpContext!.SignInAsync("CustomAuth", principal);
+        
         return true;
     }
 
@@ -79,6 +74,20 @@ public class AuthService(IDbContextFactory<DatabaseContext> dbFactory, IHttpCont
     {
         var userIdClaim = httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier);
         return userIdClaim != null ? Guid.Parse(userIdClaim.Value) : null;
+    }
+
+    private ClaimsPrincipal GenerateClaimsPrincipal(User user)
+    {
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.Name, user.Name),
+            new(ClaimTypes.Role, user.Role.ToString())
+        };
+
+        var identity = new ClaimsIdentity(claims, "CustomAuth");
+        
+        return new ClaimsPrincipal(identity);
     }
 
     private byte[] CreateSalt()
