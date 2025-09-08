@@ -28,7 +28,7 @@
             <tr>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">@palette.Name</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400 relative">
-                  <div @ref="scrollContainer"
+                  <div @ref="_scrollContainer"
                        @onwheel="OnScroll"
                        @onscroll="OnScroll"
                        class="flex flex-row gap-x-1 w-full overflow-x-auto relative
@@ -36,7 +36,7 @@
             [&::-webkit-scrollbar-track]:bg-gray-100
             [&::-webkit-scrollbar-thumb]:bg-gray-300
             dark:[&::-webkit-scrollbar-track]:bg-neutral-700
-            dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 @scrollClass">
+            dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 @_scrollClass">
         
                       @foreach (var block in palette.Blocks)
                       {
@@ -127,14 +127,14 @@
 
 @code {
     private DatabaseContext? _database;
-    private List<Palette>? _palettes = [];
-    private ElementReference scrollContainer;
-    private string scrollClass = "";
+    private List<Palette> _palettes = [];
+    private ElementReference _scrollContainer;
+    private string _scrollClass = "";
     private IJSObjectReference? _module;
-    private HashSet<Guid> _openPopovers = new();
-    private bool _showDeleteConfirm = false;
+    private readonly HashSet<Guid> _openPopovers = [];
+    private bool _showDeleteConfirm;
     private Guid _paletteToDelete = Guid.Empty;
-    private Dictionary<Guid, ElementReference> _buttonRefs = new();
+    private readonly Dictionary<Guid, ElementReference> _buttonRefs = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -174,9 +174,9 @@
     {
         if (_module is null) return;
 
-        var position = await _module.InvokeAsync<string>("getScrollPosition", scrollContainer);
+        var position = await _module.InvokeAsync<string>("getScrollPosition", _scrollContainer);
         
-        scrollClass = position switch
+        _scrollClass = position switch
         {
             "none" => "",
             "left" => "[mask-image:linear-gradient(to_right,transparent_0,black_30px,black_100%)]",
@@ -268,7 +268,7 @@
         {
             dbContext.Palettes.Remove(palette);
             await dbContext.SaveChangesAsync();
-            _palettes?.Remove(palette);
+            _palettes.Remove(palette);
         }
         
         _paletteToDelete = Guid.Empty;
