@@ -7,7 +7,7 @@
         <UseRazorSourceGenerator>true</UseRazorSourceGenerator>
         <UserSecretsId>6817e0df-61c2-4e33-9eae-07c0203a3f15</UserSecretsId>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-        <LangVersion>14</LangVersion>
+        <LangVersion>13</LangVersion>
   </PropertyGroup>
 
     <ItemGroup>

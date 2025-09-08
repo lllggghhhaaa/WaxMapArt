@@ -68,6 +68,7 @@ public class Block
 {
     public Guid Id { get; set; } = Guid.CreateVersion7();
     public string MinecraftId { get; set; }
+    public string? Name { get; set; }
     public int MapId { get; set; }
     public string? ImageUrl { get; set; }
 
@@ -81,7 +82,7 @@ public class Block
         Id = MinecraftId,
         MapId = MapId,
         Properties = Properties,
-        GeneratorProperties = new()
+        GeneratorProperties = new GeneratorProperties
         {
             NeedSupport = NeedSupport
         }
