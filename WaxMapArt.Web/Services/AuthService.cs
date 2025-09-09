@@ -75,6 +75,12 @@ public class AuthService(IDbContextFactory<DatabaseContext> dbFactory, IHttpCont
         var userIdClaim = httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier);
         return userIdClaim != null ? Guid.Parse(userIdClaim.Value) : null;
     }
+    
+    public User? GetCurrentUser()
+    {
+        var userId = GetCurrentUserId();
+        return userId.HasValue ? _dbContext.Users.FirstOrDefault(u => u.Id == userId) : null;
+    }
 
     private ClaimsPrincipal GenerateClaimsPrincipal(User user)
     {

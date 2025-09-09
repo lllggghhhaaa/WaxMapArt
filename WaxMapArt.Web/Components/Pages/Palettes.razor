@@ -1,12 +1,12 @@
 ﻿@page "/palettes"
 @attribute [Authorize]
 @rendermode InteractiveServer
-@using System.Security.Claims
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.EntityFrameworkCore
+@using WaxMapArt.Web.Services
+@inject AuthService Auth
 @inject IDbContextFactory<DatabaseContext> DbContextFactory
-@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JS
 
@@ -19,7 +19,7 @@
                     <tr>
                         <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Name</th>
                         <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Blocks</th>
-                        <th scope="col" class="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Action</th>
+                        <th scope="col" class="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Actions</th>
                     </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
@@ -68,7 +68,6 @@
             Add Palette
         </button>
     </div>
-
 </div>
 
 @if (_openPopovers.Any())
@@ -77,7 +76,7 @@
     
     @foreach (var paletteId in _openPopovers.ToList())
     {
-        <div class="fixed z-20 w-56" style="@(GetPopoverStyleSync(paletteId))">
+        <div class="fixed z-20 w-56" style="@(GetPopoverStyle(paletteId))">
             <div class="divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-neutral-800 dark:divide-neutral-700 dark:ring-neutral-600">
                 <div class="py-1">
                     <button @onclick="() => EditPalette(paletteId)" 
@@ -132,7 +131,6 @@
 }
 
 @code {
-    private DatabaseContext? _database;
     private List<Palette> _palettes = [];
     private ElementReference _scrollContainer;
     private string _scrollClass = "";
@@ -141,23 +139,20 @@
     private bool _showDeleteConfirm;
     private Guid _paletteToDelete = Guid.Empty;
     private readonly Dictionary<Guid, ElementReference> _buttonRefs = new();
+    private bool _isDev;
 
     protected override async Task OnInitializedAsync()
     {
-        _database = await DbContextFactory.CreateDbContextAsync();
-        
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        var userId = Guid.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty);
-    
-        if (userId == Guid.Empty)
+        var database = await DbContextFactory.CreateDbContextAsync();
+
+        var user = Auth.GetCurrentUser();
+        if (user is null)
         {
             NavigationManager.NavigateTo("/login");
             return;
         }
     
-        _database = await DbContextFactory.CreateDbContextAsync();
-        _palettes = await _database.Palettes.Where(palette => palette.UserId == userId).Include(palette => palette.Blocks).ToListAsync();
+        _palettes = await database.Palettes.Where(palette => palette.UserId == user.Id).Include(palette => palette.Blocks).ToListAsync();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -200,12 +195,9 @@
         return buttonRef;
     }
 
-    private string GetPopoverStyleSync(Guid paletteId)
-    {
-        return "top: 100px; right: 20px;";
-    }
+    private string GetPopoverStyle(Guid paletteId) => GetPopoverStyleAsync(paletteId).Result;
 
-    private async Task<string> GetPopoverStyle(Guid paletteId)
+    private async Task<string> GetPopoverStyleAsync(Guid paletteId)
     {
         if (!_buttonRefs.TryGetValue(paletteId, out var buttonRef))
             return "top: 0; left: 0;";
@@ -266,6 +258,8 @@
     private async Task DeletePalette(Guid paletteId)
     {
         _showDeleteConfirm = false;
+
+        if (!_isDev) return;
         
         await using var dbContext = await DbContextFactory.CreateDbContextAsync();
         var palette = await dbContext.Palettes.FindAsync(paletteId);
