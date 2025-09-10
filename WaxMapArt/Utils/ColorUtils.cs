@@ -40,7 +40,7 @@ public static class ColorUtils
                     };
                 }).ToArray()
             : palette.Colors
-                .Select(color => MapIdToInfo(color.MapId).Color.Multiply(0.86d))
+                .Select(color => MapIdToInfo(color.MapId).Color.Multiply(M1))
                 .ToArray();
     }
     

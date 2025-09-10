@@ -69,7 +69,7 @@
     [Parameter] public string? ActiveTabId { get; set; }
     [Parameter] public EventCallback<string> ActiveTabIdChanged { get; set; }
 
-    private readonly List<PrelineNavCardTab> _tabs = new();
+    private readonly List<PrelineNavCardTab> _tabs = [];
     private PrelineNavCardTab? ActiveTab => _tabs.FirstOrDefault(t => t.Id == ActiveTabId);
 
     protected override void OnAfterRender(bool firstRender)

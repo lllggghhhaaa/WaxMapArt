@@ -2,168 +2,277 @@
 @page "/palettes/new"
 @attribute [Authorize]
 @rendermode InteractiveServer
-@using System.Security.Claims
 @using Microsoft.AspNetCore.Authorization
-@using Microsoft.AspNetCore.Components.Authorization
-@using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
 @using WaxMapArt.Utils
+@using WaxMapArt.Web.Components.Components
+@using WaxMapArt.Web.Services
 @inject NavigationManager NavigationManager
 @inject IDbContextFactory<DatabaseContext> DbContextFactory
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject AuthService Auth
 
-<div class="container mx-auto px-4 py-6">
-    <h1 class="text-3xl font-semibold mb-4">@SubmitButtonText Paleta</h1>
+<div class="min-h-screen py-8">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="mb-8 space-y-4">
+            <PrelineBreadcrumb>
+                <PrelineBreadcrumbItem Href="/palettes">Palettes</PrelineBreadcrumbItem>
+                <PrelineBreadcrumbItem IsActive="true">@(_isEditMode ? "Edit" : "New")</PrelineBreadcrumbItem>
+            </PrelineBreadcrumb>
 
-    @if (Value is null)
-    {
-        <div class="text-center text-gray-500">
-            <p>Carregando...</p>
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                        @(_isEditMode ? "Edit Palette" : "Create New Palette")
+                    </h1>
+                    <p class="mt-2 text-gray-600 dark:text-gray-400">
+                        Configure palette name, placeholder block and selected blocks.
+                    </p>
+                </div>
+
+                @if (_isEditMode)
+                {
+                    <div class="flex items-center space-x-2">
+                        <div class="flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400">
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 
+                                    010 1.414l-8 8a1 1 0 01-1.414 
+                                    0l-4-4a1 1 0 011.414-1.414L8 
+                                    12.586l7.293-7.293a1 1 0 
+                                    011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Edit Mode
+                        </div>
+                    </div>
+                }
+            </div>
         </div>
-    }
-    else
-    {
-        <EditForm Model="Value" OnValidSubmit="HandleValidSubmit">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
 
-            <div class="mb-4">
-                <label for="name" class="block text-sm font-medium text-gray-700">Nome</label>
-                <InputText id="name" @bind-Value="Value.Name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2" />
-            </div>
-            
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700">Bloco Placeholder</label>
-                <InputSelect @bind-Value="Value.PlaceholderBlockId" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2">
-                    @foreach (var block in _blocks)
-                    {
-                        <option value="@block.Id">@block.MinecraftId</option>
-                    }
-                </InputSelect>
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700">Blocos Selecionados</label>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full bg-white rounded-lg border border-separate border-tools-table-outline border-gray-200">
-                        <thead>
-                        <tr class="bg-gray-100">
-                            <th class="text-center px-4 py-2 text-gray-600 font-semibold">Bloco</th>
-                            <th class="text-center px-4 py-2 text-gray-600 font-semibold">Cor</th>
-                            <th class="text-center px-4 py-2 text-gray-600 font-semibold">Selecionar</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        @foreach (var block in _blocks)
-                        {
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="px-4 py-2">
-                                    <div class="flex items-center space-x-2">
-                                        <img src="@block.ImageUrl" alt="@block.MinecraftId" class="w-10 h-10 object-cover rounded-md border border-gray-300" />
-                                        <span>@block.MinecraftId</span>
-                                    </div>
-                                </td>
-                                <td class="px-4 py-2 h-full flex justify-center items-center">
-                                    @{
-                                        var color = ColorUtils.MapIdToInfo(block.MapId).Color.ToHexColor();
-                                    }
-                                    <svg class="w-5 h-5 rounded-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" title="@color">
-                                        <circle cx="10" cy="10" r="9" fill="@color" stroke="black" />
-                                    </svg>
-                                </td>
-                                <td class="px-4 py-2 text-center">
-                                    <input type="checkbox" class="form-checkbox h-5 w-5 text-indigo-600"
-                                           checked="@IsBlockSelected(block)"
-                                           @onchange="e => ToggleBlockSelection(block, (bool)e.Value!)" />
-                                </td>
-                            </tr>
-                        }
-                        </tbody>
-                    </table>
+        @if (Value is null)
+        {
+            <div class="flex items-center justify-center py-12">
+                <div class="text-center">
+                    <div class="inline-flex items-center px-4 py-2 font-semibold leading-6 text-sm shadow rounded-md text-white bg-blue-500 hover:bg-blue-400 transition ease-in-out duration-150 cursor-not-allowed" disabled="">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 
+                                 0 0 5.373 0 12h4zm2 5.291A7.962 
+                                 7.962 0 014 12H0c0 3.042 1.135 
+                                 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Loading...
+                    </div>
                 </div>
             </div>
+        }
+        else
+        {
+            <EditForm Model="Value" OnValidSubmit="HandleValidSubmit" class="space-y-8">
+                <DataAnnotationsValidator />
 
-            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">@SubmitButtonText</button>
-        </EditForm>
-    }
+                <div class="shadow-xl rounded-2xl overflow-hidden">
+                    <div class="p-6 sm:p-8 space-y-8">
+
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                                </svg>
+                                Basic Information
+                            </h3>
+
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <div class="space-y-2">
+                                    <PrelineInputText @bind-Value="Value.Name" 
+                                                      Placeholder="Enter palette name"
+                                                      AriaLabel="Palette Name">
+                                        <Label>Palette Name</Label>
+                                    </PrelineInputText>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-medium mb-2 dark:text-white">Placeholder Block</label>
+
+                                    <PrelineSelect TValue="Guid"
+                                                   @bind-SelectedValue="Value.PlaceholderBlockId"
+                                                   Placeholder="Select Placeholder Block"
+                                                   SelectOptions="_blockOptions"
+                                                   AriaLabel="Placeholder Block"/>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-2xl 
+                            dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-800/70 
+                            p-6 sm:p-8 space-y-6">
+                            
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 
+                                     01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 
+                                     011-1h6a1 1 0 011 1v6a1 1 0 
+                                     01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 
+                                     00-1 1v6a1 1 0 001 1h2a1 1 0 
+                                     001-1v-6a1 1 0 00-1-1h-2z"/>
+                                </svg>
+                                Block Selection
+                            </h3>
+
+                            @if (_blocks.Any())
+                            {
+                                <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-neutral-700 shadow-sm">
+                                    <table id="new" class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
+                                        <thead>
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Block</th>
+                                            <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Color</th>
+                                            <th scope="col" class="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Select</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
+                                        @foreach (var block in _blocks)
+                                        {
+                                            <tr @onclick="() => ToggleBlockSelection(block, !isSelected[block.Id])" style="cursor:pointer;">
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400 relative">
+                                                    <div class="flex items-center space-x-2">
+                                                        <img src="@block.ImageUrl" 
+                                                             alt="@block.MinecraftId"
+                                                             class="w-10 h-10 object-cover rounded-md border border-gray-300" />
+                                                        <div>
+                                                            <div class="font-medium text-gray-800 dark:text-neutral-200">
+                                                                @block.Name
+                                                            </div>
+                                                            <div class="text-sm text-gray-500 dark:text-neutral-400 font-mono">
+                                                                @block.MinecraftId
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">
+                                                    @{
+                                                        var color = ColorUtils.MapIdToInfo(block.MapId).Color.ToHexColor();
+                                                    }
+                                                    <div class="flex">
+                                                        <span class="mr-2 text-xs font-mono text-gray-500 dark:text-gray-400">@block.MapId</span>
+                                                        <svg class="w-5 h-5 rounded-full" xmlns="http://www.w3.org/2000/svg"
+                                                             viewBox="0 0 20 20" title="@color">
+                                                            <circle cx="10" cy="10" r="9" fill="@color"/>
+                                                        </svg>
+                                                        <span class="ml-2 text-xs font-mono text-gray-500 dark:text-gray-400">@color</span>
+                                                    </div>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400 relative">
+                                                    <div class="flex justify-end">
+                                                        <PrelineCheckbox @bind-Value="@isSelected[block.Id]" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-12 text-gray-500 dark:text-gray-400">
+                                    <svg class="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                    </svg>
+                                    <p class="text-lg font-medium">No blocks available</p>
+                                    <p class="text-sm mt-1">Please add some blocks first before creating palettes.</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="px-6 sm:px-8 py-4 flex flex-col sm:flex-row justify-end items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                        <div class="flex space-x-3">
+                            <button type="button" 
+                                    class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200"
+                                    @onclick='() => NavigationManager.NavigateTo("/palettes")'>
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                    class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 flex items-center space-x-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                <span>@(_isEditMode ? "Save Changes" : "Create Palette")</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+        }
+    </div>
 </div>
 
 @code {
     [Parameter] public Guid? PaletteId { get; set; }
-
     private Palette? Value { get; set; }
     private List<Block> _blocks = [];
-
     private DatabaseContext? _database;
+    private bool _isEditMode;
+    private Dictionary<Guid, bool> isSelected = new();
+    private List<SelectOption<Guid>> _blockOptions = new();
 
     protected override async Task OnInitializedAsync()
     {
-        _database = await DbContextFactory.CreateDbContextAsync();
-
-        _blocks = await _database.Blocks.OrderBy(block => block.MapId).ToListAsync();
-            
-        Value = PaletteId.HasValue
-            ? await _database.Palettes
-            .Include(p => p.Blocks)
-            .Include(p => p.PlaceholderBlock)
-            .FirstOrDefaultAsync(p => p.Id == PaletteId)
-            : new Palette
-            {
-                Blocks = [],
-                PlaceholderBlockId = _blocks.FirstOrDefault()?.Id ?? Guid.Empty
-            };
-    }
-
-    private bool IsBlockSelected(Block block) => Value?.Blocks.Any(b => b.Id == block.Id) ?? false;
-
-    private void ToggleBlockSelection(Block block, bool isSelected)
-    {
-        if (Value is null) return;
-        if (!isSelected && IsBlockSelected(block))
-        {
-            Value.Blocks.Remove(block);
-            return;
-        }
-        
-        Value.Blocks.RemoveAll(b => b.MapId == block.MapId);
-        if (!IsBlockSelected(block)) Value.Blocks.Add(block);
-    }
-
-    private async Task HandleValidSubmit()
-    {
-        if (_database is null || Value is null) return;
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        var userId = Guid.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty);
-        
-        if (userId == Guid.Empty)
+        var user = Auth.GetCurrentUser();
+        if (user is null) 
         {
             NavigationManager.NavigateTo("/login");
             return;
         }
         
-        Value.UserId = userId;
+        _database = await DbContextFactory.CreateDbContextAsync();
+        _blocks = await _database.Blocks.OrderBy(b => b.MapId).ToListAsync();
+        
+        _blockOptions = _blocks
+            .Select(b => new SelectOption<Guid>{ Value = b.Id, Text = b.MinecraftId })
+            .ToList();
 
-        if (PaletteId.HasValue)
+        Value = PaletteId.HasValue
+            ? await _database.Palettes.Include(p => p.Blocks).FirstOrDefaultAsync(p => p.Id == PaletteId)
+            : new Palette { Blocks = [], PlaceholderBlockId = _blocks.FirstOrDefault()?.Id ?? Guid.Empty, UserId = user.Id };
+
+        _isEditMode = PaletteId.HasValue;
+        foreach (var block in _blocks)
+            isSelected[block.Id] = Value.Blocks.Any(b => b.Id == block.Id);
+    }
+
+    private void ToggleBlockSelection(Block block, bool selected)
+    {
+        if (Value is null) return;
+
+        isSelected[block.Id] = selected;
+        
+        if (selected && !Value.Blocks.Contains(block))
+            Value.Blocks.Add(block);
+        else if (!selected && Value.Blocks.Contains(block))
+            Value.Blocks.Remove(block);
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var user = Auth.GetCurrentUser();
+        if (user is null)
         {
-            var existingPalette = await _database.Palettes
-                .Include(p => p.Blocks)
-                .FirstOrDefaultAsync(p => p.Id == PaletteId);
-            if (existingPalette != null)
-            {
-                existingPalette.Name = Value.Name;
-                existingPalette.PlaceholderBlockId = Value.PlaceholderBlockId;
-                existingPalette.Blocks = Value.Blocks;
-            }
+            NavigationManager.NavigateTo("/login");
+            return;
         }
+
+        if (_database is null || Value is null) return;
+
+        if (_isEditMode)
+            _database.Update(Value);
         else
-        { 
-            await _database.Palettes.AddAsync(Value);
-        }
+            await _database.AddAsync(Value);
 
         await _database.SaveChangesAsync();
         NavigationManager.NavigateTo("/palettes");
     }
 
-    private string SubmitButtonText => PaletteId.HasValue ? "Atualizar" : "Criar";
 }

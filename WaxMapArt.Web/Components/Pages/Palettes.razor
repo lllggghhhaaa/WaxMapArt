@@ -153,6 +153,7 @@
         }
     
         _palettes = await database.Palettes.Where(palette => palette.UserId == user.Id).Include(palette => palette.Blocks).ToListAsync();
+        await UpdateMask();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
