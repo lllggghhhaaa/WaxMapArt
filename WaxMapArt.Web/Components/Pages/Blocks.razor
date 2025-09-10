@@ -198,12 +198,12 @@
 
     private void NavigateToEdit(Guid blockId)
     {
-        NavigationManager.NavigateTo($"/block/{blockId}");
+        NavigationManager.NavigateTo($"/blocks/{blockId}");
     }
 
     private void NavigateToAddBlock()
     {
-        NavigationManager.NavigateTo("/block");
+        NavigationManager.NavigateTo("/blocks/new");
     }
 
     private string GetPopoverStyle(Guid paletteId) => GetPopoverStyleAsync(paletteId).Result;
@@ -273,7 +273,7 @@
         {
             dbContext.Blocks.Remove(block);
             await dbContext.SaveChangesAsync();
-            _blocks.Remove(block);
+            _blocks?.Remove(block);
         }
         
         _blockToDelete = Guid.Empty;

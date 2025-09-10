@@ -8,7 +8,7 @@
             <button type="button" 
                     class="size-6 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800" 
                     tabindex="-1" 
-                    aria-label="Decrease" 
+                    aria-label="Diminuir" 
                     disabled="@IsDecrementDisabled()"
                     @onclick="DecrementValue">
                 <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -20,7 +20,7 @@
                    class="p-0 w-6 bg-transparent border-0 text-gray-800 text-center focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none dark:text-white" 
                    style="-moz-appearance: textfield;" 
                    type="number" 
-                   aria-label="@Label"
+                   aria-label="@AriaLabel"
                    aria-invalid="@(!IsValidValue(_currentInputText, out _))"
                    value="@GetFormattedValue()" 
                    min="@GetFormattedValue(Min)"
@@ -34,7 +34,7 @@
             <button type="button" 
                     class="size-6 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800" 
                     tabindex="-1" 
-                    aria-label="Increase" 
+                    aria-label="Aumentar" 
                     disabled="@IsIncrementDisabled()"
                     @onclick="IncrementValue">
                 <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -47,13 +47,13 @@
     else
     {
         <div class="w-full flex justify-between items-center gap-x-1">
-            @if (Variant == InputNumberVariant.Horizontal)
+            @if (Variant == InputNumberVariant.Horizontal && Label is not null)
             {
                 <span class="py-2.5 sm:py-3 px-4 inline-flex items-center min-w-fit w-full border border-gray-200 bg-gray-50 sm:text-sm text-gray-500 -mt-px -ms-px first:rounded-t-lg last:rounded-b-lg sm:w-auto sm:first:rounded-s-lg sm:mt-0 sm:first:ms-0 sm:first:rounded-se-none sm:last:rounded-es-none sm:last:rounded-e-lg dark:bg-neutral-700 dark:border-neutral-700 dark:text-neutral-400">@Label</span>
             }
             
             <div class="grow py-2 px-3">
-                @if (Variant == InputNumberVariant.Vertical && !string.IsNullOrEmpty(Label))
+                @if (Variant == InputNumberVariant.Vertical && Label is not null)
                 {
                     <span class="block text-xs text-gray-500 dark:text-neutral-400">
                         @Label
@@ -63,7 +63,7 @@
                        class="w-full p-0 bg-transparent border-0 text-gray-800 focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none dark:text-white" 
                        style="-moz-appearance: textfield;" 
                        type="number" 
-                       aria-label="@Label"
+                       aria-label="@AriaLabel"
                        aria-invalid="@(!IsValidValue(_currentInputText, out _))"
                        value="@GetFormattedValue()" 
                        min="@GetFormattedValue(Min)"
@@ -81,7 +81,7 @@
                 <div class="flex flex-col -gap-y-px divide-y divide-gray-200 border-s border-gray-200 dark:divide-neutral-700 dark:border-neutral-700">
                     <button type="button" 
                             class="size-7 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-se-lg bg-gray-50 text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:text-white dark:hover:bg-neutral-700 dark:focus:bg-neutral-700" 
-                            aria-label="Increase" 
+                            aria-label="Aumentar" 
                             disabled="@IsIncrementDisabled()"
                             @onclick="IncrementValue">
                         <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -91,7 +91,7 @@
                     </button>
                     <button type="button" 
                             class="size-7 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-ee-lg bg-gray-50 text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:text-white dark:hover:bg-neutral-700 dark:focus:bg-neutral-700" 
-                            aria-label="Decrease" 
+                            aria-label="Diminuir" 
                             disabled="@IsDecrementDisabled()"
                             @onclick="DecrementValue">
                         <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -105,7 +105,7 @@
                 <div class="flex items-center -gap-y-px divide-x divide-gray-200 border-s border-gray-200 dark:divide-neutral-700 dark:border-neutral-700">
                     <button type="button" 
                             class="size-10 inline-flex justify-center items-center gap-x-2 text-sm font-medium bg-white text-gray-800 hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800" 
-                            aria-label="Decrease" 
+                            aria-label="Diminuir" 
                             disabled="@IsDecrementDisabled()"
                             @onclick="DecrementValue">
                         <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -114,7 +114,7 @@
                     </button>
                     <button type="button" 
                             class="size-10 inline-flex justify-center items-center gap-x-2 text-sm font-medium last:rounded-e-lg bg-white text-gray-800 hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800" 
-                            aria-label="Increase" 
+                            aria-label="Aumentar" 
                             disabled="@IsIncrementDisabled()"
                             @onclick="IncrementValue">
                         <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -141,7 +141,8 @@
     [Parameter] public TValue Step { get; set; }
     [Parameter] public int DecimalPlaces { get; set; } = 1;
     [Parameter] public bool Disabled { get; set; }
-    [Parameter] public string Label { get; set; } = string.Empty;
+    [Parameter] public string? AriaLabel { get; set; }
+    [Parameter] public RenderFragment? Label { get; set; }
     [Parameter] public string Placeholder { get; set; } = string.Empty;
     [Parameter] public string CssClass { get; set; } = string.Empty;
 

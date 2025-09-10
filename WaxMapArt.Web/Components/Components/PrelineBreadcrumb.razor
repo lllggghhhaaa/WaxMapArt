@@ -1,0 +1,9 @@
+﻿<nav aria-label="Breadcrumb">
+    <ol class="flex items-center whitespace-nowrap">
+        @ChildContent
+    </ol>
+</nav>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

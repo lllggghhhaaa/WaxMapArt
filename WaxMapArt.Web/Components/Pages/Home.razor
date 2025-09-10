@@ -59,19 +59,23 @@ else
                                             Min="1"
                                             Max="16"
                                             Step="1"
-                                            Label="Width"/>
+                                            AriaLabel="Width">
+                            <Label>Largura</Label>
+                        </PrelineInputNumber>
                         <PrelineInputNumber TValue="int"
                                             @bind-Value="_formModel.HeightMultiplier"
                                             Variant="InputNumberVariant.Horizontal"
                                             Min="1"
                                             Max="16"
                                             Step="1"
-                                            Label="Height"/>
+                                            AriaLabel="Height">
+                            <Label>Altura</Label>
+                        </PrelineInputNumber>
                     </div>
 
                     <PrelineSelect TValue="ResizeMethod"
                                    @bind-SelectedValue="_formModel.ResizeMethod"
-                                   Placeholder="Select Resize Method"
+                                   Placeholder="Selecionar Método de Redimensionamento"
                                    SelectOptions="@(SelectOption.FromEnum<ResizeMethod>())"/>
 
                     @switch (_formModel.ResizeMethod)
@@ -80,18 +84,21 @@ else
                             <PrelineInputNumber TValue="int"
                                                 @bind-Value="_formModel.CropOffsetX"
                                                 Variant="InputNumberVariant.Horizontal"
-                                                Step="1"
-                                                Label="Crop Offset X"/>
+                                                Step="1">
+                                <Label>Deslocamento X do Corte</Label>
+                            </PrelineInputNumber>
                             <PrelineInputNumber TValue="int"
                                                 @bind-Value="_formModel.CropOffsetY"
                                                 Variant="InputNumberVariant.Horizontal"
-                                                Step="1"
-                                                Label="Crop Offset Y"/>
+                                                Step="1">
+                                <Label>Deslocamento Y do Corte</Label>
+                            </PrelineInputNumber>
                             break;
                         case ResizeMethod.Pad:
                             <PrelineInputText @bind-Value="_formModel.PadColor"
-                                              Placeholder="Pad Color"
-                                              Label="Pad Color" />
+                                              Placeholder="Cor de Preenchimento">
+                                <Label>Cor de Preenchimento</Label>
+                            </PrelineInputText>
                             break;
                     }
                 </div>
@@ -103,22 +110,25 @@ else
                                         Variant="InputNumberVariant.Horizontal"
                                         Min="0.0f"
                                         Max="2.0f"
-                                        Step="0.1f"
-                                        Label="Saturation"/>
+                                        Step="0.1f">
+                        <Label>Saturação</Label>
+                    </PrelineInputNumber>
                     <PrelineInputNumber TValue="float"
                                         @bind-Value="_formModel.Brightness"
                                         Variant="InputNumberVariant.Horizontal"
                                         Min="0.0f"
                                         Max="2.0f"
-                                        Step="0.1f"
-                                        Label="Brightness"/>
+                                        Step="0.1f">
+                        <Label>Brilho</Label>
+                    </PrelineInputNumber>
                     <PrelineInputNumber TValue="float"
                                         @bind-Value="_formModel.Contrast"
                                         Variant="InputNumberVariant.Horizontal"
                                         Min="0.0f"
                                         Max="2.0f"
-                                        Step="0.1f"
-                                        Label="Contrast"/>
+                                        Step="0.1f">
+                        <Label>Contraste</Label>
+                    </PrelineInputNumber>
                 </div>
             </PrelineNavCardTab>
         </PrelineNavCard>

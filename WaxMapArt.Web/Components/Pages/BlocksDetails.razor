@@ -1,4 +1,5 @@
-﻿@page "/block/{BlockId:guid?}"
+﻿@page "/blocks/{BlockId:guid?}"
+@page "/blocks/new"
 @attribute [Authorize(Roles = "Developer")]
 @rendermode InteractiveServer
 @inject IDbContextFactory<DatabaseContext> DbContextFactory
@@ -6,85 +7,276 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using WaxMapArt.Utils
+@using WaxMapArt.Web.Components.Components
 
-<div class="container mx-auto px-4 py-6">
-    <h3 class="text-2xl font-semibold mb-4">@(_isEditMode ? "Editar Bloco" : "Criar Bloco")</h3>
-
-    @if (Value is null)
-    {
-        <div class="text-center text-gray-500">
-            <h1>Carregando...</h1>
-        </div>
-    }
-    else
-    {
-        <EditForm Model="Value" OnValidSubmit="HandleValidSubmit">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
-
-            <div class="mb-4">
-                <label for="minecraftId" class="block text-sm font-medium text-gray-700">Minecraft ID</label>
-                <InputText id="minecraftId" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" @bind-Value="Value.MinecraftId" />
-            </div>
-
-            <div class="mb-4">
-                <label for="mapId" class="block text-sm font-medium text-gray-700">Map ID</label>
-                <div class="flex items-center space-x-4">
-                    <InputNumber id="mapId" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" @bind-Value="Value.MapId" />
-                    
-                    @{
-                        var color = ColorUtils.MapIdToInfo(Value.MapId).Color.ToHexColor();
-                        
-                        <svg class="w-5 h-5 rounded-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" title="@color">
-                            <circle cx="10" cy="10" r="9" fill="@color" />
-                        </svg>
-                    }
-                </div>
-            </div>
-
-            <div class="mb-4">
-                <label for="imageUrl" class="block text-sm font-medium text-gray-700">Image URL</label>
-                <InputText id="imageUrl" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" @bind-Value="Value.ImageUrl" />
-            </div>
-
-            <div class="mb-4">
-                <label for="properties" class="block text-sm font-medium text-gray-700">Propriedades (Key: Value)</label>
-
-                <div class="flex space-x-2 mb-2">
-                    <InputText id="properties" class="block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" @bind-Value="_newProperty.Key" placeholder="Property Key" />
-                    <InputText id="propertiesValue" class="block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" @bind-Value="_newProperty.Value" placeholder="Property Value" />
-                    <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" @onclick="AddProperty">Adicionar</button>
-                </div>
-
-                <ul class="space-y-1">
-                    @foreach (var prop in Value.Properties)
-                    {
-                        <li class="flex justify-between items-center border px-2 py-1 rounded-md">
-                            <span>@prop.Key: @prop.Value</span>
-                            <button type="button" class="text-red-500 hover:text-red-700" @onclick="() => RemoveProperty(prop.Key)">Remover</button>
-                        </li>
-                    }
-                </ul>
-            </div>
+<div class="min-h-screen py-8">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="mb-8 space-y-4">
+            <PrelineBreadcrumb>
+                <PrelineBreadcrumbItem Href="/blocks">Blocks</PrelineBreadcrumbItem>
+                <PrelineBreadcrumbItem IsActive="true">@(_isEditMode ? "Edit" : "New")</PrelineBreadcrumbItem>
+            </PrelineBreadcrumb>
             
-            <div class="mb-4">
-                <label for="properties" class="block text-sm font-medium text-gray-700">Propriedades do gerador (Key: Value)</label>
-
-                <ul class="space-y-1">
-                    <li class="flex justify-between items-center border px-2 py-1 rounded-md">
-                        <span>Need Support</span>
-                        <input type="checkbox" class="form-checkbox h-5 w-5 text-indigo-600"
-                               checked="@Value?.NeedSupport" @onchange="args => Value!.NeedSupport = (bool)(args.Value ?? false)" />
-                    </li>
-                </ul>
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                        @(_isEditMode ? "Edit Block" : "Create New Block")
+                    </h1>
+                    <p class="mt-2 text-gray-600 dark:text-gray-400">
+                        Configure the block properties and information for Minecraft.
+                    </p>
+                </div>
+                
+                @if (_isEditMode)
+                {
+                    <div class="flex items-center space-x-2">
+                        <div class="flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400">
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Edit Mode
+                        </div>
+                    </div>
+                }
             </div>
+        </div>
 
-            <div class="flex space-x-2">
-                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">@SubmitButtonText</button>
-                <button type="button" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700" @onclick="GoBack">Cancelar</button>
+        @if (Value is null)
+        {
+            <div class="flex items-center justify-center py-12">
+                <div class="text-center">
+                    <div class="inline-flex items-center px-4 py-2 font-semibold leading-6 text-sm shadow rounded-md text-white bg-blue-500 hover:bg-blue-400 transition ease-in-out duration-150 cursor-not-allowed" disabled="">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Loading...
+                    </div>
+                </div>
             </div>
-        </EditForm>
-    }
+        }
+        else
+        {
+            <EditForm Model="Value" OnValidSubmit="HandleValidSubmit">
+                <DataAnnotationsValidator />
+                
+                <div class="shadow-xl rounded-2xl overflow-hidden">
+                    <div class="p-2 space-y-8">
+                        
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                                </svg>
+                                Basic Information
+                            </h3>
+                            
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <div class="space-y-2">
+                                    <PrelineInputText @bind-Value="Value.Name" 
+                                                      Placeholder="Enter the block name"
+                                                      AriaLabel="Block Name">
+                                        <Label>Block Name</Label>
+                                    </PrelineInputText>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <PrelineInputText @bind-Value="Value.MinecraftId" 
+                                                      Placeholder="minecraft:stone"
+                                                      AriaLabel="Minecraft ID">
+                                        <Label>Minecraft ID</Label>
+                                    </PrelineInputText>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                                </svg>
+                                Visual Configuration
+                            </h3>
+                            
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <div class="space-y-2">
+                                    <div class="flex items-center space-x-4">
+                                        <PrelineInputText @bind-Value="Value.ImageUrl" 
+                                                          Placeholder="https://..."
+                                                          AriaLabel="Icon URL"
+                                                          Class="flex-1">
+                                            <Label>Icon URL</Label>
+                                        </PrelineInputText>
+                                        
+                                        @if (!string.IsNullOrEmpty(Value.ImageUrl))
+                                        {
+                                            <div class="flex-shrink-0">
+                                                <img class="w-16 h-16 rounded-lg border-2 border-gray-200 dark:border-gray-600 object-cover" 
+                                                     src="@Value.ImageUrl" 
+                                                     alt="Block Icon">
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center">
+                                                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                </svg>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Map ID
+                                    </label>
+                                    <div class="flex items-center space-x-4">
+                                            <PrelineInputNumber TValue="int" Min="0" Max="61"
+                                                                Variant="InputNumberVariant.Horizontal"
+                                                                @bind-Value="Value.MapId">
+                                                <Label>
+                                                    @{
+                                                        var color = ColorUtils.MapIdToInfo(Value.MapId).Color.ToHexColor();
+                                                    }
+                                                    <div class="flex items-center space-x-1 bg-gray-50 dark:bg-neutral-700 rounded-lg">
+                                                        <div class="w-5 h-5 rounded-full border-white shadow-md" style="background-color: @color"></div>
+                                                        <span class="text-sm font-mono text-gray-600 dark:text-gray-300">@color</span>
+                                                    </div>
+                                                </Label>
+                                            </PrelineInputNumber>
+                                        </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-2xl 
+            dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-800/70 
+            p-6 sm:p-8 space-y-8">
+
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 
+                     01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 
+                     011-1h6a1 1 0 011 1v6a1 1 0 
+                     01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 
+                     00-1 1v6a1 1 0 001 1h2a1 1 0 
+                     001-1v-6a1 1 0 00-1-1h-2z"/>
+                                </svg>
+                                Custom Properties
+                            </h3>
+
+                            <div class="space-y-4">
+                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Add New Property
+                                </h4>
+
+                                <div class="flex flex-row space-x-2">
+                                    <PrelineInputText @bind-Value="_newProperty.Key" 
+                                                      Placeholder="Enter the property key"
+                                                      AriaLabel="Property Key">
+                                        <Label>Key</Label>
+                                    </PrelineInputText>
+
+                                    <PrelineInputText @bind-Value="_newProperty.Value" 
+                                                      Placeholder="Enter the property value"
+                                                      AriaLabel="Property Value">
+                                        <Label>Value</Label>
+                                    </PrelineInputText>
+
+                                    <div class="flex items-end">
+                                        <button type="button" 
+                                                @onclick="AddProperty"
+                                                class="w-full max-w-32 px-6 py-3 bg-blue-600 text-white font-medium 
+                               rounded-lg hover:bg-blue-700 focus:outline-none 
+                               focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 
+                               transition-colors duration-200 flex items-center justify-center gap-2">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                            </svg>
+                                            <span>Add</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if (Value.Properties.Any())
+                            {
+                                <div class="space-y-3">
+                                    <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Existing Properties (@Value.Properties.Count())
+                                    </h4>
+
+                                    @foreach (var prop in Value.Properties)
+                                    {
+                                        <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-neutral-800 
+                            border border-gray-200 dark:border-neutral-700 rounded-lg shadow-sm">
+                    
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                                <span class="font-medium text-gray-900 dark:text-white">@prop.Key</span>
+                                                <span class="text-gray-400">:</span>
+                                                <span class="text-gray-700 dark:text-gray-300 font-mono bg-gray-100 
+                                     dark:bg-neutral-700 px-2 py-1 rounded">@prop.Value</span>
+                                            </div>
+
+                                            <button type="button" 
+                                                    class="text-red-500 hover:text-red-700 hover:bg-red-50 
+                                   dark:hover:bg-red-900/20 p-2 rounded-lg 
+                                   transition-colors duration-200" 
+                                                    @onclick="() => RemoveProperty(prop.Key)"
+                                                    title="Remove property">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                          d="M19 7l-.867 12.142A2 2 0 
+                                     0116.138 21H7.862a2 2 0 
+                                     01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 
+                                     1 0 00-1-1h-4a1 1 0 
+                                     00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                                    <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 
+                         01-2-2V5a2 2 0 012-2h5.586a1 1 0 
+                         01.707.293l5.414 5.414a1 1 0 
+                         01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    <p>No custom properties added yet.</p>
+                                    <p class="text-sm mt-1">Use the form above to add properties.</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="px-6 sm:px-8 py-4 flex flex-col sm:flex-row justify-end items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                        <div class="flex space-x-3">
+                            <button type="button" 
+                                    class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200"
+                                    @onclick='() => NavigationManager.NavigateTo("blocks")'>
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                    class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 flex items-center space-x-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                <span>@(_isEditMode ? "Salvar Alterações" : "Criar Bloco")</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+        }
+    </div>
 </div>
 
 @code {
@@ -93,13 +285,12 @@
 
     private bool _isEditMode;
     private BlockProperty _newProperty = new();
-
     private DatabaseContext? _database;
 
     protected override async Task OnInitializedAsync()
     {
         _database = await DbContextFactory.CreateDbContextAsync();
-        
+
         if (BlockId.HasValue)
         {
             Value = await _database.Blocks.FirstOrDefaultAsync(b => b.Id == BlockId);
@@ -124,13 +315,16 @@
         if (Value is null || string.IsNullOrWhiteSpace(_newProperty.Key) || string.IsNullOrWhiteSpace(_newProperty.Value)) return;
         Value.Properties[_newProperty.Key] = _newProperty.Value;
         _newProperty = new BlockProperty();
+        StateHasChanged();
     }
 
-    private void RemoveProperty(string key) => Value?.Properties.Remove(key);
+    private void RemoveProperty(string key) 
+    {
+        Value?.Properties.Remove(key);
+        StateHasChanged();
+    }
 
     private void GoBack() => NavigationManager.NavigateTo("/blocks");
-
-    private string SubmitButtonText => _isEditMode ? "Atualizar Bloco" : "Criar Bloco";
 
     public class BlockProperty
     {

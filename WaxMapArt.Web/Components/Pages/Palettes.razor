@@ -239,7 +239,7 @@
     private void EditPalette(Guid paletteId)
     {
         _openPopovers.Clear();
-        NavigationManager.NavigateTo($"/palette/{paletteId}");
+        NavigationManager.NavigateTo($"/palettes/{paletteId}");
     }
 
     private void ConfirmDeletePalette(Guid paletteId)
@@ -276,6 +276,6 @@
 
     private void NavigateToAddPalette()
     {
-        NavigationManager.NavigateTo("/palette");
+        NavigationManager.NavigateTo("/palettes/new");
     }
 }

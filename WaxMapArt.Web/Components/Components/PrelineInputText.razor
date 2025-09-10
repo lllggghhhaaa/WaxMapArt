@@ -1,29 +1,32 @@
-﻿<div class="max-w-sm">
-    @if (!string.IsNullOrEmpty(Label))
+﻿<div class="w-full">
+    @if (Label is not null)
     {
-        <label for="@GetHashCode()" class="text-left block text-sm font-medium mb-2 dark:text-white">@Label</label>
+        <label for="@GetHashCode()" class="block text-sm font-medium mb-2 dark:text-white">@Label</label>
     }
     <input type="text"
            id="@GetHashCode()"
            value="@Value"
            @onchange="OnInputChange"
-           class="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600 @Class"
-           placeholder="@Placeholder">
+           @oninput="OnInputChange"
+           class="py-2.5 sm:py-3 px-4 block w-full border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:placeholder-neutral-500 dark:focus:ring-neutral-600 @Class"
+           placeholder="@Placeholder"
+           disabled="@Disabled"
+           aria-label="@AriaLabel">
 </div>
 
 @code {
     [Parameter] public string Class { get; set; } = "";
     [Parameter] public string Placeholder { get; set; } = string.Empty;
-    [Parameter] public string? Label { get; set; }
+    [Parameter] public RenderFragment? Label { get; set; }
     [Parameter] public string Value { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public string AriaLabel { get; set; } = string.Empty;
     
     private async Task OnInputChange(ChangeEventArgs e)
     {
-        var newValue = e.Value?.ToString();
-        if (string.IsNullOrEmpty(newValue))
-            return;
-
+        var newValue = e.Value?.ToString() ?? string.Empty;
+        
         if (newValue != Value)
         {
             Value = newValue;
