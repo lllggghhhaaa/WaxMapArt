@@ -2,7 +2,6 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Authorization
-@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.EntityFrameworkCore
 @using WaxMapArt.Web.Services
 @inject AuthService Auth
@@ -151,6 +150,8 @@
             NavigationManager.NavigateTo("/login");
             return;
         }
+
+        _isDev = user.Role == UserRole.Developer;
     
         _palettes = await database.Palettes.Where(palette => palette.UserId == user.Id).Include(palette => palette.Blocks).ToListAsync();
         await UpdateMask();
@@ -188,12 +189,6 @@
         };
 
         StateHasChanged();
-    }
-
-    private ElementReference GetButtonRef(Guid paletteId)
-    {
-        _buttonRefs.TryGetValue(paletteId, out var buttonRef);
-        return buttonRef;
     }
 
     private string GetPopoverStyle(Guid paletteId) => GetPopoverStyleAsync(paletteId).Result;
