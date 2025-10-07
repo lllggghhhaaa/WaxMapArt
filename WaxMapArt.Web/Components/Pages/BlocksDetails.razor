@@ -84,9 +84,10 @@
                                 </div>
 
                                 <div class="space-y-2">
-                                    <PrelineInputText @bind-Value="Value.MinecraftId" 
+                                    <PrelineInputText Value="@Value.MinecraftId" 
                                                       Placeholder="minecraft:stone"
-                                                      AriaLabel="Minecraft ID">
+                                                      AriaLabel="Minecraft ID"
+                                                      ValueChanged="IdChanged">
                                         <Label>Minecraft ID</Label>
                                     </PrelineInputText>
                                 </div>
@@ -337,4 +338,20 @@
         public string Key { get; set; } = string.Empty;
         public string Value { get; set; } = string.Empty;
     }
+
+    private void IdChanged(string id)
+    {
+        Value.MinecraftId = id;
+        
+        if (string.IsNullOrWhiteSpace(Value?.Name) && !string.IsNullOrWhiteSpace(id))
+        {
+            Value.Name = id.Replace("minecraft:", "").Replace(":", " ").Replace("_", " ")
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .Select(word => char.ToUpper(word[0]) + word[1..].ToLower())
+                .Aggregate((a, b) => a + " " + b);
+        }
+        
+        StateHasChanged();
+    }
+
 }
