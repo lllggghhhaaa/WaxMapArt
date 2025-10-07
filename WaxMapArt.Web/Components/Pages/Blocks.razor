@@ -3,6 +3,7 @@
 @using WaxMapArt.Utils
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.EntityFrameworkCore
+@using WaxMapArt.Web.Entities
 @using WaxMapArt.Web.Services
 @inject AuthService Auth
 @inject NavigationManager NavigationManager
@@ -112,18 +113,18 @@
 {
     <div class="fixed inset-0 z-10" @onclick="CloseAllPopovers"></div>
     
-    @foreach (var paletteId in _openPopovers.ToList())
+    @foreach (var blockId in _openPopovers.ToList())
     {
-        <div class="fixed z-20 w-56" style="@(GetPopoverStyle(paletteId))">
+        <div class="fixed z-20 w-56" style="@_popoverPositions.GetValueOrDefault(blockId, "top:0;left:0;")">
             <div class="divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-neutral-800 dark:divide-neutral-700 dark:ring-neutral-600">
                 <div class="py-1">
-                    <button @onclick="() => NavigateToEdit(paletteId)" 
+                    <button @onclick="() => NavigateToEdit(blockId)" 
                             type="button"
                             class="group flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-white">
                         <i class="ri-edit-2-line"></i>
                         <span class="ml-2">Edit</span>
                     </button>
-                    <button @onclick="() => ConfirmDeleteBlock(paletteId)" 
+                    <button @onclick="() => ConfirmDeleteBlock(blockId)" 
                             type="button"
                             class="group flex items-center w-full px-4 py-2 text-sm text-red-700 hover:bg-red-50 hover:text-red-900 dark:text-red-400 dark:hover:bg-red-900/20 dark:hover:text-red-300">
                         <i class="ri-delete-bin-2-line"></i>
@@ -176,6 +177,7 @@
     private bool _showDeleteConfirm;
     private Guid _blockToDelete = Guid.Empty;
     private readonly Dictionary<Guid, ElementReference> _buttonRefs = new();
+    private readonly Dictionary<Guid, string> _popoverPositions = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -203,27 +205,6 @@
         NavigationManager.NavigateTo("/blocks/new");
     }
 
-    private string GetPopoverStyle(Guid paletteId) => GetPopoverStyleAsync(paletteId).Result;
-
-    private async Task<string> GetPopoverStyleAsync(Guid paletteId)
-    {
-        if (!_buttonRefs.TryGetValue(paletteId, out var buttonRef))
-            return "top: 0; left: 0;";
-
-        try
-        {
-            var rect = await JS.InvokeAsync<dynamic>("getBoundingClientRect", buttonRef);
-            var top = rect.bottom + 8;
-            var left = rect.right - 224;
-            
-            return $"top: {top}px; left: {left}px;";
-        }
-        catch
-        {
-            return "top: 0; left: 0;";
-        }
-    }
-
     private void CloseAllPopovers()
     {
         _openPopovers.Clear();
@@ -239,6 +220,22 @@
         {
             _openPopovers.Clear();
             _openPopovers.Add(paletteId);
+
+            if (_buttonRefs.TryGetValue(paletteId, out var buttonRef))
+            {
+                try
+                {
+                    var rect = await JS.InvokeAsync<DomRect>("getBoundingClientRect", buttonRef);
+                    double top = (int)(rect.Top + rect.Height + 10);
+                    double left = (int)(rect.Left + rect.Width - 224);
+
+                    _popoverPositions[paletteId] = $"top: {top}px; left: {left}px;";
+                }
+                catch
+                {
+                    _popoverPositions[paletteId] = "top: 0; left: 0;";
+                }
+            }
         }
         
         await InvokeAsync(StateHasChanged);
@@ -257,7 +254,7 @@
         _blockToDelete = Guid.Empty;
     }
 
-    private async Task DeleteBlock(Guid paletteId)
+    private async Task DeleteBlock(Guid blockId)
     {
         _showDeleteConfirm = false;
 
@@ -265,13 +262,13 @@
         if (user is null || user.Role != UserRole.Developer) return;
         
         await using var dbContext = await DbContextFactory.CreateDbContextAsync();
-        var block = await dbContext.Blocks.FindAsync(paletteId);
+        var block = await dbContext.Blocks.FindAsync(blockId);
         
         if (block is not null)
         {
             dbContext.Blocks.Remove(block);
             await dbContext.SaveChangesAsync();
-            _blocks?.Remove(block);
+            _blocks?.RemoveAll(b => b.Id == blockId);
         }
         
         _blockToDelete = Guid.Empty;

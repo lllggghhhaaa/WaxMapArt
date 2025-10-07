@@ -2,11 +2,11 @@
 
 namespace WaxMapArt.Web.Database;
 
-public class DatabaseContext(IConfiguration config, ILogger<DatabaseContext> logger) : DbContext
+public class DatabaseContext(IConfiguration config) : DbContext
 {
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {                               
-        optionsBuilder.UseNpgsql(config["DatabaseConnectionString"]);
+        optionsBuilder.UseNpgsql(config["Database:ConnectionString"]);
     }
 
     public DbSet<User> Users { get; set; }

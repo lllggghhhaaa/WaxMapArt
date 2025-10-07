@@ -2,12 +2,15 @@
 @page "/blocks/new"
 @attribute [Authorize(Roles = "Developer")]
 @rendermode InteractiveServer
-@inject IDbContextFactory<DatabaseContext> DbContextFactory
-@inject NavigationManager NavigationManager
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using WaxMapArt.Utils
 @using WaxMapArt.Web.Components.Components
+@using WaxMapArt.Web.Services
+@inject IDbContextFactory<DatabaseContext> DbContextFactory
+@inject NavigationManager NavigationManager
+@inject AuthService Auth
+
 
 <div class="min-h-screen py-8">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -302,6 +305,9 @@
 
     private async void HandleValidSubmit()
     {
+        var user = Auth.GetCurrentUser();
+        if (user is null || user.Role != UserRole.Developer) return;
+        
         if (!BlockId.HasValue)
             await _database!.Blocks.AddAsync(Value!);
 
