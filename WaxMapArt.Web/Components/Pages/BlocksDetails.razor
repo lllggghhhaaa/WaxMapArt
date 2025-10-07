@@ -273,7 +273,7 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                 </svg>
-                                <span>@(_isEditMode ? "Salvar Alterações" : "Criar Bloco")</span>
+                                <span>@(_isEditMode ? "Save Changes" : "Create Block")</span>
                             </button>
                         </div>
                     </div>
@@ -341,11 +341,11 @@
 
     private void IdChanged(string id)
     {
-        Value.MinecraftId = id;
+        Value!.MinecraftId = id;
         
         if (string.IsNullOrWhiteSpace(Value?.Name) && !string.IsNullOrWhiteSpace(id))
         {
-            Value.Name = id.Replace("minecraft:", "").Replace(":", " ").Replace("_", " ")
+            Value!.Name = id.Replace("minecraft:", "").Replace(":", " ").Replace("_", " ")
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries)
                 .Select(word => char.ToUpper(word[0]) + word[1..].ToLower())
                 .Aggregate((a, b) => a + " " + b);
