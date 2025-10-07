@@ -176,7 +176,6 @@
     private bool _showDeleteConfirm;
     private Guid _blockToDelete = Guid.Empty;
     private readonly Dictionary<Guid, ElementReference> _buttonRefs = new();
-    private bool _isDev;
 
     protected override async Task OnInitializedAsync()
     {
@@ -192,8 +191,6 @@
         _blocks = await database.Blocks
             .OrderBy(block => block.MapId)
             .ToListAsync();
-
-        _isDev = user.Role == UserRole.Developer;
     }
 
     private void NavigateToEdit(Guid blockId)
@@ -263,8 +260,9 @@
     private async Task DeleteBlock(Guid paletteId)
     {
         _showDeleteConfirm = false;
-        
-        if (!_isDev) return;
+
+        var user = Auth.GetCurrentUser();
+        if (user is null || user.Role != UserRole.Developer) return;
         
         await using var dbContext = await DbContextFactory.CreateDbContextAsync();
         var block = await dbContext.Blocks.FindAsync(paletteId);
