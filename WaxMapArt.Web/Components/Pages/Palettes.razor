@@ -3,6 +3,7 @@
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
+@using WaxMapArt.Web.Entities
 @using WaxMapArt.Web.Services
 @inject AuthService Auth
 @inject IDbContextFactory<DatabaseContext> DbContextFactory
@@ -75,7 +76,7 @@
     
     @foreach (var paletteId in _openPopovers.ToList())
     {
-        <div class="fixed z-20 w-56" style="@(GetPopoverStyle(paletteId))">
+        <div class="fixed z-20 w-56" style="@_popoverPositions.GetValueOrDefault(paletteId, "top:0;left:0;")">
             <div class="divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-neutral-800 dark:divide-neutral-700 dark:ring-neutral-600">
                 <div class="py-1">
                     <button @onclick="() => EditPalette(paletteId)" 
@@ -138,7 +139,7 @@
     private bool _showDeleteConfirm;
     private Guid _paletteToDelete = Guid.Empty;
     private readonly Dictionary<Guid, ElementReference> _buttonRefs = new();
-    private bool _isDev;
+    private readonly Dictionary<Guid, string> _popoverPositions = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -150,8 +151,6 @@
             NavigationManager.NavigateTo("/login");
             return;
         }
-
-        _isDev = user.Role == UserRole.Developer;
     
         _palettes = await database.Palettes.Where(palette => palette.UserId == user.Id).Include(palette => palette.Blocks).ToListAsync();
         await UpdateMask();
@@ -191,27 +190,6 @@
         StateHasChanged();
     }
 
-    private string GetPopoverStyle(Guid paletteId) => GetPopoverStyleAsync(paletteId).Result;
-
-    private async Task<string> GetPopoverStyleAsync(Guid paletteId)
-    {
-        if (!_buttonRefs.TryGetValue(paletteId, out var buttonRef))
-            return "top: 0; left: 0;";
-
-        try
-        {
-            var rect = await JS.InvokeAsync<dynamic>("getBoundingClientRect", buttonRef);
-            var top = rect.bottom + 8;
-            var left = rect.right - 224;
-            
-            return $"top: {top}px; left: {left}px;";
-        }
-        catch
-        {
-            return "top: 0; left: 0;";
-        }
-    }
-
     private void CloseAllPopovers()
     {
         _openPopovers.Clear();
@@ -227,6 +205,22 @@
         {
             _openPopovers.Clear();
             _openPopovers.Add(paletteId);
+
+            if (_buttonRefs.TryGetValue(paletteId, out var buttonRef))
+            {
+                try
+                {
+                    var rect = await JS.InvokeAsync<DomRect>("getBoundingClientRect", buttonRef);
+                    double top = (int)(rect.Top + rect.Height + 10);
+                    double left = (int)(rect.Left + rect.Width - 224);
+
+                    _popoverPositions[paletteId] = $"top: {top}px; left: {left}px;";
+                }
+                catch
+                {
+                    _popoverPositions[paletteId] = "top: 0; left: 0;";
+                }
+            }
         }
         
         await InvokeAsync(StateHasChanged);
@@ -255,7 +249,8 @@
     {
         _showDeleteConfirm = false;
 
-        if (!_isDev) return;
+        var user = Auth.GetCurrentUser();
+        if (user is null || user.Role != UserRole.Developer) return;
         
         await using var dbContext = await DbContextFactory.CreateDbContextAsync();
         var palette = await dbContext.Palettes.FindAsync(paletteId);

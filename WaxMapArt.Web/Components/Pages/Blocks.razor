@@ -210,18 +210,18 @@
         _openPopovers.Clear();
     }
 
-    private async Task TogglePopover(Guid paletteId)
+    private async Task TogglePopover(Guid blockId)
     {
-        if (_openPopovers.Contains(paletteId))
+        if (_openPopovers.Contains(blockId))
         {
-            _openPopovers.Remove(paletteId);
+            _openPopovers.Remove(blockId);
         }
         else
         {
             _openPopovers.Clear();
-            _openPopovers.Add(paletteId);
+            _openPopovers.Add(blockId);
 
-            if (_buttonRefs.TryGetValue(paletteId, out var buttonRef))
+            if (_buttonRefs.TryGetValue(blockId, out var buttonRef))
             {
                 try
                 {
@@ -229,11 +229,11 @@
                     double top = (int)(rect.Top + rect.Height + 10);
                     double left = (int)(rect.Left + rect.Width - 224);
 
-                    _popoverPositions[paletteId] = $"top: {top}px; left: {left}px;";
+                    _popoverPositions[blockId] = $"top: {top}px; left: {left}px;";
                 }
                 catch
                 {
-                    _popoverPositions[paletteId] = "top: 0; left: 0;";
+                    _popoverPositions[blockId] = "top: 0; left: 0;";
                 }
             }
         }
