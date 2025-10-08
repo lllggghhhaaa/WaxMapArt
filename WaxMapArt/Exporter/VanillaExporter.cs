@@ -18,15 +18,13 @@ public class VanillaExporter : IExporter
         {
             var blockInfo = new NbtCompound();
             blockInfo.Add(new NbtString("Name", block.Id));
-
-            /*
+            
             if (block.Properties.Count > 0)
             {
                 var properties = new NbtCompound("Properties");
                 foreach (var (name, value) in block.Properties) properties.Add(new NbtString(name, value));
                 blockInfo.Add(properties);
             }
-            */
 
             paletteTag.Add(blockInfo);
         }
