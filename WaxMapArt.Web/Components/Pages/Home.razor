@@ -47,6 +47,10 @@ else
                            @bind-SelectedValue="_formModel.SelectedPalette"
                            Placeholder="Select Palette"
                            SelectOptions="@(_palettes.Select(palette => new SelectOption<Palette>{ Text = palette.Name.Trim().ToLower(), Value = palette }).ToList())" />
+            <PrelineSelect TValue="IExporter"
+                           @bind-SelectedValue="_formModel.Exporter"
+                           Placeholder="Exporter"
+                           SelectOptions="@(new List<SelectOption<IExporter>>{ new() { Text = "Vanilla", Value = new VanillaExporter() }, new() { Text = "Litematica", Value = new LitematicaExporter() }})"></PrelineSelect>
         </div>
         
         <PrelineNavCard Class="w-full md:w-3/4 lg:w-1/2 dark:bg-neutral-800">
@@ -75,7 +79,7 @@ else
 
                     <PrelineSelect TValue="ResizeMethod"
                                    @bind-SelectedValue="_formModel.ResizeMethod"
-                                   Placeholder="Selecionar Método de Redimensionamento"
+                                   Placeholder="Select resize method"
                                    SelectOptions="@(SelectOption.FromEnum<ResizeMethod>())"/>
 
                     @switch (_formModel.ResizeMethod)
@@ -179,7 +183,7 @@ else
     
     @if (_exportUrl != null)
     {
-        <a id="exportMap" class="btn" href="@_exportUrl" download="map.nbt"
+        <a id="exportMap" class="btn" href="@_exportUrl" download="map.litematic"
            role="button" target="=_top">Download</a>
     }
 }
@@ -374,8 +378,7 @@ else
         };
         var generatorOutput = generator.Generate(generatedImage, palette);
 
-        var exporter = new VanillaExporter();
-        var outStream = exporter.SaveAsStream(palette, generatorOutput.Blocks);
+        var outStream = _formModel.Exporter.SaveAsStream(palette, generatorOutput.Blocks);
         var outMs = new MemoryStream();
         await outStream.CopyToAsync(outMs);
 
@@ -395,6 +398,7 @@ else
         public ComparisonMode ComparisonMode { get; set; }
         public GeneratorType GeneratorType { get; set; }
         public Palette? SelectedPalette { get; set; }
+        public IExporter Exporter { get; set; }
         public int WidthMultiplier { get; set; } = 1;
         public int HeightMultiplier { get; set; } = 1;
         public ResizeMethod ResizeMethod { get; set; } = ResizeMethod.Crop;

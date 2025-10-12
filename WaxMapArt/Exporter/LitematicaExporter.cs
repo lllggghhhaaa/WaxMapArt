@@ -1,4 +1,5 @@
-﻿using WaxMapArt.Entities;
+﻿using System.IO.Compression;
+using WaxMapArt.Entities;
 using WaxNBT;
 using WaxNBT.Tags;
 
@@ -25,7 +26,12 @@ public class LitematicaExporter : IExporter
             .Add(new NbtInt("Version", 7))
             .Add(new NbtInt("SubVersion", 1));
 
-        return file.Serialize();
+        var rawStream = file.SerializeToStream();
+        var ms = new MemoryStream();
+        using (var gzip = new GZipStream(ms, CompressionMode.Compress, true)) rawStream.CopyTo(gzip);
+        rawStream.Close();
+        ms.Seek(0, SeekOrigin.Begin);
+        return ms;
     }
 
     private static (int width, int height, int depth) CalculateDimensions(BlockInfo[] blocks)
@@ -46,7 +52,7 @@ public class LitematicaExporter : IExporter
             .Add(new NbtInt("y", dimensions.height))
             .Add(new NbtInt("z", dimensions.depth));
 
-        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         return new NbtCompound("Metadata")
             .Add(new NbtString("Name", "WaxMapArt"))
@@ -62,23 +68,108 @@ public class LitematicaExporter : IExporter
 
     private static NbtList CreateBlockStatePalette(Palette palette)
     {
-        var blockStatePalette = new NbtList("BlockStatePalette") { new NbtCompound("0").Add(new NbtString("Name", "minecraft:air")) };
-        foreach (var color in palette.Colors) blockStatePalette.Add(new NbtCompound(color.MapId.ToString()).Add(new NbtString("Name", color.Id)));
-        return blockStatePalette;
+        var list = new NbtList("BlockStatePalette");
+
+        var airCompound = new NbtCompound().Add(new NbtString("Name", "minecraft:air"));
+        list.Add(airCompound);
+
+        foreach (var color in palette.Colors)
+        {
+            var comp = new NbtCompound()
+                .Add(new NbtString("Name", color.Id));
+
+            if (color.Properties.Count > 0)
+            {
+                var props = new NbtCompound("Properties");
+                foreach (var kv in color.Properties.OrderBy(k => k.Key))
+                    props.Add(new NbtString(kv.Key, kv.Value));
+                comp.Add(props);
+            }
+
+            list.Add(comp);
+        }
+
+        return list;
     }
 
     private static long[] CreateBlockStates(BlockInfo[] blocks, (int width, int height, int depth) dimensions, Palette palette)
     {
-        var blockStates = new long[dimensions.width * dimensions.height * dimensions.depth];
-        var colors = palette.Colors.ToList();
-        
-        foreach (var block in blocks)
+        var width = dimensions.width;
+        var height = dimensions.height;
+        var depth = dimensions.depth;
+        var totalBlocks = width * height * depth;
+
+        var minX = blocks.Min(b => b.X);
+        var minY = blocks.Min(b => b.Y);
+        var minZ = blocks.Min(b => b.Z);
+        var byPos = new Dictionary<(int x, int y, int z), BlockInfo>(blocks.Length);
+        foreach (var b in blocks) byPos[(b.X - minX, b.Y - minY, b.Z - minZ)] = b;
+
+        var paletteSize = palette.Colors.Length + 1;
+        var bitsPerBlock = Math.Max(2, (int)Math.Ceiling(Math.Log2(paletteSize)));
+        var mask = (1UL << bitsPerBlock) - 1UL;
+
+        var totalBits = totalBlocks * bitsPerBlock;
+        var longCount = (int)Math.Ceiling(totalBits / 64.0);
+        var data = new long[longCount];
+
+        var paletteIndexCache = new Dictionary<(string Id, string PropsKey), int>(palette.Colors.Length);
+        for (var i = 0; i < palette.Colors.Length; i++)
         {
-            var index = block.X + dimensions.width * (block.Y + dimensions.height * block.Z);
-            blockStates[index] = colors.FindIndex(color => color.Id == block.Id) + 1;
+            var color = palette.Colors[i];
+            var propsKey = GetPropertiesKey(color.Properties);
+            paletteIndexCache[(color.Id, propsKey)] = i + 1;
         }
 
-        return blockStates;
+        for (var y = 0; y < height; y++)
+        {
+            for (var z = 0; z < depth; z++)
+            {
+                for (var x = 0; x < width; x++)
+                {
+                    var blockIndex = (y * depth + z) * width + x;
+
+                    if (!byPos.TryGetValue((x, y, z), out var block)) block = new BlockInfo { Id = "minecraft:air", X = x, Y = y, Z = z, Properties = new Dictionary<string, string>() };
+
+                    int paletteIndex;
+
+                    if (block.Id == "minecraft:air")
+                        paletteIndex = 0;
+                    else
+                    {
+                        var propsKey = GetPropertiesKey(block.Properties);
+                        if (!paletteIndexCache.TryGetValue((block.Id, propsKey), out paletteIndex))
+                        {
+                            throw new InvalidOperationException($"Block {block.Id} - [{propsKey}] not found in palette.");
+                        }
+                    }
+
+                    var value = (ulong)paletteIndex & mask;
+                    var bitIndex = blockIndex * bitsPerBlock;
+                    var longIndex = bitIndex / 64;
+                    var bitOffset = bitIndex % 64;
+
+                    data[longIndex] |= (long)(value << bitOffset);
+
+                    var bitsInCurrentLong = 64 - bitOffset;
+                    if (bitsInCurrentLong < bitsPerBlock)
+                    {
+                        data[longIndex + 1] |= (long)(value >> bitsInCurrentLong);
+                    }
+                }
+            }
+        }
+
+        return data;
+    }
+
+    private static string GetPropertiesKey(Dictionary<string, string> properties)
+    {
+        if (properties.Count == 0)
+            return string.Empty;
+
+        var sorted = properties.OrderBy(kv => kv.Key);
+        return string.Join(";", sorted.Select(kv => $"{kv.Key}={kv.Value}"));
     }
 
     private static NbtCompound CreateMapCompound((int width, int height, int depth) dimensions, NbtList blockStatePalette, long[] blockStates) =>

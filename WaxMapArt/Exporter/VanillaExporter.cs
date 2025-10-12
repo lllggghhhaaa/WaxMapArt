@@ -59,7 +59,7 @@ public class VanillaExporter : IExporter
             new NbtInt(dimensions.depth)
         });
 
-        var stream = nbt.Serialize();
+        var stream = nbt.SerializeToStream();
 
         var ms = new MemoryStream();
         var gz = new GZipStream(ms, CompressionMode.Compress, true);
