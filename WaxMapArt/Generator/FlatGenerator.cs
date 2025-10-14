@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using SkiaSharp;
 using WaxMapArt.Entities;
 using WaxMapArt.Utils;
 
@@ -8,7 +7,7 @@ namespace WaxMapArt.Generator;
 
 public class FlatGenerator : IGenerator
 {
-    public GeneratorOutput Generate(Image<Rgb24> image, Palette palette)
+    public GeneratorOutput Generate(SKBitmap image, Palette palette)
     {
         var blocks = new ConcurrentBag<BlockInfo>();
 
@@ -25,7 +24,7 @@ public class FlatGenerator : IGenerator
             
             for (var y = 1; y < image.Height + 1; y++)
             {
-                var pixel = image[x, y - 1];
+                var pixel = image.GetPixel(x, y - 1);
 
                 var blockInfo = palette.Colors.First(color => ColorUtils.MapIdToInfo(color.MapId).Color.Multiply(0.86d).Equals(pixel));
                 

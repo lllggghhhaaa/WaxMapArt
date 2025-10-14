@@ -1,5 +1,4 @@
-﻿using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+﻿using SkiaSharp;
 using WaxMapArt.Comparison;
 using WaxMapArt.Utils;
 
@@ -7,7 +6,7 @@ namespace WaxMapArt.Dithering;
 
 public class JarvisJudiceNinkeDithering : IDithering
 {
-    public Image<Rgb24> ApplyDithering(Image<Rgb24> image, Palette palette, IColorComparison colorComparison, bool staircase = false)
+    public SKBitmap ApplyDithering(SKBitmap image, Palette palette, IColorComparison colorComparison, bool staircase = false)
     {
         var colors = ColorUtils.GetPaletteColors(palette, staircase);
         
@@ -16,10 +15,10 @@ public class JarvisJudiceNinkeDithering : IDithering
         for (var y = 0; y < image.Height; y++)
         for (var x = 0; x < image.Width; x++)
         {
-            var pixel = image[x, y];
-            errorImage[x, y, 0] = pixel.R;
-            errorImage[x, y, 1] = pixel.G;
-            errorImage[x, y, 2] = pixel.B;
+            var pixel = image.GetPixel(x, y);
+            errorImage[x, y, 0] = pixel.Red;
+            errorImage[x, y, 1] = pixel.Green;
+            errorImage[x, y, 2] = pixel.Blue;
         }
         
         for (var y = 0; y < image.Height; y++)
@@ -29,15 +28,15 @@ public class JarvisJudiceNinkeDithering : IDithering
             var currentG = (byte)Math.Clamp(errorImage[x, y, 1], 0, 255);
             var currentB = (byte)Math.Clamp(errorImage[x, y, 2], 0, 255);
             
-            var currentColor = new Rgb24(currentR, currentG, currentB);
+            var currentColor = new SKColor(currentR, currentG, currentB);
             
             var nearestColor = ColorUtils.FindNearestColor(currentColor, colors, colorComparison);
             
-            image[x, y] = nearestColor;
+            image.SetPixel(x, y, nearestColor);
             
-            var errorR = currentR - nearestColor.R;
-            var errorG = currentG - nearestColor.G;
-            var errorB = currentB - nearestColor.B;
+            var errorR = currentR - nearestColor.Red;
+            var errorG = currentG - nearestColor.Green;
+            var errorB = currentB - nearestColor.Blue;
             
             DistributeError(errorImage, x, y, errorR, errorG, errorB, image.Width, image.Height);
         }

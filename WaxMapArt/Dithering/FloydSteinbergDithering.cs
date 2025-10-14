@@ -1,6 +1,5 @@
 ﻿using System.Numerics;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using SkiaSharp;
 using WaxMapArt.Comparison;
 using WaxMapArt.Utils;
 
@@ -8,21 +7,21 @@ namespace WaxMapArt.Dithering;
 
 public class FloydSteinbergDithering : IDithering
 {
-    public Image<Rgb24> ApplyDithering(Image<Rgb24> image, Palette palette, IColorComparison colorComparison, bool staircase)
+    public SKBitmap ApplyDithering(SKBitmap image, Palette palette, IColorComparison colorComparison, bool staircase)
     {
         var colors = ColorUtils.GetPaletteColors(palette, staircase);
         
         for (var y = 0; y < image.Height; y++)
         for (var x = 0; x < image.Width; x++)
         {
-            var originalColor = image[x, y];
+            var originalColor = image.GetPixel(x, y);
             var nearestColor = ColorUtils.FindNearestColor(originalColor, colors, colorComparison);
-            image[x, y] = nearestColor;
+            image.SetPixel(x, y, nearestColor);
 
             var error = new Vector3(
-                originalColor.R - nearestColor.R,
-                originalColor.G - nearestColor.G,
-                originalColor.B - nearestColor.B
+                originalColor.Red - nearestColor.Red,
+                originalColor.Green - nearestColor.Green,
+                originalColor.Blue - nearestColor.Blue
             );
 
             DistributeError(image, x, y, error);
@@ -31,7 +30,7 @@ public class FloydSteinbergDithering : IDithering
         return image;
     }
 
-    private static void DistributeError(Image<Rgb24> image, int x, int y, Vector3 error)
+    private static void DistributeError(SKBitmap image, int x, int y, Vector3 error)
     {
         // Floyd-Steinberg dithering coefficients
         AddError(1, 0, 7.0f / 16.0f);
@@ -47,13 +46,13 @@ public class FloydSteinbergDithering : IDithering
             
             if (nx < 0 || nx >= image.Width || ny < 0 || ny >= image.Height) return;
             
-            var pixel = image[nx, ny];
-            var newColor = new Vector3(pixel.R, pixel.G, pixel.B) + error * factor;
-            image[nx, ny] = new Rgb24(
+            var pixel = image.GetPixel(nx, ny);
+            var newColor = new Vector3(pixel.Red, pixel.Green, pixel.Blue) + error * factor;
+            image.SetPixel(nx, ny, new SKColor(
                 (byte)Math.Clamp(newColor.X, 0, 255),
                 (byte)Math.Clamp(newColor.Y, 0, 255),
                 (byte)Math.Clamp(newColor.Z, 0, 255)
-            );
+            ));
         }
     }
 }

@@ -1,14 +1,14 @@
-﻿using SixLabors.ImageSharp.PixelFormats;
+﻿using SkiaSharp;
 
 namespace WaxMapArt.Entities;
 
 public record struct Lab(double L, double A, double B)
 {
-    public static Lab FromRgb24(Rgb24 color)
+    public static Lab FromSKColor(SKColor color)
     {
-        double r = color.R / 255d;
-        double g = color.G / 255d;
-        double b = color.B / 255d;
+        double r = color.Red / 255d;
+        double g = color.Green / 255d;
+        double b = color.Blue / 255d;
 
         r = r > .04045 ? Math.Pow((r + .055) / 1.055, 2.4) : r / 12.92;
         g = g > .04045 ? Math.Pow((g + .055) / 1.055, 2.4) : g / 12.92;

@@ -1,14 +1,14 @@
-﻿using SixLabors.ImageSharp.PixelFormats;
+﻿using SkiaSharp;
 using WaxMapArt.Entities;
 
 namespace WaxMapArt.Comparison;
 
 public class Cie76ColorComparison : IColorComparison
 {
-    public double GetColorDifference(Rgb24 color1, Rgb24 color2)
+    public double GetColorDifference(SKColor color1, SKColor color2)
     {
-        var lab1 = Lab.FromRgb24(color1);
-        var lab2 = Lab.FromRgb24(color2);
+        var lab1 = Lab.FromSKColor(color1);
+        var lab2 = Lab.FromSKColor(color2);
         
         return Math.Sqrt(Math.Pow(lab1.L - lab2.L, 2) +
                          Math.Pow(lab1.A - lab2.A, 2) +

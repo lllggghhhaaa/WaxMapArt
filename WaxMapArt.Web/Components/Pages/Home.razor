@@ -3,9 +3,7 @@
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.EntityFrameworkCore
-@using SixLabors.ImageSharp
-@using SixLabors.ImageSharp.PixelFormats
-@using SixLabors.ImageSharp.Processing
+@using SkiaSharp
 @using WaxMapArt.Comparison
 @using WaxMapArt.Dithering
 @using WaxMapArt.Exporter
@@ -50,7 +48,7 @@ else
             <PrelineSelect TValue="IExporter"
                            @bind-SelectedValue="_formModel.Exporter"
                            Placeholder="Exporter"
-                           SelectOptions="@(new List<SelectOption<IExporter>>{ new() { Text = "Vanilla", Value = new VanillaExporter() }, new() { Text = "Litematica", Value = new LitematicaExporter() }})"></PrelineSelect>
+                           SelectOptions="@(new List<SelectOption<IExporter>>{ new() { Text = "Vanilla", Value = new VanillaExporter(), IsSelected = true }, new() { Text = "Litematica", Value = new LitematicaExporter() }})"></PrelineSelect>
         </div>
         
         <PrelineNavCard Class="w-full md:w-3/4 lg:w-1/2 dark:bg-neutral-800">
@@ -64,7 +62,7 @@ else
                                             Max="16"
                                             Step="1"
                                             AriaLabel="Width">
-                            <Label>Largura</Label>
+                            <Label>Width</Label>
                         </PrelineInputNumber>
                         <PrelineInputNumber TValue="int"
                                             @bind-Value="_formModel.HeightMultiplier"
@@ -73,7 +71,7 @@ else
                                             Max="16"
                                             Step="1"
                                             AriaLabel="Height">
-                            <Label>Altura</Label>
+                            <Label>Height</Label>
                         </PrelineInputNumber>
                     </div>
 
@@ -168,7 +166,7 @@ else
                             <img src="@_generatedImageUrl"
                                  class="w-full h-full object-cover"
                                  alt="Imagem Gerada"/>
-                            <PrelineBadge Variant="PrelineBadgeVariant.Soft" Color="teal-500" BackgroundColor="teal-100" Class="absolute top-4 right-4 z-10 dark:bg-teal-800/30 dark:text-teal-500">Gerada</PrelineBadge>
+                            <PrelineBadge Variant="PrelineBadgeVariant.Soft" Color="teal-500" BackgroundColor="teal-100" Class="absolute top-4 right-4 z-10 dark:bg-teal-800/30 dark:text-teal-500">Generated</PrelineBadge>
                         </div>
                     </div>
                 }
@@ -196,7 +194,7 @@ else
     private string? _preProcessedImageUrl;
     private string? _generatedImageUrl;
     private string? _exportUrl;
-    private Image<Rgb24>? _inputImage;
+    private SKBitmap? _inputImage;
 
     private List<Palette>? _palettes;
     private readonly FormModel _formModel = new();
@@ -233,99 +231,173 @@ else
     {
         if (_inputImage is null) return;
 
-        var image = _inputImage.Clone();
         var targetWidth = _formModel.WidthMultiplier * 128;
         var targetHeight = _formModel.HeightMultiplier * 128;
         
-        image.Mutate(x => x.Resize(targetWidth, targetHeight, KnownResamplers.Lanczos3));
-        
-        var originalImageStream = new MemoryStream();
-        await image.SaveAsPngAsync(originalImageStream);
-        _originalImageUrl = ConvertStreamToBase64Url(originalImageStream.ToArray());
-    }
-
-    private async Task<Image<Rgb24>?> ProcessImageAsync()
-    {
-        if (_inputImage is null) return null;
-
-        var image = _inputImage.Clone();
-
-        if (Math.Abs(_formModel.Saturation - 1.0f) > float.Epsilon
-            || Math.Abs(_formModel.Brightness - 1.0f) > float.Epsilon
-            || Math.Abs(_formModel.Contrast - 1.0f) > float.Epsilon)
+        using var resized = new SKBitmap(targetWidth, targetHeight, _inputImage.ColorType, _inputImage.AlphaType);
+        using (var canvas = new SKCanvas(resized))
+        using (var paint = new SKPaint { FilterQuality = SKFilterQuality.High, IsAntialias = true })
         {
-            image.Mutate(x => x
-                .Saturate(_formModel.Saturation)
-                .Brightness(_formModel.Brightness)
-                .Contrast(_formModel.Contrast));
+            canvas.Clear(SKColors.Transparent);
+            var srcRect = new SKRect(0, 0, _inputImage.Width, _inputImage.Height);
+            var dstRect = new SKRect(0, 0, targetWidth, targetHeight);
+            canvas.DrawBitmap(_inputImage, srcRect, dstRect, paint);
+            canvas.Flush();
         }
 
+        using var skImage = SKImage.FromBitmap(resized);
+        using var data = skImage.Encode(SKEncodedImageFormat.Png, 100);
+        _originalImageUrl = ConvertStreamToBase64Url(data.ToArray());
+    }
+
+    private async Task<SKBitmap?> ProcessImageAsync()
+    {
+        if (_inputImage is null)
+            return null;
+
+        var source = _inputImage;
+
+        using var surface = SKSurface.Create(new SKImageInfo(source.Width, source.Height, source.ColorType, source.AlphaType));
+        var canvas = surface.Canvas;
+        using var paint = new SKPaint { IsAntialias = true };
+
+        SKColorFilter? colorFilter = null;
+
+        if (Math.Abs(_formModel.Saturation - 1.0f) > float.Epsilon)
+        {
+            var s = _formModel.Saturation;
+            const float rw = 0.2126f;
+            const float gw = 0.7152f;
+            const float bw = 0.0722f;
+
+            var mSat = new[]
+            {
+                rw * (1 - s) + s, gw * (1 - s), bw * (1 - s), 0, 0,
+                rw * (1 - s), gw * (1 - s) + s, bw * (1 - s), 0, 0,
+                rw * (1 - s), gw * (1 - s), bw * (1 - s) + s, 0, 0,
+                0, 0, 0, 1, 0
+            };
+
+            var cfSat = SKColorFilter.CreateColorMatrix(mSat);
+            colorFilter = cfSat;
+        }
+
+        if (Math.Abs(_formModel.Brightness - 1.0f) > float.Epsilon || Math.Abs(_formModel.Contrast - 1.0f) > float.Epsilon)
+        {
+            var brightness = _formModel.Brightness;
+            var contrast = _formModel.Contrast;
+
+            var bOffset = (brightness - 1.0f) * contrast;
+
+            var mCombined = new[]
+            {
+                contrast, 0, 0, 0, bOffset,
+                0, contrast, 0, 0, bOffset,
+                0, 0, contrast, 0, bOffset,
+                0, 0, 0, 1, 0
+            };
+
+            var cfCombined = SKColorFilter.CreateColorMatrix(mCombined);
+            colorFilter = colorFilter is null ? cfCombined : SKColorFilter.CreateCompose(cfCombined, colorFilter);
+        }
+
+        canvas.Clear(SKColors.Transparent);
+        if (colorFilter is not null)
+        {
+            paint.ColorFilter = colorFilter;
+        }
+
+        canvas.DrawBitmap(source, 0, 0, paint);
+        canvas.Flush();
+
         var targetWidth = _formModel.WidthMultiplier * 128;
         var targetHeight = _formModel.HeightMultiplier * 128;
-        
-        var resizeMode = _formModel.ResizeMethod switch 
-        {
-            ResizeMethod.Stretch => ResizeMode.Stretch,
-            ResizeMethod.Pad => ResizeMode.Pad,
-            ResizeMethod.Crop => ResizeMode.Crop,
-            ResizeMethod.Min => ResizeMode.Min,
-            ResizeMethod.Max => ResizeMode.Max,
-            _ => throw new ArgumentOutOfRangeException()
-        };
 
-        var resizeOptions = new ResizeOptions
-        {
-            Size = new Size(targetWidth, targetHeight),
-            Mode = resizeMode
-        };
+        using var resizeSurface = SKSurface.Create(new SKImageInfo(targetWidth, targetHeight, source.ColorType, source.AlphaType));
+        var resizeCanvas = resizeSurface.Canvas;
+        using var paint2 = new SKPaint { FilterQuality = SKFilterQuality.High, IsAntialias = true };
+
+        var bg = _formModel.ResizeMethod == ResizeMethod.Pad ? ParseHexColor(_formModel.PadColor) : SKColors.Transparent;
+        resizeCanvas.Clear(bg);
+
+        var workingImg = surface.Snapshot();
+        var srcRect = new SKRect(0, 0, workingImg.Width, workingImg.Height);
+        SKRect dstRect;
 
         switch (_formModel.ResizeMethod)
         {
+            case ResizeMethod.Stretch:
+                dstRect = new SKRect(0, 0, targetWidth, targetHeight);
+                break;
+
             case ResizeMethod.Crop:
-                var sourceAspect = (float)image.Width / image.Height;
+            {
+                var sourceAspect = (float)workingImg.Width / workingImg.Height;
                 var targetAspect = (float)targetWidth / targetHeight;
 
                 int cropWidth, cropHeight, cropX, cropY;
-
                 if (sourceAspect > targetAspect)
                 {
-                    cropHeight = image.Height;
-                    cropWidth = (int)(image.Height * targetAspect);
-                    cropX = (image.Width - cropWidth) / 2 + _formModel.CropOffsetX;
+                    cropHeight = workingImg.Height;
+                    cropWidth = (int)(workingImg.Height * targetAspect);
+                    cropX = (workingImg.Width - cropWidth) / 2 + _formModel.CropOffsetX;
                     cropY = _formModel.CropOffsetY;
                 }
                 else
                 {
-                    cropWidth = image.Width;
-                    cropHeight = (int)(image.Width / targetAspect);
+                    cropWidth = workingImg.Width;
+                    cropHeight = (int)(workingImg.Width / targetAspect);
                     cropX = _formModel.CropOffsetX;
-                    cropY = (image.Height - cropHeight) / 2 + _formModel.CropOffsetY;
+                    cropY = (workingImg.Height - cropHeight) / 2 + _formModel.CropOffsetY;
                 }
 
-                cropX = Math.Max(0, Math.Min(cropX, image.Width - cropWidth));
-                cropY = Math.Max(0, Math.Min(cropY, image.Height - cropHeight));
+                cropX = Math.Max(0, Math.Min(cropX, workingImg.Width - cropWidth));
+                cropY = Math.Max(0, Math.Min(cropY, workingImg.Height - cropHeight));
 
-                var cropRect = new Rectangle(cropX, cropY, cropWidth, cropHeight);
-                image.Mutate(x => x.Crop(cropRect));
-                image.Mutate(x => x.Resize(targetWidth, targetHeight));
+                srcRect = new SKRect(cropX, cropY, cropX + cropWidth, cropY + cropHeight);
+                dstRect = new SKRect(0, 0, targetWidth, targetHeight);
                 break;
+            }
 
             case ResizeMethod.Pad:
-                var padColor = Color.ParseHex(_formModel.PadColor);
-                resizeOptions.PadColor = padColor;
-                image.Mutate(x => x.Resize(resizeOptions));
+            case ResizeMethod.Min:
+            {
+                var ratio = Math.Min((float)targetWidth / workingImg.Width, (float)targetHeight / workingImg.Height);
+                var newW = workingImg.Width * ratio;
+                var newH = workingImg.Height * ratio;
+                var dx = (targetWidth - newW) / 2f;
+                var dy = (targetHeight - newH) / 2f;
+                dstRect = new SKRect(dx, dy, dx + newW, dy + newH);
                 break;
+            }
+
+            case ResizeMethod.Max:
+            {
+                var ratio = Math.Max((float)targetWidth / workingImg.Width, (float)targetHeight / workingImg.Height);
+                var newW = workingImg.Width * ratio;
+                var newH = workingImg.Height * ratio;
+                var dx = (targetWidth - newW) / 2f;
+                var dy = (targetHeight - newH) / 2f;
+                dstRect = new SKRect(dx, dy, dx + newW, dy + newH);
+                break;
+            }
 
             default:
-                image.Mutate(x => x.Resize(resizeOptions));
+                dstRect = new SKRect(0, 0, targetWidth, targetHeight);
                 break;
         }
 
-        var processedImageStream = new MemoryStream();
-        await image.SaveAsPngAsync(processedImageStream);
-        _preProcessedImageUrl = ConvertStreamToBase64Url(processedImageStream.ToArray());
+        resizeCanvas.DrawImage(workingImg, srcRect, dstRect, paint2);
+        resizeCanvas.Flush();
 
-        return image;
+        using var finalImg = resizeSurface.Snapshot();
+        using var data = finalImg.Encode(SKEncodedImageFormat.Png, 100);
+        _preProcessedImageUrl = ConvertStreamToBase64Url(data.ToArray());
+
+        var result = new SKBitmap(targetWidth, targetHeight);
+        finalImg.ReadPixels(result.Info, result.GetPixels(), result.Info.RowBytes, 0, 0);
+
+        return result;
     }
 
     private async Task OnPreProcessingChange()
@@ -363,10 +435,12 @@ else
         var processedImage = await ProcessImageAsync();
         if (processedImage is null) return;
         
-        var ms = new MemoryStream();
         var generatedImage = dithering.ApplyDithering(processedImage, palette, colorComparison, _formModel.GeneratorType == GeneratorType.Staircase);
-        await generatedImage.SaveAsPngAsync(ms);
-        _generatedImageUrl = ConvertStreamToBase64Url(ms.ToArray());
+        using (var skImg = SKImage.FromBitmap(generatedImage))
+        using (var data = skImg.Encode(SKEncodedImageFormat.Png, 100))
+        {
+            _generatedImageUrl = ConvertStreamToBase64Url(data.ToArray());
+        }
         
         if (!_generate) return;
 
@@ -460,6 +534,38 @@ else
         Max
     }
 
+    private static SKColor ParseHexColor(string hex)
+    {
+        if (string.IsNullOrWhiteSpace(hex)) return SKColors.White;
+        if (hex.StartsWith("#")) hex = hex[1..];
+        try
+        {
+            switch (hex.Length)
+            {
+                case 6:
+                {
+                    var r = Convert.ToByte(hex.Substring(0, 2), 16);
+                    var g = Convert.ToByte(hex.Substring(2, 2), 16);
+                    var b = Convert.ToByte(hex.Substring(4, 2), 16);
+                    return new SKColor(r, g, b);
+                }
+                case 8:
+                {
+                    var a = Convert.ToByte(hex.Substring(0, 2), 16);
+                    var r = Convert.ToByte(hex.Substring(2, 2), 16);
+                    var g = Convert.ToByte(hex.Substring(4, 2), 16);
+                    var b = Convert.ToByte(hex.Substring(6, 2), 16);
+                    return new SKColor(r, g, b, a);
+                }
+            }
+        }
+        catch
+        {
+            // ignore and fallback
+        }
+        return SKColors.White;
+    }
+
     private async void FileUploaded(IBrowserFile[] obj)
     {
         var file = obj.FirstOrDefault();
@@ -480,7 +586,7 @@ else
         }
 
         var data = ms.ToArray();
-        _inputImage = Image.Load<Rgb24>(data);
+        _inputImage = SKBitmap.Decode(data);
         
         await CreateOriginalPreviewAsync();
         

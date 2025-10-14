@@ -1,10 +1,10 @@
-﻿using SixLabors.ImageSharp.PixelFormats;
+﻿using SkiaSharp;
 
 namespace WaxMapArt.Comparison;
 
 public interface IColorComparison
 {
-    public double GetColorDifference(Rgb24 color1, Rgb24 color2);
+    public double GetColorDifference(SKColor color1, SKColor color2);
 }
 
 public enum ComparisonMode

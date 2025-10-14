@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using SkiaSharp;
 using WaxMapArt.Entities;
 using WaxMapArt.Utils;
 
@@ -8,7 +7,7 @@ namespace WaxMapArt.Generator;
 
 public class StaircaseGenerator : IGenerator
 {
-    public GeneratorOutput Generate(Image<Rgb24> image, Palette palette)
+    public GeneratorOutput Generate(SKBitmap image, Palette palette)
     {
         var blocks = new ConcurrentBag<BlockInfo>();
         var colors = ColorUtils.GetPaletteBlocks(palette, true);
@@ -31,7 +30,7 @@ public class StaircaseGenerator : IGenerator
             
             for (var y = 1; y < image.Height + 1; y++)
             {
-                var pixel = image[x, y - 1];
+                var pixel = image.GetPixel(x, y - 1);
 
                 var blockInfo = colors.First(info => info.Color.Equals(pixel));
                 lastY += blockInfo.Shading - 1;
