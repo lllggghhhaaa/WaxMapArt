@@ -17,7 +17,7 @@
 
 @if (_palettes is null)
 {
-    <p>Faça login para continuar</p>
+    <p>Login to continue</p>
 }
 else
 {
@@ -87,19 +87,19 @@ else
                                                 @bind-Value="_formModel.CropOffsetX"
                                                 Variant="InputNumberVariant.Horizontal"
                                                 Step="1">
-                                <Label>Deslocamento X do Corte</Label>
+                                <Label>Cut X Offset</Label>
                             </PrelineInputNumber>
                             <PrelineInputNumber TValue="int"
                                                 @bind-Value="_formModel.CropOffsetY"
                                                 Variant="InputNumberVariant.Horizontal"
                                                 Step="1">
-                                <Label>Deslocamento Y do Corte</Label>
+                                <Label>Cut Y Offset</Label>
                             </PrelineInputNumber>
                             break;
                         case ResizeMethod.Pad:
                             <PrelineInputText @bind-Value="_formModel.PadColor"
-                                              Placeholder="Cor de Preenchimento">
-                                <Label>Cor de Preenchimento</Label>
+                                              Placeholder="FillColor">
+                                <Label>Fill Color</Label>
                             </PrelineInputText>
                             break;
                     }
@@ -113,7 +113,7 @@ else
                                         Min="0.0f"
                                         Max="2.0f"
                                         Step="0.1f">
-                        <Label>Saturação</Label>
+                        <Label>Saturation</Label>
                     </PrelineInputNumber>
                     <PrelineInputNumber TValue="float"
                                         @bind-Value="_formModel.Brightness"
@@ -121,7 +121,7 @@ else
                                         Min="0.0f"
                                         Max="2.0f"
                                         Step="0.1f">
-                        <Label>Brilho</Label>
+                        <Label>Brightness</Label>
                     </PrelineInputNumber>
                     <PrelineInputNumber TValue="float"
                                         @bind-Value="_formModel.Contrast"
@@ -129,7 +129,7 @@ else
                                         Min="0.0f"
                                         Max="2.0f"
                                         Step="0.1f">
-                        <Label>Contraste</Label>
+                        <Label>Contrast</Label>
                     </PrelineInputNumber>
                 </div>
             </PrelineNavCardTab>
@@ -144,7 +144,7 @@ else
                     <div class="relative w-full overflow-hidden">
                         <img src="@_originalImageUrl"
                              class="w-full h-full object-cover"
-                             alt="Imagem Original"/>
+                             alt="Original image"/>
                         <PrelineBadge Variant="PrelineBadgeVariant.Soft" Color="gray-800" BackgroundColor="gray-100" Class="absolute top-4 right-4 z-10">Original</PrelineBadge>
                     </div>
                     
@@ -153,7 +153,7 @@ else
                         <div class="relative w-full overflow-hidden">
                             <img src="@_preProcessedImageUrl"
                                  class="w-full h-full object-cover"
-                                 alt="Imagem Pré-processada"/>
+                                 alt="Pre-processed image"/>
                             <PrelineBadge Variant="PrelineBadgeVariant.Soft" Color="blue-600" BackgroundColor="blue-100" Class="absolute top-4 right-4 z-10 dark:bg-blue-800/30 dark:text-blue-400">Pre-Processed</PrelineBadge>
                         </div>
                     }
@@ -165,7 +165,7 @@ else
                         <div class="relative w-1/2 overflow-hidden">
                             <img src="@_generatedImageUrl"
                                  class="w-full h-full object-cover"
-                                 alt="Imagem Gerada"/>
+                                 alt="Generated image"/>
                             <PrelineBadge Variant="PrelineBadgeVariant.Soft" Color="teal-500" BackgroundColor="teal-100" Class="absolute top-4 right-4 z-10 dark:bg-teal-800/30 dark:text-teal-500">Generated</PrelineBadge>
                         </div>
                     </div>
@@ -174,8 +174,8 @@ else
         }
 
         <div class="flex space-x-4">
-            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded" @onclick="() => _generate = false">Gerar Preview</button>
-            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded" @onclick="() => _generate = true">Gerar Mapa</button>
+            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded" @onclick="() => _generate = false">Preview</button>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded" @onclick="() => _generate = true">Generate</button>
         </div>
     </EditForm>
     
@@ -233,7 +233,7 @@ else
 
         var targetWidth = _formModel.WidthMultiplier * 128;
         var targetHeight = _formModel.HeightMultiplier * 128;
-        
+
         using var resized = new SKBitmap(targetWidth, targetHeight, _inputImage.ColorType, _inputImage.AlphaType);
         using (var canvas = new SKCanvas(resized))
         using (var paint = new SKPaint { FilterQuality = SKFilterQuality.High, IsAntialias = true })
@@ -412,7 +412,7 @@ else
     private async Task OnValidSubmit()
     {
         if (_inputImage is null) return;
-        
+
         IColorComparison colorComparison = _formModel.ComparisonMode switch
         {
             ComparisonMode.Rgb => new RgbColorComparison(),
@@ -431,17 +431,17 @@ else
 
         var palette = _formModel.SelectedPalette;
         if (palette is null) return;
-        
+
         var processedImage = await ProcessImageAsync();
         if (processedImage is null) return;
-        
+
         var generatedImage = dithering.ApplyDithering(processedImage, palette, colorComparison, _formModel.GeneratorType == GeneratorType.Staircase);
         using (var skImg = SKImage.FromBitmap(generatedImage))
         using (var data = skImg.Encode(SKEncodedImageFormat.Png, 100))
         {
             _generatedImageUrl = ConvertStreamToBase64Url(data.ToArray());
         }
-        
+
         if (!_generate) return;
 
         IGenerator generator = _formModel.GeneratorType switch
@@ -480,37 +480,37 @@ else
         public int CropOffsetY { get; set; }
         public string PadColor { get; set; } = "#FFFFFF";
 
-        public float Saturation 
-        { 
-            get => _saturation; 
+        public float Saturation
+        {
+            get => _saturation;
             set
             {
                 if (Math.Abs(_saturation - value) < float.Epsilon) return;
                 _saturation = value;
                 _preProcessingChangeCallback?.Invoke();
-            } 
+            }
         }
 
-        public float Brightness 
-        { 
-            get => _brightness; 
+        public float Brightness
+        {
+            get => _brightness;
             set
             {
                 if (Math.Abs(_brightness - value) < float.Epsilon) return;
                 _brightness = value;
                 _preProcessingChangeCallback?.Invoke();
-            } 
+            }
         }
 
-        public float Contrast 
-        { 
-            get => _contrast; 
+        public float Contrast
+        {
+            get => _contrast;
             set
             {
                 if (Math.Abs(_contrast - value) < float.Epsilon) return;
                 _contrast = value;
                 _preProcessingChangeCallback?.Invoke();
-            } 
+            }
         }
 
         public void SetPreProcessingChangeCallback(Func<Task> callback)
@@ -518,7 +518,7 @@ else
             _preProcessingChangeCallback = callback;
         }
     }
-    
+
     private enum GeneratorType
     {
         Flat,
@@ -563,6 +563,7 @@ else
         {
             // ignore and fallback
         }
+
         return SKColors.White;
     }
 
@@ -570,7 +571,7 @@ else
     {
         var file = obj.FirstOrDefault();
         if (file is null) return;
-        
+
         await using var ms = new MemoryStream();
         var stream = file.OpenReadStream(_imageUpload.MaxFileSize);
         var buffer = new byte[4096];
@@ -587,11 +588,11 @@ else
 
         var data = ms.ToArray();
         _inputImage = SKBitmap.Decode(data);
-        
+
         await CreateOriginalPreviewAsync();
-        
+
         await ProcessImageAsync();
-        
+
         StateHasChanged();
     }
 }
