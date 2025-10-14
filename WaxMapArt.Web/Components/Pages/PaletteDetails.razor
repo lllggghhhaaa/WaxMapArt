@@ -97,7 +97,14 @@
                                                    @bind-SelectedValue="Value.PlaceholderBlockId"
                                                    Placeholder="Select Placeholder Block"
                                                    SelectOptions="_blockOptions"
-                                                   AriaLabel="Placeholder Block"/>
+                                                   AriaLabel="Placeholder Block">
+                                        <SelectOptionTemplate Context="blockOption">
+                                            <div class="flex items-center gap-2">
+                                                <img src="@_blocks.FirstOrDefault(b => b.Id == blockOption.Value)?.ImageUrl" alt="" class="shrink-0 size-5 rounded-full" />
+                                                @_blocks.FirstOrDefault(b => b.Id == blockOption.Value)?.Name
+                                            </div>
+                                        </SelectOptionTemplate>
+                                    </PrelineSelect>
 
                                 </div>
                             </div>

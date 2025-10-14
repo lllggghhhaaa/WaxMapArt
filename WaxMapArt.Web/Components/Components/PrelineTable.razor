@@ -88,7 +88,7 @@
                     <span class="sr-only">Previous</span>
                 </button>
 
-                @for (int i = Math.Max(1, CurrentPage - 2); i <= Math.Min(TotalPages, CurrentPage + 2); i++)
+                @for (var i = Math.Max(1, CurrentPage - 2); i <= Math.Min(TotalPages, CurrentPage + 2); i++)
                 {
                     var pageNum = i;
                     <button @onclick="() => GoToPage(pageNum)"
@@ -122,12 +122,11 @@
         get => _pageSize;
         set
         {
-            if (_pageSize != value)
-            {
-                _pageSize = value;
-                CurrentPage = 1;
-                OnPageChanged.InvokeAsync(new PageChangedEventArgs(1, value, _sortColumn, _sortAscending));
-            }
+            if (_pageSize == value) return;
+            
+            _pageSize = value;
+            CurrentPage = 1;
+            OnPageChanged.InvokeAsync(new PageChangedEventArgs(1, value, _sortColumn, _sortAscending));
         }
     }
     
