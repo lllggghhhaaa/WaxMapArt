@@ -216,7 +216,7 @@
     private DatabaseContext? _database;
     private bool _isEditMode;
     private Dictionary<Guid, bool> isSelected = new();
-    private List<SelectOption<Guid>> _blockOptions = new();
+    private List<SelectOption<Guid>> _blockOptions = [];
 
     protected override async Task OnInitializedAsync()
     {

@@ -3,8 +3,9 @@
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
-@using WaxMapArt.Web.Entities
 @using WaxMapArt.Web.Services
+@using WaxMapArt.Web.Components.Components
+@using WaxMapArt.Web.Entities
 @inject AuthService Auth
 @inject IDbContextFactory<DatabaseContext> DbContextFactory
 @inject NavigationManager NavigationManager
@@ -14,52 +15,20 @@
     <div class="-m-1.5 overflow-x-auto">
         <div class="p-1.5 min-w-full inline-block align-middle">
             <div class="border border-gray-200 rounded-lg overflow-hidden dark:border-neutral-700">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-                    <thead>
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Name</th>
-                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Blocks</th>
-                        <th scope="col" class="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
-                    @foreach (var palette in _palettes)
-                    {
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">@palette.Name</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400 relative">
-                                <div @ref="_scrollContainer"
-                                     @onwheel="OnScroll"
-                                     @onscroll="OnScroll"
-                                     class="flex flex-row gap-x-1 w-full overflow-x-auto relative
-            [&::-webkit-scrollbar]:h-2
-            [&::-webkit-scrollbar-track]:bg-gray-100
-            [&::-webkit-scrollbar-thumb]:bg-gray-300
-            dark:[&::-webkit-scrollbar-track]:bg-neutral-700
-            dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 @_scrollClass">
-        
-                                    @foreach (var block in palette.Blocks)
-                                    {
-                                        <div class="rounded-md border border-gray-600 p-0.5 dark:border-neutral-500">
-                                            <img src="@block.ImageUrl" alt="@block.MinecraftId" title="@block.MinecraftId"
-                                                 class="w-10 h-10 object-cover flex-shrink-0" />
-                                        </div>
-                                    }
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
-                                <button @onclick="() => TogglePopover(palette.Id)" 
-                                        @ref="@_buttonRefs[palette.Id]"
-                                        type="button" 
-                                        class="inline-flex items-center gap-x-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-neutral-300 dark:hover:text-white transition-colors duration-150">
-                                    <span>Actions</span>
-                                    <i class="ri-arrow-up-s-line text-gray-500 dark:text-neutral-400 transition-transform duration-150 @(_openPopovers.Contains(palette.Id) ? "rotate-90" : "")"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    }
-                    </tbody>
-                </table>
+                <PrelineTable TItem="Palette"
+                           Items="@_palettes"
+                           TotalCount="@_totalCount"
+                           IsLoading="@_isLoading"
+                           CurrentPage="@_currentPage"
+                           PageSize="@_pageSize"
+                           InitialSortColumn="@nameof(Palette.Name)"
+                           InitialSortAscending="true"
+                           Columns="@_columns"
+                           OnPageChanged="@LoadDataAsync"
+                           ActionsTemplate="@ActionsTemplate"
+                           LoadingText="Loading palettes..."
+                           EmptyText="No palettes found.">
+                </PrelineTable>
             </div>
         </div>
     </div>
@@ -132,28 +101,78 @@
 
 @code {
     private List<Palette> _palettes = [];
-    private ElementReference _scrollContainer;
-    private string _scrollClass = "";
+    private int _totalCount;
+    private int _currentPage = 1;
+    private int _pageSize = 25;
+    private bool _isLoading = true;
+    private Guid? _userId;
+    
+    private List<PrelineTable<Palette>.TableColumn<Palette>> _columns = [];
+    
     private IJSObjectReference? _module;
     private readonly HashSet<Guid> _openPopovers = [];
     private bool _showDeleteConfirm;
     private Guid _paletteToDelete = Guid.Empty;
     private readonly Dictionary<Guid, ElementReference> _buttonRefs = new();
     private readonly Dictionary<Guid, string> _popoverPositions = new();
+    private readonly Dictionary<Guid, ElementReference> _scrollContainers = new();
+    private readonly Dictionary<Guid, string> _scrollClasses = new();
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        var database = await DbContextFactory.CreateDbContextAsync();
-
         var user = Auth.GetCurrentUser();
         if (user is null)
         {
             NavigationManager.NavigateTo("/login");
             return;
         }
-    
-        _palettes = await database.Palettes.Where(palette => palette.UserId == user.Id).Include(palette => palette.Blocks).ToListAsync();
-        await UpdateMask();
+
+        _userId = user.Id;
+
+        _columns =
+        [
+            new PrelineTable<Palette>.TableColumn<Palette>
+            {
+                Header = "Name",
+                PropertyName = nameof(Palette.Name),
+                Sortable = true,
+                CssClass = "font-medium text-gray-800 dark:text-neutral-200",
+                Template = palette => @<text>@palette.Name</text>
+            },
+            new PrelineTable<Palette>.TableColumn<Palette>
+            {
+                Header = "Blocks",
+                PropertyName = "Blocks",
+                Sortable = false,
+                CssClass = "text-gray-500 dark:text-neutral-400",
+                Template = palette => @<div @ref="_scrollContainers[palette.Id]"
+                                            @onwheel="() => OnScroll(palette.Id)"
+                                            @onwheel:preventDefault="true"
+                                            class="flex flex-row gap-x-1 w-full overflow-x-auto relative
+            max-w-full
+            [&::-webkit-scrollbar]:h-2
+            [&::-webkit-scrollbar-track]:bg-gray-100
+            [&::-webkit-scrollbar-thumb]:bg-gray-300
+            dark:[&::-webkit-scrollbar-track]:bg-neutral-700
+            dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 @_scrollClasses.GetValueOrDefault(palette.Id, "")">
+                                          @foreach (var block in palette.Blocks)
+                                          {
+                                              <div class="rounded-md border border-gray-600 p-0.5 dark:border-neutral-500 flex-shrink-0">
+                                                  <img src="@block.ImageUrl"
+                                                       alt="@block.MinecraftId"
+                                                       title="@block.MinecraftId"
+                                                       class="w-10 h-10 object-cover" />
+                                              </div>
+                                          }
+                                      </div>
+
+            }
+        ];
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync(new PrelineTable<Palette>.PageChangedEventArgs(1, _pageSize, nameof(Palette.Name), true));
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -163,32 +182,90 @@
             _module = await JS.InvokeAsync<IJSObjectReference>("import",
                 "./Components/Pages/Palettes.razor.js");
 
-            await UpdateMask();
+            foreach (var paletteId in _scrollContainers.Keys)
+            {
+                await UpdateMask(paletteId);
+            }
         }
     }
-    
-    private async Task OnScroll()
-    {
-        await UpdateMask();
-    }
 
-    private async Task UpdateMask()
+    private async Task LoadDataAsync(PrelineTable<Palette>.PageChangedEventArgs args)
     {
-        if (_module is null) return;
+        if (_userId is null) return;
 
-        var position = await _module.InvokeAsync<string>("getScrollPosition", _scrollContainer);
-        
-        _scrollClass = position switch
+        _isLoading = true;
+        StateHasChanged();
+
+        await using var database = await DbContextFactory.CreateDbContextAsync();
+
+        var query = database.Palettes
+            .Where(p => p.UserId == _userId.Value)
+            .Include(p => p.Blocks).AsQueryable();
+
+        query = args.SortColumn switch
         {
-            "none" => "",
-            "left" => "[mask-image:linear-gradient(to_right,transparent_0,black_30px,black_100%)]",
-            "right" => "[mask-image:linear-gradient(to_right,black_30px,black_calc(100%-30px),transparent_100%)]",
-            "both" => "[mask-image:linear-gradient(to_right,transparent_0,black_30px,black_calc(100%-30px),transparent_100%)]",
-            _ => ""
+            nameof(Palette.Name) => args.SortAscending
+                ? query.OrderBy(p => p.Name)
+                : query.OrderByDescending(p => p.Name) ,
+            _ => query.OrderBy(p => p.Name)
         };
 
-        StateHasChanged();
+        _totalCount = await query.CountAsync();
+
+        _palettes = await query
+            .Skip((args.Page - 1) * args.PageSize)
+            .Take(args.PageSize)
+            .ToListAsync();
+
+        _currentPage = args.Page;
+        _pageSize = args.PageSize;
+        _isLoading = false;
+
+        foreach (var palette in _palettes)
+        {
+            _scrollClasses.TryAdd(palette.Id, "");
+        }
     }
+
+    private async Task OnScroll(Guid paletteId)
+    {
+        await UpdateMask(paletteId);
+    }
+
+    private async Task UpdateMask(Guid paletteId)
+    {
+        if (_module is null || !_scrollContainers.TryGetValue(paletteId, out var container)) return;
+
+        try
+        {
+            var position = await _module.InvokeAsync<string>("getScrollPosition", container);
+            
+            _scrollClasses[paletteId] = position switch
+            {
+                "none" => "",
+                "left" => "[mask-image:linear-gradient(to_right,transparent_0,black_30px,black_100%)]",
+                "right" => "[mask-image:linear-gradient(to_right,black_30px,black_calc(100%-30px),transparent_100%)]",
+                "both" => "[mask-image:linear-gradient(to_right,transparent_0,black_30px,black_calc(100%-30px),transparent_100%)]",
+                _ => ""
+            };
+
+            StateHasChanged();
+        }
+        catch
+        {
+            // Ignore JS Interop errors
+        }
+    }
+
+    private RenderFragment<Palette> ActionsTemplate => palette => @<text>
+        <button @onclick="() => TogglePopover(palette.Id)" 
+                @ref="@_buttonRefs[palette.Id]"
+                type="button" 
+                class="inline-flex items-center gap-x-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-neutral-300 dark:hover:text-white transition-colors duration-150">
+            <span>Actions</span>
+            <i class="ri-arrow-up-s-line text-gray-500 dark:text-neutral-400 transition-transform duration-150 @(_openPopovers.Contains(palette.Id) ? "rotate-90" : "")"></i>
+        </button>
+    </text>;
 
     private void CloseAllPopovers()
     {
@@ -250,7 +327,7 @@
         _showDeleteConfirm = false;
 
         var user = Auth.GetCurrentUser();
-        if (user is null || user.Role != UserRole.Developer) return;
+        if (user is null) return;
         
         await using var dbContext = await DbContextFactory.CreateDbContextAsync();
         var palette = await dbContext.Palettes.FindAsync(paletteId);
@@ -259,7 +336,13 @@
         {
             dbContext.Palettes.Remove(palette);
             await dbContext.SaveChangesAsync();
-            _palettes.Remove(palette);
+            
+            await LoadDataAsync(new PrelineTable<Palette>.PageChangedEventArgs(
+                _currentPage, 
+                _pageSize, 
+                nameof(Palette.Name), 
+                true
+            ));
         }
         
         _paletteToDelete = Guid.Empty;

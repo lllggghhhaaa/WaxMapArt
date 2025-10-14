@@ -5,6 +5,7 @@
 @using Microsoft.EntityFrameworkCore
 @using WaxMapArt.Web.Entities
 @using WaxMapArt.Web.Services
+@using WaxMapArt.Web.Components.Components
 @inject AuthService Auth
 @inject NavigationManager NavigationManager
 @inject IDbContextFactory<DatabaseContext> DbContextFactory
@@ -14,89 +15,20 @@
     <div class="-m-1.5 overflow-x-auto">
         <div class="p-1.5 min-w-full inline-block align-middle">
             <div class="border border-gray-200 rounded-lg overflow-hidden dark:border-neutral-700">
-                <table id="reference" class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-                    <thead>
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Color</th>
-                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Name</th>
-                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Id</th>
-                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Properties</th>
-                        <AuthorizeView Roles="Developer">
-                            <th scope="col" class="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Actions</th>
-                        </AuthorizeView>
-                    </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
-                    @if (_blocks is null)
-                    {
-                        <tr>
-                            <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 dark:text-neutral-400">
-                                Loading blocks...
-                            </td>
-                        </tr>
-                    } 
-                    else if (_blocks.Count == 0)
-                    {
-                        <tr>
-                            <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 dark:text-neutral-400">
-                                No blocks found.
-                            </td>
-                        </tr>
-                    }
-                    else
-                    {
-                        @foreach (var block in _blocks)
-                        {
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">
-                                    <div class="flex items-center justify-center">
-                                        @{
-                                            var color = ColorUtils.MapIdToInfo(block.MapId).Color.ToHexColor();
-
-                                            <svg class="w-5 h-5 rounded-full" xmlns="http://www.w3.org/2000/svg"
-                                                 viewBox="0 0 20 20" title="@color">
-                                                <circle cx="10" cy="10" r="9" fill="@color"/>
-                                            </svg>
-                                        }
-                                        <span class="ml-2">@block.MapId</span>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400 relative">
-                                    <div class="flex items-center space-x-2">
-                                        <span>@block.Name</span>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400 relative">
-                                    <div class="flex items-center space-x-2">
-                                        <img src="@block.ImageUrl" alt="@block.MinecraftId"
-                                             class="w-10 h-10 object-cover rounded-md border border-gray-300"/>
-                                        <span>@block.MinecraftId</span>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400 relative">
-                                    <div class="flex items-center space-x-2">
-                                        @foreach (var prop in block.Properties)
-                                        {
-                                            <div class="text-sm text-gray-700">@prop.Key: @prop.Value</div>
-                                        }
-                                    </div>
-                                </td>
-                                <AuthorizeView Roles="Developer">
-                                    <td class="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
-                                        <button @onclick="() => TogglePopover(block.Id)"
-                                                @ref="@_buttonRefs[block.Id]"
-                                                type="button"
-                                                class="inline-flex items-center gap-x-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-neutral-300 dark:hover:text-white transition-colors duration-150">
-                                            <span>Actions</span>
-                                            <i class="ri-arrow-up-s-line text-gray-500 dark:text-neutral-400 transition-transform duration-150 @(_openPopovers.Contains(block.Id) ? "rotate-90" : "")"></i>
-                                        </button>
-                                    </td>
-                                </AuthorizeView>
-                            </tr>
-                        }
-                    }
-                    </tbody>
-                </table>
+                <PrelineTable TItem="Block"
+                           Items="@_blocks"
+                           TotalCount="@_totalCount"
+                           IsLoading="@_isLoading"
+                           CurrentPage="@_currentPage"
+                           PageSize="@_pageSize"
+                           InitialSortColumn="@nameof(Block.MapId)"
+                           InitialSortAscending="true"
+                           Columns="@_columns"
+                           OnPageChanged="@LoadDataAsync"
+                           ActionsTemplate="@ActionsTemplate"
+                           LoadingText="Loading blocks..."
+                           EmptyText="No blocks found.">
+                </PrelineTable>
             </div>
         </div>
     </div>
@@ -146,10 +78,10 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                     </svg>
                 </div>
-                <h3 class="text-lg font-medium text-gray-900 dark:text-white mt-4">Delete Palette</h3>
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mt-4">Delete Block</h3>
                 <div class="mt-2 px-7 py-3">
                     <p class="text-sm text-gray-500 dark:text-neutral-400">
-                        Are you sure you want to delete this palette?
+                        Are you sure you want to delete this block?
                     </p>
                 </div>
                 <div class="items-center px-4 py-3 space-x-2">
@@ -170,19 +102,22 @@
 }
 
 @code {
-    private List<Block>? _blocks;
+    private List<Block> _blocks = [];
+    private int _totalCount;
+    private int _currentPage = 1;
+    private int _pageSize = 25;
+    private bool _isLoading = true;
     
-    private IJSObjectReference? _module;
+    private List<PrelineTable<Block>.TableColumn<Block>> _columns = [];
+    
     private readonly HashSet<Guid> _openPopovers = [];
     private bool _showDeleteConfirm;
     private Guid _blockToDelete = Guid.Empty;
     private readonly Dictionary<Guid, ElementReference> _buttonRefs = new();
     private readonly Dictionary<Guid, string> _popoverPositions = new();
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        var database = await DbContextFactory.CreateDbContextAsync();
-
         var user = Auth.GetCurrentUser();
         if (user is null) 
         {
@@ -190,10 +125,108 @@
             return;
         }
 
-        _blocks = await database.Blocks
-            .OrderBy(block => block.MapId)
-            .ToListAsync();
+        _columns = [
+            new PrelineTable<Block>.TableColumn<Block>
+            {
+                Header = "Color",
+                PropertyName = nameof(Block.MapId),
+                Sortable = true,
+                CssClass = "font-medium text-gray-800 dark:text-neutral-200",
+                Template = block => @<div class="flex items-center justify-center">
+                    @{
+                        var color = ColorUtils.MapIdToInfo(block.MapId).Color.ToHexColor();
+                    }
+                    <svg class="w-5 h-5 rounded-full" xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 20 20" title="@color">
+                        <circle cx="10" cy="10" r="9" fill="@color"/>
+                    </svg>
+                    <span class="ml-2">@block.MapId</span>
+                </div>
+            },
+            new PrelineTable<Block>.TableColumn<Block>
+            {
+                Header = "Name",
+                PropertyName = nameof(Block.Name),
+                Sortable = true,
+                Template = block => @<div class="flex items-center space-x-2">
+                    <span>@block.Name</span>
+                </div>
+            },
+            new PrelineTable<Block>.TableColumn<Block>
+            {
+                Header = "Id",
+                PropertyName = nameof(Block.MinecraftId),
+                Sortable = true,
+                Template = block => @<div class="flex items-center space-x-2">
+                    <img src="@block.ImageUrl" alt="@block.MinecraftId"
+                         class="w-10 h-10 object-cover rounded-md border border-gray-300"/>
+                    <span>@block.MinecraftId</span>
+                </div>
+            },
+            new PrelineTable<Block>.TableColumn<Block>
+            {
+                Header = "Properties",
+                PropertyName = "Properties",
+                Sortable = false,
+                Template = block => @<div class="flex items-center space-x-2">
+                    @foreach (var prop in block.Properties)
+                    {
+                        <div class="text-sm text-gray-700 dark:text-neutral-300">@prop.Key: @prop.Value</div>
+                    }
+                </div>
+            }
+        ];
     }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync(new PrelineTable<Block>.PageChangedEventArgs(1, _pageSize, nameof(Block.MapId), true));
+    }
+
+    private async Task LoadDataAsync(PrelineTable<Block>.PageChangedEventArgs args)
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        await using var database = await DbContextFactory.CreateDbContextAsync();
+
+        var query = database.Blocks.AsQueryable();
+
+        query = args.SortColumn switch
+        {
+            nameof(Block.MapId) => args.SortAscending 
+                ? query.OrderBy(b => b.MapId) 
+                : query.OrderByDescending(b => b.MapId),
+            nameof(Block.Name) => args.SortAscending 
+                ? query.OrderBy(b => b.Name) 
+                : query.OrderByDescending(b => b.Name),
+            nameof(Block.MinecraftId) => args.SortAscending 
+                ? query.OrderBy(b => b.MinecraftId) 
+                : query.OrderByDescending(b => b.MinecraftId),
+            _ => query.OrderBy(b => b.MapId)
+        };
+
+        _totalCount = await query.CountAsync();
+
+        _blocks = await query
+            .Skip((args.Page - 1) * args.PageSize)
+            .Take(args.PageSize)
+            .ToListAsync();
+
+        _currentPage = args.Page;
+        _pageSize = args.PageSize;
+        _isLoading = false;
+    }
+
+    private RenderFragment<Block> ActionsTemplate => block => @<AuthorizeView Roles="Developer">
+        <button @onclick="() => TogglePopover(block.Id)"
+                @ref="@_buttonRefs[block.Id]"
+                type="button"
+                class="inline-flex items-center gap-x-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-neutral-300 dark:hover:text-white transition-colors duration-150">
+            <span>Actions</span>
+            <i class="ri-arrow-up-s-line text-gray-500 dark:text-neutral-400 transition-transform duration-150 @(_openPopovers.Contains(block.Id) ? "rotate-90" : "")"></i>
+        </button>
+    </AuthorizeView>;
 
     private void NavigateToEdit(Guid blockId)
     {
@@ -241,10 +274,10 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private void ConfirmDeleteBlock(Guid paletteId)
+    private void ConfirmDeleteBlock(Guid blockId)
     {
         _openPopovers.Clear();
-        _blockToDelete = paletteId;
+        _blockToDelete = blockId;
         _showDeleteConfirm = true;
     }
 
@@ -268,7 +301,13 @@
         {
             dbContext.Blocks.Remove(block);
             await dbContext.SaveChangesAsync();
-            _blocks?.RemoveAll(b => b.Id == blockId);
+            
+            await LoadDataAsync(new PrelineTable<Block>.PageChangedEventArgs(
+                _currentPage, 
+                _pageSize, 
+                nameof(Block.MapId), 
+                true
+            ));
         }
         
         _blockToDelete = Guid.Empty;

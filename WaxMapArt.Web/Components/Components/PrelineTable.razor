@@ -1,0 +1,232 @@
+﻿@typeparam TItem
+
+<div class="space-y-4">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
+            <thead>
+                <tr>
+                    @foreach (var column in Columns)
+                    {
+                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">
+                            @if (column.Sortable)
+                            {
+                                <button @onclick="() => SortBy(column.PropertyName)" 
+                                        class="flex items-center gap-1 hover:text-gray-700 dark:hover:text-neutral-300">
+                                    @column.Header
+                                    @if (_sortColumn == column.PropertyName)
+                                    {
+                                        <i class="@(_sortAscending ? "ri-arrow-up-line" : "ri-arrow-down-line")"></i>
+                                    }
+                                </button>
+                            }
+                            else
+                            {
+                                @column.Header
+                            }
+                        </th>
+                    }
+                    @if (ActionsTemplate != null)
+                    {
+                        <th scope="col" class="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">
+                            @ActionsHeaderText
+                        </th>
+                    }
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
+                @if (IsLoading)
+                {
+                    <tr>
+                        <td colspan="@(_totalColumns)" class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 dark:text-neutral-400">
+                            @LoadingText
+                        </td>
+                    </tr>
+                }
+                else if (!Items.Any())
+                {
+                    <tr>
+                        <td colspan="@(_totalColumns)" class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 dark:text-neutral-400">
+                            @EmptyText
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var item in Items)
+                    {
+                        <tr>
+                            @foreach (var column in Columns)
+                            {
+                                <td class="px-6 py-4 whitespace-nowrap text-sm @column.CssClass">
+                                    @column.Template(item)
+                                </td>
+                            }
+                            @if (ActionsTemplate != null)
+                            {
+                                <td class="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
+                                    @ActionsTemplate(item)
+                                </td>
+                            }
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (!IsLoading && TotalCount > 0)
+    {
+        <div class="flex items-center justify-between px-6 py-3 bg-white dark:bg-neutral-800 border-t border-gray-200 dark:border-neutral-700">
+            <div class="whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400">
+                Showing @(((CurrentPage - 1) * PageSize) + 1) to @(Math.Min(CurrentPage * PageSize, TotalCount)) of @TotalCount
+            </div>
+
+            <div class="flex items-center gap-1">
+                <button @onclick="PreviousPage" disabled="@(CurrentPage == 1)"
+                        class="p-2.5 min-w-10 inline-flex justify-center items-center gap-x-2 text-sm rounded-full text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:hover:bg-neutral-700 dark:focus:bg-neutral-700">
+                    <i class="ri-arrow-left-s-line"></i>
+                    <span class="sr-only">Previous</span>
+                </button>
+
+                @for (int i = Math.Max(1, CurrentPage - 2); i <= Math.Min(TotalPages, CurrentPage + 2); i++)
+                {
+                    var pageNum = i;
+                    <button @onclick="() => GoToPage(pageNum)"
+                            class="min-w-10 flex justify-center items-center text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 py-2.5 text-sm rounded-full disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:focus:bg-neutral-700 dark:hover:bg-neutral-700" aria-current="@(pageNum == CurrentPage ? "page" : null)" disabled="@(pageNum == CurrentPage)">
+                        @pageNum
+                    </button>
+                }
+
+                <button @onclick="NextPage" disabled="@(CurrentPage == TotalPages)"
+                        class="p-2.5 min-w-10 inline-flex justify-center items-center gap-x-2 text-sm rounded-full text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:hover:bg-neutral-700 dark:focus:bg-neutral-700">
+                    <i class="ri-arrow-right-s-line"></i>
+                    <span class="sr-only">Next</span>
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public List<TItem> Items { get; set; } = [];
+    [Parameter, EditorRequired] public int TotalCount { get; set; }
+    [Parameter] public bool IsLoading { get; set; }
+
+    [Parameter] public int CurrentPage { get; set; } = 1;
+    [Parameter] public EventCallback<int> CurrentPageChanged { get; set; }
+    
+    private int _pageSize = 25;
+    [Parameter]
+    public int PageSize
+    {
+        get => _pageSize;
+        set
+        {
+            if (_pageSize != value)
+            {
+                _pageSize = value;
+                CurrentPage = 1;
+                OnPageChanged.InvokeAsync(new PageChangedEventArgs(1, value, _sortColumn, _sortAscending));
+            }
+        }
+    }
+    
+    [Parameter] public int[] PageSizeOptions { get; set; } = [10, 25, 50, 100];
+
+    private string _sortColumn = string.Empty;
+    private bool _sortAscending = true;
+    [Parameter] public string InitialSortColumn { get; set; } = string.Empty;
+    [Parameter] public bool InitialSortAscending { get; set; } = true;
+
+    [Parameter] public EventCallback<PageChangedEventArgs> OnPageChanged { get; set; }
+
+    [Parameter, EditorRequired] public List<TableColumn<TItem>> Columns { get; set; } = [];
+
+    [Parameter] public RenderFragment<TItem>? ActionsTemplate { get; set; }
+    [Parameter] public string ActionsHeaderText { get; set; } = "Actions";
+
+    [Parameter] public string LoadingText { get; set; } = "Loading...";
+    [Parameter] public string EmptyText { get; set; } = "No items found.";
+
+    private int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
+    private int _totalColumns => Columns.Count + (ActionsTemplate != null ? 1 : 0);
+
+    protected override void OnInitialized()
+    {
+        _sortColumn = InitialSortColumn;
+        _sortAscending = InitialSortAscending;
+    }
+
+    private async Task SortBy(string column)
+    {
+        if (_sortColumn == column)
+        {
+            _sortAscending = !_sortAscending;
+        }
+        else
+        {
+            _sortColumn = column;
+            _sortAscending = true;
+        }
+
+        await OnPageChanged.InvokeAsync(new PageChangedEventArgs(CurrentPage, PageSize, _sortColumn, _sortAscending));
+    }
+
+    private async Task FirstPage()
+    {
+        CurrentPage = 1;
+        await CurrentPageChanged.InvokeAsync(CurrentPage);
+        await OnPageChanged.InvokeAsync(new PageChangedEventArgs(CurrentPage, PageSize, _sortColumn, _sortAscending));
+    }
+
+    private async Task LastPage()
+    {
+        CurrentPage = TotalPages;
+        await CurrentPageChanged.InvokeAsync(CurrentPage);
+        await OnPageChanged.InvokeAsync(new PageChangedEventArgs(CurrentPage, PageSize, _sortColumn, _sortAscending));
+    }
+
+    private async Task NextPage()
+    {
+        if (CurrentPage < TotalPages)
+        {
+            CurrentPage++;
+            await CurrentPageChanged.InvokeAsync(CurrentPage);
+            await OnPageChanged.InvokeAsync(new PageChangedEventArgs(CurrentPage, PageSize, _sortColumn, _sortAscending));
+        }
+    }
+
+    private async Task PreviousPage()
+    {
+        if (CurrentPage > 1)
+        {
+            CurrentPage--;
+            await CurrentPageChanged.InvokeAsync(CurrentPage);
+            await OnPageChanged.InvokeAsync(new PageChangedEventArgs(CurrentPage, PageSize, _sortColumn, _sortAscending));
+        }
+    }
+
+    private async Task GoToPage(int page)
+    {
+        CurrentPage = page;
+        await CurrentPageChanged.InvokeAsync(CurrentPage);
+        await OnPageChanged.InvokeAsync(new PageChangedEventArgs(CurrentPage, PageSize, _sortColumn, _sortAscending));
+    }
+
+    public class TableColumn<T>
+    {
+        public string Header { get; set; } = string.Empty;
+        public string PropertyName { get; set; } = string.Empty;
+        public RenderFragment<T> Template { get; set; } = null!;
+        public bool Sortable { get; set; } = true;
+        public string CssClass { get; set; } = "text-gray-500 dark:text-neutral-400";
+    }
+
+    public class PageChangedEventArgs(int page, int pageSize, string sortColumn, bool sortAscending)
+    {
+        public int Page { get; set; } = page;
+        public int PageSize { get; set; } = pageSize;
+        public string SortColumn { get; set; } = sortColumn;
+        public bool SortAscending { get; set; } = sortAscending;
+    }
+}
