@@ -11,9 +11,10 @@
           aria-expanded="@_isOpen">
     
     <span class="flex gap-x-2 text-nowrap">
-      @if (SelectedValue != null && !EqualityComparer<TValue>.Default.Equals(SelectedValue, default))
+      @if (SelectedValue is not null && SelectOptions is not null)
       {
-        @SelectOptionTemplate(SelectOptions.FirstOrDefault(option => EqualityComparer<TValue>.Default.Equals(option.Value, SelectedValue)))      }
+        @SelectOptionTemplate(SelectOptions.FirstOrDefault(option => EqualityComparer<TValue>.Default.Equals(option.Value, SelectedValue))!)
+      }
       else
       {
         <span class="text-gray-500 dark:text-neutral-500">@Placeholder</span>
@@ -180,6 +181,18 @@
       _dotNetRef = DotNetObjectReference.Create(this);
       
       await _module.InvokeVoidAsync("initSelect", _containerRef, _dotNetRef);
+    }
+  }
+
+  protected override async Task OnInitializedAsync()
+  {
+    if (SelectOptions is not null && SelectedValue is null)
+    {
+      var defaultOption = SelectOptions.Find(option => option.IsSelected);
+      if (defaultOption is null) return;
+
+      SelectedValue = defaultOption.Value;
+      await SelectedValueChanged.InvokeAsync(SelectedValue);
     }
   }
 

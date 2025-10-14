@@ -48,7 +48,7 @@ else
             <PrelineSelect TValue="IExporter"
                            @bind-SelectedValue="_formModel.Exporter"
                            Placeholder="Exporter"
-                           SelectOptions="@(new List<SelectOption<IExporter>>{ new() { Text = "Vanilla", Value = new VanillaExporter(), IsSelected = true }, new() { Text = "Litematica", Value = new LitematicaExporter() }})"></PrelineSelect>
+                           SelectOptions="_exportOptions"></PrelineSelect>
         </div>
         
         <PrelineNavCard Class="w-full md:w-3/4 lg:w-1/2 dark:bg-neutral-800">
@@ -179,6 +179,30 @@ else
         </div>
     </EditForm>
     
+    @if (_materialList is not null && _materialList.Count > 0)
+    {
+        <div class="-m-1.5 overflow-x-auto mt-4">
+            <div class="p-1.5 min-w-full inline-block align-middle">
+                <div class="border border-gray-200 rounded-lg overflow-hidden dark:border-neutral-700">
+                    <PrelineTable TItem="MapMaterial"
+                                  Items="@_sortedMaterialList"
+                                  TotalCount="@_materialList.Count"
+                                  IsLoading="false"
+                                  CurrentPage="1"
+                                  PageSize="@_materialList.Count"
+                                  Columns="@_materialColumns"
+                                  InitialSortColumn="Count"
+                                  InitialSortAscending="false"
+                                  OnPageChanged="OnMaterialPageChanged"
+                                  EmptyText="No materials necessary."
+                                  LoadingText="Loading materials...">
+                    </PrelineTable>
+                </div>
+            </div>
+        </div>
+    }
+    
+    
     @if (_exportUrl != null)
     {
         <a id="exportMap" class="btn" href="@_exportUrl" download="map.litematic"
@@ -194,7 +218,44 @@ else
     private string? _preProcessedImageUrl;
     private string? _generatedImageUrl;
     private string? _exportUrl;
+
     private SKBitmap? _inputImage;
+
+    private List<MapMaterial>? _materialList;
+    private List<MapMaterial>? _sortedMaterialList;
+    private string _materialSortColumn = "Count";
+    private bool _materialSortAscending = false;
+
+    private List<SelectOption<IExporter>> _exportOptions = [new() { Text = "Vanilla", Value = new VanillaExporter(), IsSelected = true }, new() { Text = "Litematica", Value = new LitematicaExporter() }];
+
+    private readonly List<PrelineTable<MapMaterial>.TableColumn<MapMaterial>> _materialColumns =
+    [
+        new()
+        {
+            Header = "Block",
+            PropertyName = "Block",
+            Sortable = true,
+            Template = material => @<div class="flex items-center space-x-2">
+                                       <img src="@material.Material.ImageUrl" alt="@material.Material.MinecraftId"
+                                            class="w-10 h-10 object-cover rounded-md border border-gray-300"/>
+                                       <span>@material.Material.Name</span>
+                                   </div>
+        },
+        new()
+        {
+            Header = "ID",
+            PropertyName = "Id",
+            Sortable = true,
+            Template = material => @<span>@material.Material.MinecraftId</span>
+        },
+        new()
+        {
+            Header = "Count",
+            PropertyName = "Count",
+            Sortable = true,
+            Template = material => @<span>@material.Count</span>
+        }
+    ];
 
     private List<Palette>? _palettes;
     private readonly FormModel _formModel = new();
@@ -412,6 +473,7 @@ else
     private async Task OnValidSubmit()
     {
         if (_inputImage is null) return;
+        if (_database is null) return;
 
         IColorComparison colorComparison = _formModel.ComparisonMode switch
         {
@@ -452,11 +514,45 @@ else
         };
         var generatorOutput = generator.Generate(generatedImage, palette);
 
+        _materialList = [];
+        foreach (var blockGroup in generatorOutput.Blocks.GroupBy(info => info.Id))
+        {
+            var block = await _database.Blocks.FirstOrDefaultAsync(b => b.MinecraftId == blockGroup.Key);
+            var count = blockGroup.Count();
+            if (block is null) continue;
+
+            _materialList.Add(new MapMaterial(block, count));
+        }
+
+        _sortedMaterialList = _materialList.OrderByDescending(m => m.Count).ToList();
+
         var outStream = _formModel.Exporter.SaveAsStream(palette, generatorOutput.Blocks);
         var outMs = new MemoryStream();
         await outStream.CopyToAsync(outMs);
 
         _exportUrl = ConvertStreamToBase64Url(outMs.ToArray(), "application/octet-stream");
+    }
+
+    private async Task OnMaterialPageChanged(PrelineTable<MapMaterial>.PageChangedEventArgs args)
+    {
+        _materialSortColumn = args.SortColumn;
+        _materialSortAscending = args.SortAscending;
+
+        if (_materialList is null) return;
+
+        _sortedMaterialList = _materialSortColumn switch
+        {
+            "Count" => _materialSortAscending
+                ? _materialList.OrderBy(m => m.Count).ToList()
+                : _materialList.OrderByDescending(m => m.Count).ToList(),
+            "Block" => _materialSortAscending
+                ? _materialList.OrderBy(m => m.Material.Name).ToList()
+                : _materialList.OrderByDescending(m => m.Material.Name).ToList(),
+            "Id" => _materialSortAscending
+                ? _materialList.OrderBy(m => m.Material.MinecraftId).ToList()
+                : _materialList.OrderByDescending(m => m.Material.MinecraftId).ToList(),
+            _ => _materialList
+        };
     }
 
     private static string ConvertStreamToBase64Url(byte[] data, string contentType = "image/png") => $"data:{contentType};base64,{Convert.ToBase64String(data)}";
@@ -595,4 +691,7 @@ else
 
         StateHasChanged();
     }
+
+    record struct MapMaterial(Block Material, int Count);
+
 }
