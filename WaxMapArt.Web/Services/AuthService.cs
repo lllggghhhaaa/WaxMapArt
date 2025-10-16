@@ -11,7 +11,7 @@ namespace WaxMapArt.Web.Services;
 
 public class AuthService(IDbContextFactory<DatabaseContext> dbFactory, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, ILogger<AuthService> logger)
 {
-    private DatabaseContext _dbContext = dbFactory.CreateDbContext();
+    private readonly DatabaseContext _dbContext = dbFactory.CreateDbContext();
     
     public async Task<bool> LoginAsync(string username, string password)
     {
@@ -146,5 +146,43 @@ public class AuthService(IDbContextFactory<DatabaseContext> dbFactory, IHttpCont
         var hash = await argon2.GetBytesAsync(512);
 
         return hash is not null && hash.SequenceEqual(user.PasswordHash);
+    }
+    
+    public async Task<bool> UpdateUsernameAsync(Guid userId, string newUsername)
+    {
+        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user == null) return false;
+
+        if (await _dbContext.Users.AnyAsync(u => u.Name == newUsername && u.Id != userId))
+            return false;
+
+        user.Name = newUsername;
+        await _dbContext.SaveChangesAsync();
+    
+        return true;
+    }
+
+    public async Task<bool> UpdatePasswordAsync(User user, string newPassword)
+    {
+        var salt = CreateSalt();
+
+        var argon2 = new Argon2id(Encoding.UTF8.GetBytes(newPassword))
+        {
+            Salt = salt,
+            Iterations = 4,
+            MemorySize = 65536,
+            DegreeOfParallelism = 2,
+        };
+
+        var hash = await argon2.GetBytesAsync(512);
+    
+        if (hash is null) return false;
+
+        user.PasswordHash = hash;
+        user.PasswordSalt = salt;
+    
+        await _dbContext.SaveChangesAsync();
+    
+        return true;
     }
 }

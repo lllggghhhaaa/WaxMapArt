@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
+using Minio;
 using WaxMapArt.Web.Components;
 using WaxMapArt.Web.Database;
 using WaxMapArt.Web.Services;
@@ -18,6 +19,15 @@ builder.Services.AddRazorComponents()
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddDbContextFactory<DatabaseContext>();
+builder.Services.AddMinio(configureClient => configureClient
+    .WithEndpoint(builder.Configuration["MinIO:Endpoint"] ?? throw new InvalidOperationException("MinIO Endpoint is not configured"))
+    .WithCredentials(
+        builder.Configuration["MinIO:AccessKey"] ?? throw new InvalidOperationException("MinIO Access Key is not configured"),
+        builder.Configuration["MinIO:SecretKey"] ?? throw new InvalidOperationException("MinIO Secret Key is not configured"))
+    .Build());
+builder.Services.AddScoped<ImageService>();
+builder.Services.AddScoped<UserProfileState>();
+
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 

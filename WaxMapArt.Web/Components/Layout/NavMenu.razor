@@ -1,6 +1,12 @@
 ﻿@using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
+@using WaxMapArt.Web.Services
+@implements IDisposable
+@rendermode InteractiveServer
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ImageService Image
+@inject AuthService Auth
+@inject UserProfileState UserProfileState
 
 <header class="sticky top-0 inset-x-0 flex flex-wrap md:justify-start md:flex-nowrap z-50 w-full text-sm">
   <nav class="mt-4 relative max-w-5xl w-full bg-white border border-gray-200 rounded-[24px] mx-2 flex flex-wrap md:flex-nowrap items-center justify-between p-2 px-4 sm:mx-auto dark:bg-neutral-900 dark:border-neutral-700" aria-label="Global">
@@ -32,9 +38,9 @@
     <div class="flex items-center gap-2 md:order-4 md:ms-4">
       <AuthorizeView>
         <Authorized>
-          <div class="flex items-center gap-x-3">
+          <a class="flex items-center gap-x-3" href="/profile">
             <div class="flex items-center gap-x-2">
-              <img src="_content/MyApp/default-avatar.png" alt="User avatar" class="w-8 h-8 rounded-full border border-gray-300 dark:border-neutral-700 object-cover" />
+              <img src="@_imageAvatarUrl" alt="User avatar" class="w-8 h-8 rounded-full border border-gray-300 dark:border-neutral-700 object-cover" />
               <span class="font-medium text-gray-800 dark:text-neutral-200">@_userName</span>
             </div>
             
@@ -44,7 +50,7 @@
                 <i class="ri-code-s-slash-line" />
               </span>
             }
-          </div>
+          </a>
         </Authorized>
         <NotAuthorized>
           <div class="inline-flex items-center gap-x-3">
@@ -61,7 +67,7 @@
       <div class="md:hidden">
         <button type="button"
                 class="hs-collapse-toggle flex justify-center items-center size-9.5 border border-gray-200 text-gray-500 rounded-full hover:bg-gray-200 focus:outline-hidden focus:bg-gray-200 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700"
-                aria-label="Alternar navegação"
+                aria-label="Change navigation"
                 aria-controls="navMenu"
                 data-hs-collapse="#navMenu">
           <svg class="hs-collapse-open:hidden shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -79,14 +85,30 @@
 @code {
     private string? _userName;
     private bool _isDev;
+    private string _imageAvatarUrl = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        
+
         _userName = authState.User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Name)?.Value ?? "Guest";
         _isDev = authState.User.Claims.Any(claim => claim is { Type: ClaimTypes.Role, Value: "Developer" });
+
+        var user = Auth.GetCurrentUser();
+        _imageAvatarUrl = await Image.GetUserAvatarUrlAsync(user?.Id) ?? $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(user?.Name ?? "User")}&background=random";
+        UserProfileState.OnAvatarChanged += HandleAvatarChanged;
         
         StateHasChanged();
+    }
+
+    private void HandleAvatarChanged()
+    {
+        _imageAvatarUrl = UserProfileState.AvatarUrl ?? _imageAvatarUrl;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        UserProfileState.OnAvatarChanged -= HandleAvatarChanged;
     }
 }

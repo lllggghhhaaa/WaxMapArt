@@ -104,8 +104,8 @@ namespace WaxMapArt.Web.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("ImageUrl")
-                        .HasColumnType("text");
+                    b.Property<Guid?>("AvatarImageId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .HasColumnType("text");
@@ -123,10 +123,42 @@ namespace WaxMapArt.Web.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AvatarImageId")
+                        .IsUnique();
+
                     b.HasIndex("Name")
                         .IsUnique();
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("WaxMapArt.Web.Database.UserImage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ObjectName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<long>("Size")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Images");
                 });
 
             modelBuilder.Entity("BlockPalette", b =>
@@ -165,7 +197,22 @@ namespace WaxMapArt.Web.Migrations
 
             modelBuilder.Entity("WaxMapArt.Web.Database.User", b =>
                 {
+                    b.HasOne("WaxMapArt.Web.Database.UserImage", "AvatarImage")
+                        .WithOne("User")
+                        .HasForeignKey("WaxMapArt.Web.Database.User", "AvatarImageId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("AvatarImage");
+                });
+
+            modelBuilder.Entity("WaxMapArt.Web.Database.User", b =>
+                {
                     b.Navigation("Palettes");
+                });
+
+            modelBuilder.Entity("WaxMapArt.Web.Database.UserImage", b =>
+                {
+                    b.Navigation("User");
                 });
 #pragma warning restore 612, 618
         }

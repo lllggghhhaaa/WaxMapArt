@@ -12,6 +12,7 @@ public class DatabaseContext(IConfiguration config) : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<Block> Blocks { get; set; }
     public DbSet<Palette> Palettes { get; set; }
+    public DbSet<UserImage> Images { get; set; } 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -24,6 +25,11 @@ public class DatabaseContext(IConfiguration config) : DbContext
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Name)
             .IsUnique();
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.AvatarImage)
+            .WithOne(i => i.User)
+            .HasForeignKey<User>(u => u.AvatarImageId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<Palette>()
             .HasMany(p => p.Blocks)
@@ -48,7 +54,9 @@ public class User
 {
     public Guid Id { get; set; } = Guid.CreateVersion7();
     public string? Name { get; set; }
-    public string? ImageUrl { get; set; }
+    
+    public Guid? AvatarImageId { get; set; }
+    public UserImage? AvatarImage { get; set; }
     public UserRole Role { get; set; } = UserRole.User;
     
     public byte[] PasswordHash { get; set; }
@@ -108,4 +116,16 @@ public class Palette
         PlaceholderColor = value.PlaceholderBlock.ToPaletteColor(),
         Colors = value.Blocks.Select(b => b.ToPaletteColor()).ToArray()
     };
+}
+
+public class UserImage
+{
+    public Guid Id { get; set; } = Guid.CreateVersion7();
+    public string FileName { get; set; } = null!;
+    public string ObjectName { get; set; } = null!;
+    public string ContentType { get; set; } = null!;
+    public long Size { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    
+    public User? User { get; set; }
 }
