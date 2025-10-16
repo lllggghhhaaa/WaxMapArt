@@ -44,8 +44,6 @@ public class StaircaseGenerator : IGenerator
                     Properties = blockInfo.Properties
                 });
                 
-                
-
                 if (blockInfo.GeneratorProperties.NeedSupport)
                     row.Add(new BlockInfo
                     {
@@ -64,7 +62,6 @@ public class StaircaseGenerator : IGenerator
                 ref var element = ref blockInfo;
                 element.Y -= minY;
             }
-
             
             foreach (var b in row) blocks.Add(b);
         });

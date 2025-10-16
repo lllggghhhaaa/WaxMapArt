@@ -188,4 +188,6 @@ public class LitematicaExporter : IExporter
                 .Add(new NbtInt("x", dimensions.width))
                 .Add(new NbtInt("y", dimensions.height))
                 .Add(new NbtInt("z", dimensions.depth)));
+    
+    public string GetFileFormat() => "litematic";
 }

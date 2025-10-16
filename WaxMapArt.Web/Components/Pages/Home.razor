@@ -13,7 +13,7 @@
 @inject IDbContextFactory<DatabaseContext> DbContextFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-<PageTitle>Home</PageTitle>
+<PageTitle>WaxMapArt - Generator</PageTitle>
 
 @if (_palettes is null)
 {
@@ -202,6 +202,11 @@ else
         <div class="flex space-x-4">
             <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded" @onclick="() => _generate = false">Preview</button>
             <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded" @onclick="() => _generate = true">Generate</button>
+            @if (_exportUrl is not null)
+            {
+                <a id="exportMap" class="px-4 py-2 bg-stone-600 text-white rounded" href='@_exportUrl' download="@(_exportName ?? "Untitled.nbt")"
+                   role="button" target="=_top">Download</a>
+            }
         </div>
     </EditForm>
     
@@ -227,13 +232,6 @@ else
             </div>
         </div>
     }
-    
-    
-    @if (_exportUrl != null)
-    {
-        <a id="exportMap" class="btn" href="@_exportUrl" download="map.litematic"
-           role="button" target="=_top">Download</a>
-    }
 }
 
 @code {
@@ -244,7 +242,9 @@ else
     private string? _preProcessedImageUrl;
     private string? _generatedImageUrl;
     private string? _exportUrl;
+    private string? _exportName;
 
+    private string? _imageName;
     private SKBitmap? _inputImage;
 
     private List<MapMaterial>? _materialList;
@@ -557,6 +557,7 @@ else
         var outMs = new MemoryStream();
         await outStream.CopyToAsync(outMs);
 
+        _exportName = $"{_imageName}.{_formModel.Exporter.GetFileFormat()}";
         _exportUrl = ConvertStreamToBase64Url(outMs.ToArray(), "application/octet-stream");
     }
 
@@ -715,6 +716,7 @@ else
         }
 
         var data = ms.ToArray();
+        _imageName = Path.GetFileNameWithoutExtension(file.Name);
         _inputImage = SKBitmap.Decode(data);
 
         await CreateOriginalPreviewAsync();

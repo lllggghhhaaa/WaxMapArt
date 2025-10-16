@@ -81,4 +81,6 @@ public class VanillaExporter : IExporter
 
         return (maxX - minX + 1, maxY - minY + 1, maxZ - minZ + 1);
     }
+
+    public string GetFileFormat() => "nbt";
 }
