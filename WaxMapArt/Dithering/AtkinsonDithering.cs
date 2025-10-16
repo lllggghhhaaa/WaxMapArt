@@ -5,38 +5,45 @@ using WaxMapArt.Utils;
 
 namespace WaxMapArt.Dithering;
 
-public class AtkinsonDithering : IDithering
+public class AtkinsonDithering(float errorDiffusionStrength = 1.0f, bool serpentineScanning = false) : IDithering
 {
     public SKBitmap ApplyDithering(SKBitmap image, Palette palette, IColorComparison colorComparison, bool staircase)
     {
         var colors = ColorUtils.GetPaletteColors(palette, staircase);
         
         for (var y = 0; y < image.Height; y++)
-        for (var x = 0; x < image.Width; x++)
         {
-            var originalColor = image.GetPixel(x, y);
-            var nearestColor = ColorUtils.FindNearestColor(originalColor, colors, colorComparison);
-            image.SetPixel(x, y, nearestColor);
+            var isReversed = serpentineScanning && y % 2 == 1;
+            var xStart = isReversed ? image.Width - 1 : 0;
+            var xEnd = isReversed ? -1 : image.Width;
+            var xStep = isReversed ? -1 : 1;
 
-            var error = new Vector3(
-                originalColor.Red - nearestColor.Red,
-                originalColor.Green - nearestColor.Green,
-                originalColor.Blue - nearestColor.Blue
-            );
+            for (var x = xStart; x != xEnd; x += xStep)
+            {
+                var originalColor = image.GetPixel(x, y);
+                var nearestColor = ColorUtils.FindNearestColor(originalColor, colors, colorComparison);
+                image.SetPixel(x, y, nearestColor);
 
-            DistributeError(image, x, y, error);
+                var error = new Vector3(
+                    originalColor.Red - nearestColor.Red,
+                    originalColor.Green - nearestColor.Green,
+                    originalColor.Blue - nearestColor.Blue
+                ) * errorDiffusionStrength;
+
+                DistributeError(image, x, y, error, xStep);
+            }
         }
 
         return image;
     }
 
-    private static void DistributeError(SKBitmap image, int x, int y, Vector3 error)
+    private static void DistributeError(SKBitmap image, int x, int y, Vector3 error, int direction)
     {
-        AddError(1, 0, 1.0f / 8.0f);
-        AddError(2, 0, 1.0f / 8.0f);
-        AddError(-1, 1, 1.0f / 8.0f);
+        AddError(direction, 0, 1.0f / 8.0f);
+        AddError(2 * direction, 0, 1.0f / 8.0f);
+        AddError(-direction, 1, 1.0f / 8.0f);
         AddError(0, 1, 1.0f / 8.0f);
-        AddError(1, 1, 1.0f / 8.0f);
+        AddError(direction, 1, 1.0f / 8.0f);
         AddError(0, 2, 1.0f / 8.0f);
         return;
 

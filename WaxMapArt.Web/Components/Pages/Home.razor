@@ -105,6 +105,32 @@ else
                     }
                 </div>
             </PrelineNavCardTab>
+            <PrelineNavCardTab Title="Dithering">
+                <div class="flex flex-col space-x-4">
+                    @switch (_formModel.DitheringMode)
+                    {
+                        case DitheringMode.Atkinson:
+                        case DitheringMode.FloydSteinberg:
+                        case DitheringMode.JarvisJudiceNinke:
+                            <div class="flex flex-row space-x-4">
+                                <PrelineInputNumber TValue="float"
+                                                    @bind-Value="_formModel.ErrorDiffusionStrength"
+                                                    Variant="InputNumberVariant.Horizontal"
+                                                    Step="0.05f">
+                                    <Label>Error Diffusion Strength</Label>
+                                </PrelineInputNumber>
+                                <PrelineSwitch @bind-Value="_formModel.SerpentineScanning"
+                                               Label="Serpentine Scanning"
+                                               Tooltip="When enabled, the dithering will alternate direction on each row." />
+                            </div>
+                            break;
+                        case DitheringMode.None:
+                        default:
+
+                            break;
+                    }
+                </div>
+            </PrelineNavCardTab>
             <PrelineNavCardTab Title="Pre-Processing">
                 <div class="flex flex-col gap-4">
                     <PrelineInputNumber TValue="float"
@@ -112,7 +138,7 @@ else
                                         Variant="InputNumberVariant.Horizontal"
                                         Min="0.0f"
                                         Max="2.0f"
-                                        Step="0.1f">
+                                        Step="0.05f">
                         <Label>Saturation</Label>
                     </PrelineInputNumber>
                     <PrelineInputNumber TValue="float"
@@ -120,7 +146,7 @@ else
                                         Variant="InputNumberVariant.Horizontal"
                                         Min="0.0f"
                                         Max="2.0f"
-                                        Step="0.1f">
+                                        Step="0.05f">
                         <Label>Brightness</Label>
                     </PrelineInputNumber>
                     <PrelineInputNumber TValue="float"
@@ -128,7 +154,7 @@ else
                                         Variant="InputNumberVariant.Horizontal"
                                         Min="0.0f"
                                         Max="2.0f"
-                                        Step="0.1f">
+                                        Step="0.05f">
                         <Label>Contrast</Label>
                     </PrelineInputNumber>
                 </div>
@@ -486,8 +512,9 @@ else
         IDithering dithering = _formModel.DitheringMode switch
         {
             DitheringMode.None => new NoneDithering(),
-            DitheringMode.Atkinson => new AtkinsonDithering(),
-            DitheringMode.FloydSteinberg => new FloydSteinbergDithering(),
+            DitheringMode.Atkinson => new AtkinsonDithering(_formModel.ErrorDiffusionStrength, _formModel.SerpentineScanning),
+            DitheringMode.FloydSteinberg => new FloydSteinbergDithering(_formModel.ErrorDiffusionStrength, _formModel.SerpentineScanning),
+            DitheringMode.JarvisJudiceNinke => new JarvisJudiceNinkeDithering(_formModel.ErrorDiffusionStrength, _formModel.SerpentineScanning),
             _ => throw new ArgumentOutOfRangeException()
         };
 
@@ -575,6 +602,11 @@ else
         public int CropOffsetX { get; set; }
         public int CropOffsetY { get; set; }
         public string PadColor { get; set; } = "#FFFFFF";
+
+        // For Dithering
+        // Atikson, FloydSteinberg, JarvisJudiceNinke
+        public float ErrorDiffusionStrength = 1;
+        public bool SerpentineScanning = false;
 
         public float Saturation
         {
