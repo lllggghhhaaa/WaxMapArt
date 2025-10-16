@@ -126,58 +126,40 @@
                                 Block Selection
                             </h3>
 
-                            @if (_blocks.Any())
+                            @if (_blocksByMapId.Any())
                             {
-                                <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-neutral-700 shadow-sm">
-                                    <table id="new" class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-                                        <thead>
-                                        <tr>
-                                            <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Block</th>
-                                            <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Color</th>
-                                            <th scope="col" class="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase dark:text-neutral-500">Select</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
-                                        @foreach (var block in _blocks)
-                                        {
-                                            <tr @onclick="() => ToggleBlockSelection(block, !isSelected[block.Id])" style="cursor:pointer;">
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400 relative">
-                                                    <div class="flex items-center space-x-2">
-                                                        <img src="@block.ImageUrl" 
-                                                             alt="@block.MinecraftId"
-                                                             class="w-10 h-10 object-cover rounded-md border border-gray-300" />
-                                                        <div>
-                                                            <div class="font-medium text-gray-800 dark:text-neutral-200">
-                                                                @block.Name
-                                                            </div>
-                                                            <div class="text-sm text-gray-500 dark:text-neutral-400 font-mono">
-                                                                @block.MinecraftId
-                                                            </div>
-                                                        </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    @foreach (var (mapId, blocks) in _blocksByMapId.OrderBy(x => x.Key))
+                                    {
+                                        var color = ColorUtils.MapIdToInfo(mapId).Color.ToHexColor();
+                                        
+                                        <div class="space-y-2">
+                                            <label class="block text-sm font-medium dark:text-white flex items-center gap-2">
+                                                <svg class="w-4 h-4 rounded-full" xmlns="http://www.w3.org/2000/svg"
+                                                     viewBox="0 0 20 20" title="@color">
+                                                    <circle cx="10" cy="10" r="9" fill="@color"/>
+                                                </svg>
+                                                <span class="font-mono text-xs text-gray-500 dark:text-gray-400">Map ID @mapId</span>
+                                            </label>
+
+                                            <PrelineSelect TValue="Guid?"
+                                                           @bind-SelectedValue="@_selectedBlocksByMapId[mapId]"
+                                                           Placeholder="No block selected"
+                                                           SelectOptions="@blocks"
+                                                           DefaultOptionText="None"
+                                                           AriaLabel="@($"Block for Map ID {mapId}")"
+                                                           OnSelectionChange="@(async (Guid? value) => await HandleBlockSelection(mapId, value))">
+                                                <SelectOptionTemplate Context="blockOption">
+                                                    <div class="flex items-center gap-2">
+                                                        <img src="@_blocks.FirstOrDefault(b => b.Id == blockOption.Value)?.ImageUrl" 
+                                                             alt="" 
+                                                             class="shrink-0 size-5 rounded" />
+                                                        <span class="truncate">@_blocks.FirstOrDefault(b => b.Id == blockOption.Value)?.Name</span>
                                                     </div>
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">
-                                                    @{
-                                                        var color = ColorUtils.MapIdToInfo(block.MapId).Color.ToHexColor();
-                                                    }
-                                                    <div class="flex">
-                                                        <span class="mr-2 text-xs font-mono text-gray-500 dark:text-gray-400">@block.MapId</span>
-                                                        <svg class="w-5 h-5 rounded-full" xmlns="http://www.w3.org/2000/svg"
-                                                             viewBox="0 0 20 20" title="@color">
-                                                            <circle cx="10" cy="10" r="9" fill="@color"/>
-                                                        </svg>
-                                                        <span class="ml-2 text-xs font-mono text-gray-500 dark:text-gray-400">@color</span>
-                                                    </div>
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400 relative">
-                                                    <div class="flex justify-end">
-                                                        <PrelineCheckbox @bind-Value="@isSelected[block.Id]" />
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        }
-                                        </tbody>
-                                    </table>
+                                                </SelectOptionTemplate>
+                                            </PrelineSelect>
+                                        </div>
+                                    }
                                 </div>
                             }
                             else
@@ -222,8 +204,10 @@
     private List<Block> _blocks = [];
     private DatabaseContext? _database;
     private bool _isEditMode;
-    private Dictionary<Guid, bool> isSelected = new();
     private List<SelectOption<Guid>> _blockOptions = [];
+    
+    private Dictionary<int, List<SelectOption<Guid?>>> _blocksByMapId = new();
+    private readonly Dictionary<int, Guid?> _selectedBlocksByMapId = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -238,7 +222,7 @@
         _blocks = await _database.Blocks.OrderBy(b => b.MapId).ToListAsync();
         
         _blockOptions = _blocks
-            .Select(b => new SelectOption<Guid>{ Value = b.Id, Text = b.MinecraftId })
+            .Select(b => new SelectOption<Guid>{ Value = b.Id, Text = b.Name })
             .ToList();
 
         Value = PaletteId.HasValue
@@ -246,20 +230,52 @@
             : new Palette { Blocks = [], PlaceholderBlockId = _blocks.FirstOrDefault()?.Id ?? Guid.Empty, UserId = user.Id };
 
         _isEditMode = PaletteId.HasValue;
-        foreach (var block in _blocks)
-            isSelected[block.Id] = Value.Blocks.Any(b => b.Id == block.Id);
+        
+        InitializeBlockSelections();
     }
 
-    private void ToggleBlockSelection(Block block, bool selected)
+    private void InitializeBlockSelections()
     {
         if (Value is null) return;
 
-        isSelected[block.Id] = selected;
-        
-        if (selected && !Value.Blocks.Contains(block))
-            Value.Blocks.Add(block);
-        else if (!selected && Value.Blocks.Contains(block))
-            Value.Blocks.Remove(block);
+        _blocksByMapId = _blocks
+            .GroupBy(b => b.MapId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(b => new SelectOption<Guid?>
+                {
+                    Value = b.Id,
+                    Text = b.Name
+                }).ToList()
+            );
+
+        foreach (var mapId in _blocksByMapId.Keys)
+        {
+            var selectedBlock = Value.Blocks.FirstOrDefault(b => b.MapId == mapId);
+            _selectedBlocksByMapId[mapId] = selectedBlock?.Id;
+        }
+    }
+
+    private async Task HandleBlockSelection(int mapId, Guid? blockId)
+    {
+        if (Value is null) return;
+
+        var existingBlock = Value.Blocks.FirstOrDefault(b => b.MapId == mapId);
+        if (existingBlock != null)
+        {
+            Value.Blocks.Remove(existingBlock);
+        }
+
+        if (blockId.HasValue)
+        {
+            var newBlock = _blocks.FirstOrDefault(b => b.Id == blockId.Value);
+            if (newBlock != null)
+            {
+                Value.Blocks.Add(newBlock);
+            }
+        }
+
+        _selectedBlocksByMapId[mapId] = blockId;
     }
 
     private async Task HandleValidSubmit()
@@ -281,5 +297,4 @@
         await _database.SaveChangesAsync();
         NavigationManager.NavigateTo("/palettes");
     }
-
 }
