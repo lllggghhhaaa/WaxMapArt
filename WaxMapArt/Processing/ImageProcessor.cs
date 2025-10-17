@@ -86,8 +86,10 @@ public class ImageProcessor
         var bg = Options.ResizeMethod == ResizeMethod.Pad ? ParseHexColor(Options.PadColor) : SKColors.Transparent;
         resizeCanvas.Clear(bg);
 
-        var workingImg = SKImage.FromBitmap(source);
-        var srcRect = new SKRect(0, 0, workingImg.Width, workingImg.Height);
+        using var workingImg = SKImage.FromBitmap(source);
+
+        var srcRect = Options.ResizeMethod == ResizeMethod.Crop ? CalculateCropRect(workingImg, targetWidth, targetHeight) : new SKRect(0, 0, workingImg.Width, workingImg.Height);
+
         var dstRect = CalculateDestinationRect(workingImg, targetWidth, targetHeight);
 
         resizeCanvas.DrawImage(workingImg, srcRect, dstRect, paint);
@@ -99,19 +101,15 @@ public class ImageProcessor
 
         return result;
     }
-
+    
     private SKRect CalculateDestinationRect(SKImage source, int targetWidth, int targetHeight)
     {
         return Options.ResizeMethod switch
         {
             ResizeMethod.Stretch => new SKRect(0, 0, targetWidth, targetHeight),
-            
-            ResizeMethod.Crop => CalculateCropRect(source, targetWidth, targetHeight),
-            
+            ResizeMethod.Crop    => new SKRect(0, 0, targetWidth, targetHeight),
             ResizeMethod.Pad or ResizeMethod.Min => CalculateFitRect(source, targetWidth, targetHeight, true),
-            
             ResizeMethod.Max => CalculateFitRect(source, targetWidth, targetHeight, false),
-            
             _ => new SKRect(0, 0, targetWidth, targetHeight)
         };
     }
@@ -122,7 +120,7 @@ public class ImageProcessor
         var targetAspect = (float)targetWidth / targetHeight;
 
         int cropWidth, cropHeight, cropX, cropY;
-        
+
         if (sourceAspect > targetAspect)
         {
             cropHeight = source.Height;
@@ -141,9 +139,9 @@ public class ImageProcessor
         cropX = Math.Max(0, Math.Min(cropX, source.Width - cropWidth));
         cropY = Math.Max(0, Math.Min(cropY, source.Height - cropHeight));
 
-        return new SKRect(0, 0, targetWidth, targetHeight);
+        return new SKRect(cropX, cropY, cropX + cropWidth, cropY + cropHeight);
     }
-
+    
     private SKRect CalculateFitRect(SKImage source, int targetWidth, int targetHeight, bool fitInside)
     {
         var ratio = fitInside 
