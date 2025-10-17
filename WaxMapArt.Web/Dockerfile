@@ -4,9 +4,6 @@ EXPOSE 3006
 
 USER root
 
-
-RUN node --version && npm --version
-
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 COPY . .
