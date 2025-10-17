@@ -1,5 +1,4 @@
-﻿FROM mcr.microsoft.com/dotnet/nightly/aspnet:10.0.0-rc.2 AS base
-USER $APP_UID
+﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
 EXPOSE 3006
 
@@ -11,21 +10,21 @@ RUN apt-get update && apt-get install -y curl \
 
 RUN node --version && npm --version
 
-FROM mcr.microsoft.com/dotnet/nightly/sdk:10.0.0-rc.2 AS build
-ARG BUILD_CONFIGURATION=Release
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
-COPY ["WaxMapArt.Web/WaxMapArt.Web.csproj", "WaxMapArt.Web/"]
-COPY ["WaxMapArt/WaxMapArt.csproj", "WaxMapArt/"]
-RUN dotnet restore "WaxMapArt.Web/WaxMapArt.Web.csproj"
 COPY . .
-WORKDIR "/src/WaxMapArt.Web"
-RUN dotnet build "WaxMapArt.Web.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "WaxMapArt.Web.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet restore "WaxMapArt.Web/WaxMapArt.Web.csproj"
+
+WORKDIR "/src/WaxMapArt.Web"
+RUN dotnet publish "WaxMapArt.Web.csproj" \
+    -c Release \
+    -o /app/publish \
+    -p:PublishTrimmed=false \
+    -p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+
+COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "WaxMapArt.Web.dll"]
