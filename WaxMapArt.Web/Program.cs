@@ -31,6 +31,8 @@ builder.Services.AddScoped<UserProfileState>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 
+builder.Services.AddScoped<MapGeneratorService>();
+
 var jwtKey = builder.Configuration["JwtSettings:SecretKey"] ?? throw new InvalidOperationException("JWT Secret Key is not configured");
 var jwtIssuer = builder.Configuration["JwtSettings:Issuer"] ?? "WaxMapArt";
 var jwtAudience = builder.Configuration["JwtSettings:Audience"] ?? "WaxMapArt";

@@ -4,14 +4,19 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.EntityFrameworkCore
 @using SkiaSharp
+@using WaxMapArt
 @using WaxMapArt.Comparison
 @using WaxMapArt.Dithering
+@using WaxMapArt.Entities
 @using WaxMapArt.Exporter
-@using WaxMapArt.Generator
+@using WaxMapArt.Processing
 @using WaxMapArt.Web.Components.Components
+@using WaxMapArt.Web.Services
+@using Palette = WaxMapArt.Web.Database.Palette
 @inject NavigationManager NavigationManager
 @inject IDbContextFactory<DatabaseContext> DbContextFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject MapGeneratorService Generator
 
 <PageTitle>WaxMapArt - Generator</PageTitle>
 
@@ -48,7 +53,7 @@ else
             <PrelineSelect TValue="IExporter"
                            @bind-SelectedValue="_formModel.Exporter"
                            Placeholder="Exporter"
-                           SelectOptions="_exportOptions"></PrelineSelect>
+                           SelectOptions="_exportOptions" />
         </div>
         
         <PrelineNavCard Class="w-full md:w-3/4 lg:w-1/2 dark:bg-neutral-800">
@@ -120,13 +125,12 @@ else
                                     <Label>Error Diffusion Strength</Label>
                                 </PrelineInputNumber>
                                 <PrelineSwitch @bind-Value="_formModel.SerpentineScanning"
-                                               Label="Serpentine Scanning"
-                                               Tooltip="When enabled, the dithering will alternate direction on each row." />
+                                               Label="Serpentine Scanning" />
                             </div>
                             break;
                         case DitheringMode.None:
                         default:
-                            <div class="bg-gray-50 border border-gray-200 text-sm text-gray-600 rounded-lg p-4 dark:bg-white/10 dark:border-white/10 dark:text-neutral-400" role="alert" tabindex="-1" aria-labelledby="hs-link-on-right-label">
+                            <div class="bg-gray-50 border border-gray-200 text-sm text-gray-600 rounded-lg p-4 dark:bg-white/10 dark:border-white/10 dark:text-neutral-400" role="alert">
                                 <div class="flex">
                                     <div class="shrink-0">
                                         <svg class="shrink-0 size-4 mt-0.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -136,8 +140,8 @@ else
                                         </svg>
                                     </div>
                                     <div class="flex-1 md:flex md:justify-between ms-2">
-                                        <p id="hs-link-on-right-label" class="text-sm">
-                                            This dithering doesn't has any configuration options.
+                                        <p class="text-sm">
+                                            This dithering doesn't have any configuration options.
                                         </p>
                                     </div>
                                 </div>
@@ -220,7 +224,7 @@ else
             @if (_exportUrl is not null)
             {
                 <a id="exportMap" class="px-4 py-2 bg-stone-600 text-white rounded" href='@_exportUrl' download="@(_exportName ?? "Untitled.nbt")"
-                   role="button" target="=_top">Download</a>
+                   role="button" target="_top">Download</a>
             }
         </div>
     </EditForm>
@@ -251,7 +255,7 @@ else
 
 @code {
     private DatabaseContext? _database;
-    PrelineFileUpload _imageUpload = null!;
+    private PrelineFileUpload _imageUpload = null!;
 
     private string? _originalImageUrl;
     private string? _preProcessedImageUrl;
@@ -267,12 +271,13 @@ else
     private string _materialSortColumn = "Count";
     private bool _materialSortAscending;
 
-    private readonly List<SelectOption<IExporter>> _exportOptions = [new() { Text = "Vanilla", Value = new VanillaExporter(), IsSelected = true }, new() { Text = "Litematica", Value = new LitematicaExporter() }];
+    private readonly List<SelectOption<IExporter>> _exportOptions = [
+        new() { Text = "Vanilla", Value = new VanillaExporter(), IsSelected = true }, 
+        new() { Text = "Litematica", Value = new LitematicaExporter() }
+    ];
 
-    private readonly List<PrelineTable<MapMaterial>.TableColumn<MapMaterial>> _materialColumns =
-    [
-        new()
-        {
+    private readonly List<PrelineTable<MapMaterial>.TableColumn<MapMaterial>> _materialColumns = [
+        new() {
             Header = "Block",
             PropertyName = "Block",
             Sortable = true,
@@ -282,15 +287,13 @@ else
                                        <span>@material.Material.Name</span>
                                    </div>
         },
-        new()
-        {
+        new() {
             Header = "ID",
             PropertyName = "Id",
             Sortable = true,
             Template = material => @<span>@material.Material.MinecraftId</span>
         },
-        new()
-        {
+        new() {
             Header = "Count",
             PropertyName = "Count",
             Sortable = true,
@@ -329,238 +332,98 @@ else
         _formModel.SetPreProcessingChangeCallback(OnPreProcessingChange);
     }
 
-    private async Task CreateOriginalPreviewAsync()
-    {
-        if (_inputImage is null) return;
-
-        var targetWidth = _formModel.WidthMultiplier * 128;
-        var targetHeight = _formModel.HeightMultiplier * 128;
-
-        using var resized = new SKBitmap(targetWidth, targetHeight, _inputImage.ColorType, _inputImage.AlphaType);
-        using (var canvas = new SKCanvas(resized))
-        using (var paint = new SKPaint { FilterQuality = SKFilterQuality.High, IsAntialias = true })
-        {
-            canvas.Clear(SKColors.Transparent);
-            var srcRect = new SKRect(0, 0, _inputImage.Width, _inputImage.Height);
-            var dstRect = new SKRect(0, 0, targetWidth, targetHeight);
-            canvas.DrawBitmap(_inputImage, srcRect, dstRect, paint);
-            canvas.Flush();
-        }
-
-        using var skImage = SKImage.FromBitmap(resized);
-        using var data = skImage.Encode(SKEncodedImageFormat.Png, 100);
-        _originalImageUrl = ConvertStreamToBase64Url(data.ToArray());
-    }
-
-    private async Task<SKBitmap?> ProcessImageAsync()
-    {
-        if (_inputImage is null)
-            return null;
-
-        var source = _inputImage;
-
-        using var surface = SKSurface.Create(new SKImageInfo(source.Width, source.Height, source.ColorType, source.AlphaType));
-        var canvas = surface.Canvas;
-        using var paint = new SKPaint { IsAntialias = true };
-
-        SKColorFilter? colorFilter = null;
-
-        if (Math.Abs(_formModel.Saturation - 1.0f) > float.Epsilon)
-        {
-            var s = _formModel.Saturation;
-            const float rw = 0.2126f;
-            const float gw = 0.7152f;
-            const float bw = 0.0722f;
-
-            var mSat = new[]
-            {
-                rw * (1 - s) + s, gw * (1 - s), bw * (1 - s), 0, 0,
-                rw * (1 - s), gw * (1 - s) + s, bw * (1 - s), 0, 0,
-                rw * (1 - s), gw * (1 - s), bw * (1 - s) + s, 0, 0,
-                0, 0, 0, 1, 0
-            };
-
-            var cfSat = SKColorFilter.CreateColorMatrix(mSat);
-            colorFilter = cfSat;
-        }
-
-        if (Math.Abs(_formModel.Brightness - 1.0f) > float.Epsilon || Math.Abs(_formModel.Contrast - 1.0f) > float.Epsilon)
-        {
-            var brightness = _formModel.Brightness;
-            var contrast = _formModel.Contrast;
-
-            var bOffset = (brightness - 1.0f) * contrast;
-
-            var mCombined = new[]
-            {
-                contrast, 0, 0, 0, bOffset,
-                0, contrast, 0, 0, bOffset,
-                0, 0, contrast, 0, bOffset,
-                0, 0, 0, 1, 0
-            };
-
-            var cfCombined = SKColorFilter.CreateColorMatrix(mCombined);
-            colorFilter = colorFilter is null ? cfCombined : SKColorFilter.CreateCompose(cfCombined, colorFilter);
-        }
-
-        canvas.Clear(SKColors.Transparent);
-        if (colorFilter is not null)
-        {
-            paint.ColorFilter = colorFilter;
-        }
-
-        canvas.DrawBitmap(source, 0, 0, paint);
-        canvas.Flush();
-
-        var targetWidth = _formModel.WidthMultiplier * 128;
-        var targetHeight = _formModel.HeightMultiplier * 128;
-
-        using var resizeSurface = SKSurface.Create(new SKImageInfo(targetWidth, targetHeight, source.ColorType, source.AlphaType));
-        var resizeCanvas = resizeSurface.Canvas;
-        using var paint2 = new SKPaint { FilterQuality = SKFilterQuality.High, IsAntialias = true };
-
-        var bg = _formModel.ResizeMethod == ResizeMethod.Pad ? ParseHexColor(_formModel.PadColor) : SKColors.Transparent;
-        resizeCanvas.Clear(bg);
-
-        var workingImg = surface.Snapshot();
-        var srcRect = new SKRect(0, 0, workingImg.Width, workingImg.Height);
-        SKRect dstRect;
-
-        switch (_formModel.ResizeMethod)
-        {
-            case ResizeMethod.Stretch:
-                dstRect = new SKRect(0, 0, targetWidth, targetHeight);
-                break;
-
-            case ResizeMethod.Crop:
-            {
-                var sourceAspect = (float)workingImg.Width / workingImg.Height;
-                var targetAspect = (float)targetWidth / targetHeight;
-
-                int cropWidth, cropHeight, cropX, cropY;
-                if (sourceAspect > targetAspect)
-                {
-                    cropHeight = workingImg.Height;
-                    cropWidth = (int)(workingImg.Height * targetAspect);
-                    cropX = (workingImg.Width - cropWidth) / 2 + _formModel.CropOffsetX;
-                    cropY = _formModel.CropOffsetY;
-                }
-                else
-                {
-                    cropWidth = workingImg.Width;
-                    cropHeight = (int)(workingImg.Width / targetAspect);
-                    cropX = _formModel.CropOffsetX;
-                    cropY = (workingImg.Height - cropHeight) / 2 + _formModel.CropOffsetY;
-                }
-
-                cropX = Math.Max(0, Math.Min(cropX, workingImg.Width - cropWidth));
-                cropY = Math.Max(0, Math.Min(cropY, workingImg.Height - cropHeight));
-
-                srcRect = new SKRect(cropX, cropY, cropX + cropWidth, cropY + cropHeight);
-                dstRect = new SKRect(0, 0, targetWidth, targetHeight);
-                break;
-            }
-
-            case ResizeMethod.Pad:
-            case ResizeMethod.Min:
-            {
-                var ratio = Math.Min((float)targetWidth / workingImg.Width, (float)targetHeight / workingImg.Height);
-                var newW = workingImg.Width * ratio;
-                var newH = workingImg.Height * ratio;
-                var dx = (targetWidth - newW) / 2f;
-                var dy = (targetHeight - newH) / 2f;
-                dstRect = new SKRect(dx, dy, dx + newW, dy + newH);
-                break;
-            }
-
-            case ResizeMethod.Max:
-            {
-                var ratio = Math.Max((float)targetWidth / workingImg.Width, (float)targetHeight / workingImg.Height);
-                var newW = workingImg.Width * ratio;
-                var newH = workingImg.Height * ratio;
-                var dx = (targetWidth - newW) / 2f;
-                var dy = (targetHeight - newH) / 2f;
-                dstRect = new SKRect(dx, dy, dx + newW, dy + newH);
-                break;
-            }
-
-            default:
-                dstRect = new SKRect(0, 0, targetWidth, targetHeight);
-                break;
-        }
-
-        resizeCanvas.DrawImage(workingImg, srcRect, dstRect, paint2);
-        resizeCanvas.Flush();
-
-        using var finalImg = resizeSurface.Snapshot();
-        using var data = finalImg.Encode(SKEncodedImageFormat.Png, 100);
-        _preProcessedImageUrl = ConvertStreamToBase64Url(data.ToArray());
-
-        var result = new SKBitmap(targetWidth, targetHeight);
-        finalImg.ReadPixels(result.Info, result.GetPixels(), result.Info.RowBytes, 0, 0);
-
-        return result;
-    }
-
     private async Task OnPreProcessingChange()
     {
         if (_inputImage is not null)
         {
-            await ProcessImageAsync();
+            await GeneratePreview();
             StateHasChanged();
         }
     }
 
+    private async Task GeneratePreview()
+    {
+        if (_inputImage is null || _formModel.SelectedPalette is null) return;
+        
+        var request = new MapGenerationRequest
+        {
+            InputImage = _inputImage,
+            Palette = _formModel.SelectedPalette,
+            WidthMultiplier = _formModel.WidthMultiplier,
+            HeightMultiplier = _formModel.HeightMultiplier,
+            ResizeMethod = _formModel.ResizeMethod,
+            CropOffsetX = _formModel.CropOffsetX,
+            CropOffsetY = _formModel.CropOffsetY,
+            PadColor = _formModel.PadColor,
+            Saturation = _formModel.Saturation,
+            Brightness = _formModel.Brightness,
+            Contrast = _formModel.Contrast,
+            DitheringMode = DitheringMode.None,
+            ComparisonMode = _formModel.ComparisonMode,
+            GeneratorType = _formModel.GeneratorType,
+            ShouldGenerateStructure = false
+        };
+
+        var result = Generator.Generate(request);
+        
+        _preProcessedImageUrl = ConvertStreamToBase64Url(result.ProcessedImage);
+    }
+
     private async Task OnValidSubmit()
     {
-        if (_inputImage is null) return;
+        if (_inputImage is null || _formModel.SelectedPalette is null) return;
+        
+        var request = new MapGenerationRequest
+        {
+            InputImage = _inputImage,
+            Palette = _formModel.SelectedPalette,
+            WidthMultiplier = _formModel.WidthMultiplier,
+            HeightMultiplier = _formModel.HeightMultiplier,
+            ResizeMethod = _formModel.ResizeMethod,
+            CropOffsetX = _formModel.CropOffsetX,
+            CropOffsetY = _formModel.CropOffsetY,
+            PadColor = _formModel.PadColor,
+            Saturation = _formModel.Saturation,
+            Brightness = _formModel.Brightness,
+            Contrast = _formModel.Contrast,
+            DitheringMode = _formModel.DitheringMode,
+            DitheringOptions = new DitheringOptions
+            {
+                ErrorDiffusionStrength = _formModel.ErrorDiffusionStrength,
+                SerpentineScanning = _formModel.SerpentineScanning
+            },
+            ComparisonMode = _formModel.ComparisonMode,
+            GeneratorType = _formModel.GeneratorType,
+            ShouldGenerateStructure = _generate,
+            Exporter = _generate ? _formModel.Exporter : null
+        };
+
+        var result = Generator.Generate(request);
+        
+        _preProcessedImageUrl = ConvertStreamToBase64Url(result.ProcessedImage);
+        _generatedImageUrl = ConvertStreamToBase64Url(result.GeneratedImage);
+
+        if (_generate && result.Blocks is not null)
+        {
+            await ProcessMaterials(result.Blocks);
+            
+            if (result.ExportStream is not null)
+            {
+                var ms = new MemoryStream();
+                await result.ExportStream.CopyToAsync(ms);
+                
+                _exportName = $"{_imageName}.{_formModel.Exporter?.GetFileFormat()}";
+                _exportUrl = ConvertStreamToBase64Url(ms.ToArray(), "application/octet-stream");
+            }
+        }
+    }
+
+    private async Task ProcessMaterials(BlockInfo[] blocks)
+    {
         if (_database is null) return;
 
-        IColorComparison colorComparison = _formModel.ComparisonMode switch
-        {
-            ComparisonMode.Rgb => new RgbColorComparison(),
-            ComparisonMode.Cie76 => new Cie76ColorComparison(),
-            ComparisonMode.Cie94 => new Cie94ColorComparison(),
-            ComparisonMode.CieDe2000 => new CieDe2000ColorComparison(),
-            ComparisonMode.Cmc => new CmcColorComparison(),
-            ComparisonMode.DeltaEITP => new DeltaEITPColorComparison(),
-            _ => throw new ArgumentOutOfRangeException()
-        };
-
-        IDithering dithering = _formModel.DitheringMode switch
-        {
-            DitheringMode.None => new NoneDithering(),
-            DitheringMode.Atkinson => new AtkinsonDithering(_formModel.ErrorDiffusionStrength, _formModel.SerpentineScanning),
-            DitheringMode.FloydSteinberg => new FloydSteinbergDithering(_formModel.ErrorDiffusionStrength, _formModel.SerpentineScanning),
-            DitheringMode.JarvisJudiceNinke => new JarvisJudiceNinkeDithering(_formModel.ErrorDiffusionStrength, _formModel.SerpentineScanning),
-            _ => throw new ArgumentOutOfRangeException()
-        };
-
-        var palette = _formModel.SelectedPalette;
-        if (palette is null) return;
-
-        var processedImage = await ProcessImageAsync();
-        if (processedImage is null) return;
-
-        var generatedImage = dithering.ApplyDithering(processedImage, palette, colorComparison, _formModel.GeneratorType == GeneratorType.Staircase);
-        using (var skImg = SKImage.FromBitmap(generatedImage))
-        using (var data = skImg.Encode(SKEncodedImageFormat.Png, 100))
-        {
-            _generatedImageUrl = ConvertStreamToBase64Url(data.ToArray());
-        }
-
-        if (!_generate) return;
-
-        IGenerator generator = _formModel.GeneratorType switch
-        {
-            GeneratorType.Flat => new FlatGenerator(),
-            GeneratorType.Staircase => new StaircaseGenerator(),
-            _ => throw new ArgumentOutOfRangeException()
-        };
-        var generatorOutput = generator.Generate(generatedImage, palette);
-
         _materialList = [];
-        foreach (var blockGroup in generatorOutput.Blocks.GroupBy(info => info.Id))
+        foreach (var blockGroup in blocks.GroupBy(info => info.Id))
         {
             var block = await _database.Blocks.FirstOrDefaultAsync(b => b.MinecraftId == blockGroup.Key);
             var count = blockGroup.Count();
@@ -570,13 +433,6 @@ else
         }
 
         _sortedMaterialList = _materialList.OrderByDescending(m => m.Count).ToList();
-
-        var outStream = _formModel.Exporter.SaveAsStream(palette, generatorOutput.Blocks);
-        var outMs = new MemoryStream();
-        await outStream.CopyToAsync(outMs);
-
-        _exportName = $"{_imageName}.{_formModel.Exporter.GetFileFormat()}";
-        _exportUrl = ConvertStreamToBase64Url(outMs.ToArray(), "application/octet-stream");
     }
 
     private async Task OnMaterialPageChanged(PrelineTable<MapMaterial>.PageChangedEventArgs args)
@@ -601,7 +457,57 @@ else
         };
     }
 
-    private static string ConvertStreamToBase64Url(byte[] data, string contentType = "image/png") => $"data:{contentType};base64,{Convert.ToBase64String(data)}";
+    private static string ConvertStreamToBase64Url(byte[] data, string contentType = "image/png") 
+        => $"data:{contentType};base64,{Convert.ToBase64String(data)}";
+
+    private async void FileUploaded(IBrowserFile[] obj)
+    {
+        var file = obj.FirstOrDefault();
+        if (file is null) return;
+
+        await using var ms = new MemoryStream();
+        var stream = file.OpenReadStream(_imageUpload.MaxFileSize);
+        var buffer = new byte[4096];
+        int bytesRead;
+        long totalRead = 0;
+
+        while ((bytesRead = await stream.ReadAsync(buffer)) > 0)
+        {
+            await ms.WriteAsync(buffer.AsMemory(0, bytesRead));
+            totalRead += bytesRead;
+            var percentComplete = (int)((float)totalRead / stream.Length * 100);
+            _imageUpload.SetFileProgress(_imageUpload.GetSelectedFiles().First(), percentComplete);
+        }
+
+        var data = ms.ToArray();
+        _imageName = Path.GetFileNameWithoutExtension(file.Name);
+        _inputImage = SKBitmap.Decode(data);
+
+        // Create original preview
+        using var resized = new SKBitmap(
+            _formModel.WidthMultiplier * 128, 
+            _formModel.HeightMultiplier * 128, 
+            _inputImage.ColorType, 
+            _inputImage.AlphaType
+        );
+        using (var canvas = new SKCanvas(resized))
+        using (var paint = new SKPaint { FilterQuality = SKFilterQuality.High, IsAntialias = true })
+        {
+            canvas.Clear(SKColors.Transparent);
+            var srcRect = new SKRect(0, 0, _inputImage.Width, _inputImage.Height);
+            var dstRect = new SKRect(0, 0, resized.Width, resized.Height);
+            canvas.DrawBitmap(_inputImage, srcRect, dstRect, paint);
+            canvas.Flush();
+        }
+
+        using var skImage = SKImage.FromBitmap(resized);
+        using var imageData = skImage.Encode(SKEncodedImageFormat.Png, 100);
+        _originalImageUrl = ConvertStreamToBase64Url(imageData.ToArray());
+
+        await GeneratePreview();
+
+        StateHasChanged();
+    }
 
     private class FormModel
     {
@@ -614,18 +520,15 @@ else
         public ComparisonMode ComparisonMode { get; set; }
         public GeneratorType GeneratorType { get; set; }
         public Palette? SelectedPalette { get; set; }
-        public IExporter Exporter { get; set; }
+        public IExporter? Exporter { get; set; }
         public int WidthMultiplier { get; set; } = 1;
         public int HeightMultiplier { get; set; } = 1;
         public ResizeMethod ResizeMethod { get; set; } = ResizeMethod.Crop;
         public int CropOffsetX { get; set; }
         public int CropOffsetY { get; set; }
         public string PadColor { get; set; } = "#FFFFFF";
-
-        // For Dithering
-        // Atikson, FloydSteinberg, JarvisJudiceNinke
-        public float ErrorDiffusionStrength = 1;
-        public bool SerpentineScanning = false;
+        public float ErrorDiffusionStrength { get; set; } = 1;
+        public bool SerpentineScanning { get; set; }
 
         public float Saturation
         {
@@ -666,84 +569,5 @@ else
         }
     }
 
-    private enum GeneratorType
-    {
-        Flat,
-        Staircase
-    }
-
-    private enum ResizeMethod
-    {
-        Stretch,
-        Pad,
-        Crop,
-        Min,
-        Max
-    }
-
-    private static SKColor ParseHexColor(string hex)
-    {
-        if (string.IsNullOrWhiteSpace(hex)) return SKColors.White;
-        if (hex.StartsWith("#")) hex = hex[1..];
-        try
-        {
-            switch (hex.Length)
-            {
-                case 6:
-                {
-                    var r = Convert.ToByte(hex.Substring(0, 2), 16);
-                    var g = Convert.ToByte(hex.Substring(2, 2), 16);
-                    var b = Convert.ToByte(hex.Substring(4, 2), 16);
-                    return new SKColor(r, g, b);
-                }
-                case 8:
-                {
-                    var a = Convert.ToByte(hex.Substring(0, 2), 16);
-                    var r = Convert.ToByte(hex.Substring(2, 2), 16);
-                    var g = Convert.ToByte(hex.Substring(4, 2), 16);
-                    var b = Convert.ToByte(hex.Substring(6, 2), 16);
-                    return new SKColor(r, g, b, a);
-                }
-            }
-        }
-        catch
-        {
-            // ignore and fallback
-        }
-
-        return SKColors.White;
-    }
-
-    private async void FileUploaded(IBrowserFile[] obj)
-    {
-        var file = obj.FirstOrDefault();
-        if (file is null) return;
-
-        await using var ms = new MemoryStream();
-        var stream = file.OpenReadStream(_imageUpload.MaxFileSize);
-        var buffer = new byte[4096];
-        int bytesRead;
-        long totalRead = 0;
-
-        while ((bytesRead = await stream.ReadAsync(buffer)) > 0)
-        {
-            await ms.WriteAsync(buffer.AsMemory(0, bytesRead));
-            totalRead += bytesRead;
-            var percentComplete = (int)((float)totalRead / stream.Length * 100);
-            _imageUpload.SetFileProgress(_imageUpload.GetSelectedFiles().First(), percentComplete);
-        }
-
-        var data = ms.ToArray();
-        _imageName = Path.GetFileNameWithoutExtension(file.Name);
-        _inputImage = SKBitmap.Decode(data);
-
-        await CreateOriginalPreviewAsync();
-
-        await ProcessImageAsync();
-
-        StateHasChanged();
-    }
-
     record struct MapMaterial(Block Material, int Count);
-
 }
