@@ -1,14 +1,17 @@
-﻿FROM mcr.microsoft.com/dotnet/nightly/aspnet:10.0-preview AS base
+﻿FROM mcr.microsoft.com/dotnet/nightly/aspnet:10.0.0-rc.2 AS base
 USER $APP_UID
 WORKDIR /app
 EXPOSE 3006
 
+USER root
 RUN apt-get update && apt-get install -y curl \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g npm
 
-FROM mcr.microsoft.com/dotnet/nightly/sdk:10.0-preview AS build
+RUN node --version && npm --version
+
+FROM mcr.microsoft.com/dotnet/nightly/sdk:10.0.0-rc.2 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["WaxMapArt.Web/WaxMapArt.Web.csproj", "WaxMapArt.Web/"]
