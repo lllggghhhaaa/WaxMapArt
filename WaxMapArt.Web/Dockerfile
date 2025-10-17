@@ -3,6 +3,11 @@ USER $APP_UID
 WORKDIR /app
 EXPOSE 3006
 
+RUN apt-get update && apt-get install -y curl \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g npm
+
 FROM mcr.microsoft.com/dotnet/nightly/sdk:10.0-preview AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
