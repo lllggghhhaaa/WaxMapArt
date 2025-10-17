@@ -27,4 +27,5 @@ FROM base AS final
 WORKDIR /app
 
 COPY --from=build /app/publish .
+COPY --from=build /src/WaxMapArt.Web/node_modules /app/node_modules
 ENTRYPOINT ["dotnet", "WaxMapArt.Web.dll"]
