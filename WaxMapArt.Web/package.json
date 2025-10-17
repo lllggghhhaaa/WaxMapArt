@@ -7,6 +7,6 @@
     "tailwindcss": "^4.1.11"
   },
   "scripts": {
-    "build": "npx tailwindcss -i ./Styles/app.css -o ./wwwroot/css/app.css --content \"**/*.razor, **/*.html"
+    "build": "npx tailwindcss -i ./Styles/app.css -o ./wwwroot/css/app.css --content \"**/*.razor, **/*.html\""
   }
 }
