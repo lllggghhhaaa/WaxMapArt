@@ -11,7 +11,7 @@ COPY . .
 RUN apt-get update && apt-get install -y curl \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
-    && npm install -g npm \
+    && npm install -g npm
     
 RUN dotnet restore "WaxMapArt.Web/WaxMapArt.Web.csproj"
 
