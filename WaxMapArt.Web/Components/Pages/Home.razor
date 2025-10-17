@@ -176,6 +176,13 @@ else
                                         Step="0.05f">
                         <Label>Contrast</Label>
                     </PrelineInputNumber>
+                    <PrelineInputNumber TValue="float"
+                                        @bind-Value="_formModel.BlurRadius"
+                                        Variant="InputNumberVariant.Horizontal"
+                                        Min="0.0f"
+                                        Step="1f">
+                        <Label>Blur Radius</Label>
+                    </PrelineInputNumber>
                 </div>
             </PrelineNavCardTab>
         </PrelineNavCard>
@@ -386,6 +393,7 @@ else
             Saturation = _formModel.Saturation,
             Brightness = _formModel.Brightness,
             Contrast = _formModel.Contrast,
+            BlurRadius = _formModel.BlurRadius,
             DitheringMode = _formModel.DitheringMode,
             DitheringOptions = new DitheringOptions
             {
@@ -395,7 +403,7 @@ else
             ComparisonMode = _formModel.ComparisonMode,
             GeneratorType = _formModel.GeneratorType,
             ShouldGenerateStructure = _generate,
-            Exporter = _generate ? _formModel.Exporter : null
+            Exporter = _generate ? _formModel.Exporter : null,
         };
 
         var result = Generator.Generate(request);
@@ -514,6 +522,7 @@ else
         private float _saturation = 1.0f;
         private float _brightness = 1.0f;
         private float _contrast = 1.0f;
+        private float _blurRadius = 0;
         private Func<Task>? _preProcessingChangeCallback;
 
         public DitheringMode DitheringMode { get; set; }
@@ -559,6 +568,17 @@ else
             {
                 if (Math.Abs(_contrast - value) < float.Epsilon) return;
                 _contrast = value;
+                _preProcessingChangeCallback?.Invoke();
+            }
+        }
+        
+        public float BlurRadius
+        {
+            get => _blurRadius;
+            set
+            {
+                if (Math.Abs(_blurRadius - value) < float.Epsilon) return;
+                _blurRadius = value;
                 _preProcessingChangeCallback?.Invoke();
             }
         }

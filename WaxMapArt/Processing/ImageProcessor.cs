@@ -17,11 +17,13 @@ public class ImageProcessor
 
     private SKBitmap ApplyColorAdjustments(SKBitmap source)
     {
-        using var surface = SKSurface.Create(new SKImageInfo(source.Width, source.Height, source.ColorType, source.AlphaType));
+        using var surface =
+            SKSurface.Create(new SKImageInfo(source.Width, source.Height, source.ColorType, source.AlphaType));
         var canvas = surface.Canvas;
         using var paint = new SKPaint { IsAntialias = true };
 
         SKColorFilter? colorFilter = null;
+        SKImageFilter? imageFilter = null;
 
         // Saturation
         if (Math.Abs(Options.Saturation - 1.0f) > float.Epsilon)
@@ -61,11 +63,19 @@ public class ImageProcessor
             colorFilter = colorFilter is null ? cfCombined : SKColorFilter.CreateCompose(cfCombined, colorFilter);
         }
 
-        canvas.Clear(SKColors.Transparent);
-        if (colorFilter is not null)
+        // 👇 Blur
+        if (Options.BlurRadius > 0)
         {
-            paint.ColorFilter = colorFilter;
+            imageFilter = SKImageFilter.CreateBlur(Options.BlurRadius, Options.BlurRadius);
         }
+
+        canvas.Clear(SKColors.Transparent);
+
+        if (colorFilter is not null)
+            paint.ColorFilter = colorFilter;
+
+        if (imageFilter is not null)
+            paint.ImageFilter = imageFilter;
 
         canvas.DrawBitmap(source, 0, 0, paint);
         canvas.Flush();
@@ -204,6 +214,8 @@ public class ProcessingOptions
     public int CropOffsetX { get; set; }
     public int CropOffsetY { get; set; }
     public string PadColor { get; set; } = "#FFFFFF";
+    
+    public float BlurRadius { get; set; } = 0f;
 }
 
 public enum ResizeMethod

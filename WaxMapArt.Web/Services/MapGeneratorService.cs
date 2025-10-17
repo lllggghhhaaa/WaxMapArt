@@ -25,7 +25,8 @@ public class MapGeneratorService(ILogger<MapGeneratorService> logger)
                 Contrast = request.Contrast,
                 CropOffsetX = request.CropOffsetX,
                 CropOffsetY = request.CropOffsetY,
-                PadColor = request.PadColor
+                PadColor = request.PadColor,
+                BlurRadius = request.BlurRadius
             }
         };
 
@@ -142,6 +143,7 @@ public class MapGenerationRequest
     public float Saturation { get; init; } = 1.0f;
     public float Brightness { get; init; } = 1.0f;
     public float Contrast { get; init; } = 1.0f;
+    public float BlurRadius { get; init; } = 1.0f;
     
     // Dithering
     public DitheringMode DitheringMode { get; init; }
