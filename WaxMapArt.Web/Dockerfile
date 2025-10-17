@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y curl \
 RUN dotnet restore "WaxMapArt.Web/WaxMapArt.Web.csproj"
 
 WORKDIR "/src/WaxMapArt.Web"
+RUN npm install
 RUN dotnet publish "WaxMapArt.Web.csproj" \
     -c Release \
     -o /app/publish \
