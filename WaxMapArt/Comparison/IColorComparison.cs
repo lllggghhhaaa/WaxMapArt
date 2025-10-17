@@ -11,5 +11,8 @@ public enum ComparisonMode
 {
     Rgb,
     Cie76,
-    CieDe2000
+    Cie94,
+    CieDe2000,
+    Cmc,
+    DeltaEITP
 }

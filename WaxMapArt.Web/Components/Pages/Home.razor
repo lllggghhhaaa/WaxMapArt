@@ -265,9 +265,9 @@ else
     private List<MapMaterial>? _materialList;
     private List<MapMaterial>? _sortedMaterialList;
     private string _materialSortColumn = "Count";
-    private bool _materialSortAscending = false;
+    private bool _materialSortAscending;
 
-    private List<SelectOption<IExporter>> _exportOptions = [new() { Text = "Vanilla", Value = new VanillaExporter(), IsSelected = true }, new() { Text = "Litematica", Value = new LitematicaExporter() }];
+    private readonly List<SelectOption<IExporter>> _exportOptions = [new() { Text = "Vanilla", Value = new VanillaExporter(), IsSelected = true }, new() { Text = "Litematica", Value = new LitematicaExporter() }];
 
     private readonly List<PrelineTable<MapMaterial>.TableColumn<MapMaterial>> _materialColumns =
     [
@@ -520,7 +520,10 @@ else
         {
             ComparisonMode.Rgb => new RgbColorComparison(),
             ComparisonMode.Cie76 => new Cie76ColorComparison(),
+            ComparisonMode.Cie94 => new Cie94ColorComparison(),
             ComparisonMode.CieDe2000 => new CieDe2000ColorComparison(),
+            ComparisonMode.Cmc => new CmcColorComparison(),
+            ComparisonMode.DeltaEITP => new DeltaEITPColorComparison(),
             _ => throw new ArgumentOutOfRangeException()
         };
 
