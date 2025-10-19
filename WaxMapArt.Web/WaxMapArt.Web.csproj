@@ -23,6 +23,7 @@
       </PackageReference>
       <PackageReference Include="Minio" Version="6.0.5" />
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+      <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.2-preview.1" />
     </ItemGroup>
 
     <ItemGroup>
