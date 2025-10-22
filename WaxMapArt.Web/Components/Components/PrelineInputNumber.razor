@@ -4,132 +4,25 @@
 <div class="@GetContainerClasses()" data-hs-input-number="">
     @if (Variant == InputNumberVariant.Mini)
     {
-        <div class="flex items-center gap-x-1.5">
-            <button type="button" 
-                    class="size-6 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800" 
-                    tabindex="-1" 
-                    aria-label="Diminuir" 
-                    disabled="@IsDecrementDisabled()"
-                    @onclick="DecrementValue">
-                <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M5 12h14"></path>
-                </svg>
-            </button>
-            
-            <input @ref="_inputElement"
-                   class="p-0 w-6 bg-transparent border-0 text-gray-800 text-center focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none dark:text-white" 
-                   style="-moz-appearance: textfield;" 
-                   type="number" 
-                   aria-label="@AriaLabel"
-                   aria-invalid="@(!IsValidValue(_currentInputText, out _))"
-                   value="@GetFormattedValue()" 
-                   min="@GetFormattedValue(Min)"
-                   max="@GetFormattedValue(Max)"
-                   step="@GetFormattedValue(Step)"
-                   disabled="@Disabled"
-                   @oninput="OnInputTextChanged"
-                   @onchange="OnInputChange"
-                   @onblur="OnFocusOut" />
-            
-            <button type="button" 
-                    class="size-6 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800" 
-                    tabindex="-1" 
-                    aria-label="Aumentar" 
-                    disabled="@IsIncrementDisabled()"
-                    @onclick="IncrementValue">
-                <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M5 12h14"></path>
-                    <path d="M12 5v14"></path>
-                </svg>
-            </button>
-        </div>
+        @RenderMiniLayout()
     }
-    else
+    else if (Variant == InputNumberVariant.Vertical)
     {
-        <div class="w-full flex justify-between items-center gap-x-1">
-            @if (Variant == InputNumberVariant.Horizontal && Label is not null)
-            {
-                <span class="py-2.5 sm:py-3 px-4 inline-flex items-center min-w-fit w-full border border-gray-200 bg-gray-50 sm:text-sm text-gray-500 -mt-px -ms-px first:rounded-t-lg last:rounded-b-lg sm:w-auto sm:first:rounded-s-lg sm:mt-0 sm:first:ms-0 sm:first:rounded-se-none sm:last:rounded-es-none sm:last:rounded-e-lg dark:bg-neutral-700 dark:border-neutral-700 dark:text-neutral-400">@Label</span>
-            }
-            
-            <div class="grow py-2 px-3">
-                @if (Variant == InputNumberVariant.Vertical && Label is not null)
-                {
-                    <span class="block text-xs text-gray-500 dark:text-neutral-400">
-                        @Label
-                    </span>
-                }
-                <input @ref="_inputElement"
-                       class="w-full p-0 bg-transparent border-0 text-gray-800 focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none dark:text-white" 
-                       style="-moz-appearance: textfield;" 
-                       type="number" 
-                       aria-label="@AriaLabel"
-                       aria-invalid="@(!IsValidValue(_currentInputText, out _))"
-                       value="@GetFormattedValue()" 
-                       min="@GetFormattedValue(Min)"
-                       max="@GetFormattedValue(Max)"
-                       step="@GetFormattedValue(Step)"
-                       disabled="@Disabled"
-                       placeholder="@Placeholder"
-                       @oninput="OnInputTextChanged"
-                       @onchange="OnInputChange"
-                       @onblur="OnFocusOut" />
-            </div>
-            
-            @if (Variant == InputNumberVariant.Vertical)
-            {
-                <div class="flex flex-col -gap-y-px divide-y divide-gray-200 border-s border-gray-200 dark:divide-neutral-700 dark:border-neutral-700">
-                    <button type="button" 
-                            class="size-7 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-se-lg bg-gray-50 text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:text-white dark:hover:bg-neutral-700 dark:focus:bg-neutral-700" 
-                            aria-label="Aumentar" 
-                            disabled="@IsIncrementDisabled()"
-                            @onclick="IncrementValue">
-                        <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M5 12h14"></path>
-                            <path d="M12 5v14"></path>
-                        </svg>
-                    </button>
-                    <button type="button" 
-                            class="size-7 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-ee-lg bg-gray-50 text-gray-800 hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:text-white dark:hover:bg-neutral-700 dark:focus:bg-neutral-700" 
-                            aria-label="Diminuir" 
-                            disabled="@IsDecrementDisabled()"
-                            @onclick="DecrementValue">
-                        <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M5 12h14"></path>
-                        </svg>
-                    </button>
-                </div>
-            }
-            else if (Variant == InputNumberVariant.Horizontal)
-            {
-                <div class="flex items-center -gap-y-px divide-x divide-gray-200 border-s border-gray-200 dark:divide-neutral-700 dark:border-neutral-700">
-                    <button type="button" 
-                            class="size-10 inline-flex justify-center items-center gap-x-2 text-sm font-medium bg-white text-gray-800 hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800" 
-                            aria-label="Diminuir" 
-                            disabled="@IsDecrementDisabled()"
-                            @onclick="DecrementValue">
-                        <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M5 12h14"></path>
-                        </svg>
-                    </button>
-                    <button type="button" 
-                            class="size-10 inline-flex justify-center items-center gap-x-2 text-sm font-medium last:rounded-e-lg bg-white text-gray-800 hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800" 
-                            aria-label="Aumentar" 
-                            disabled="@IsIncrementDisabled()"
-                            @onclick="IncrementValue">
-                        <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M5 12h14"></path>
-                            <path d="M12 5v14"></path>
-                        </svg>
-                    </button>
-                </div>
-            }
+        @RenderVerticalLayout()
+    }
+    else if (Variant == InputNumberVariant.Horizontal)
+    {
+        <div class="md:hidden">
+            @RenderMiniLayout()
+        </div>
+        
+        <div class="hidden md:flex">
+            @RenderHorizontalLayout()
         </div>
     }
 </div>
 
 @code {
-    private ElementReference _inputElement;
     private TValue _previousValidValue;
     private string _currentInputText = string.Empty;
 
@@ -145,6 +38,104 @@
     [Parameter] public RenderFragment? Label { get; set; }
     [Parameter] public string Placeholder { get; set; } = string.Empty;
     [Parameter] public string CssClass { get; set; } = string.Empty;
+
+    private RenderFragment RenderMiniLayout() => __builder =>
+    {
+        <div class="flex items-center gap-x-1.5">
+            @RenderButton("Decrease", IsDecrementDisabled(), DecrementValue, isIncrement: false,
+                "size-6 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800")
+
+            @RenderInput("p-0 w-full bg-transparent border-0 text-gray-800 text-center focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none dark:text-white")
+
+            @RenderButton("Increase", IsIncrementDisabled(), IncrementValue, isIncrement: true,
+                "size-6 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800")
+        </div>
+    };
+
+
+    private RenderFragment RenderVerticalLayout() => __builder =>
+    {
+        <div class="w-full flex justify-between items-center gap-x-1">
+            <div class="grow py-2 px-3">
+                @if (Label is not null)
+                {
+                    <span class="block text-xs text-gray-500 dark:text-neutral-400">
+                        @Label
+                    </span>
+                }
+                @RenderInput("w-full p-0 bg-transparent border-0 text-gray-800 focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none dark:text-white")
+            </div>
+            
+            <div class="flex flex-col divide-y divide-gray-200 border-s border-gray-200 dark:divide-neutral-700 dark:border-neutral-700">
+                @RenderButton("Increase", IsIncrementDisabled(), IncrementValue, isIncrement: true, 
+                    "size-7 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-se-lg bg-gray-50 text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:text-white dark:hover:bg-neutral-700 dark:focus:bg-neutral-700")
+                @RenderButton("Decrease", IsDecrementDisabled(), DecrementValue, isIncrement: false,
+                    "size-7 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-ee-lg bg-gray-50 text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:text-white dark:hover:bg-neutral-700 dark:focus:bg-neutral-700")
+            </div>
+        </div>
+    };
+
+    private RenderFragment RenderHorizontalLayout() => __builder =>
+    {
+        <div class="w-full flex items-center gap-x-1">
+            @if (Label is not null)
+            {
+                <span class="py-2.5 px-4 inline-flex items-center min-w-fit border border-gray-200 bg-gray-50 text-sm text-gray-500 rounded-s-lg dark:bg-neutral-700 dark:border-neutral-700 dark:text-neutral-400">@Label</span>
+            }
+            
+            <div class="grow py-2 px-3">
+                @RenderInput("w-full p-0 bg-transparent border-0 text-gray-800 focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none dark:text-white")
+            </div>
+            
+            <div class="flex items-center divide-x divide-gray-200 border-s border-gray-200 dark:divide-neutral-700 dark:border-neutral-700">
+                @RenderButton("Decrease", IsDecrementDisabled(), DecrementValue, isIncrement: false,
+                    "size-10 inline-flex justify-center items-center gap-x-2 text-sm font-medium bg-white text-gray-800 hover:bg-gray-50 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800")
+                @RenderButton("Increase", IsIncrementDisabled(), IncrementValue, isIncrement: true,
+                    "size-10 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-e-lg bg-white text-gray-800 hover:bg-gray-50 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800")
+            </div>
+        </div>
+    };
+
+    private RenderFragment RenderInput(string cssClasses) => __builder =>
+    {
+        <input class="@cssClasses" 
+               style="-moz-appearance: textfield;" 
+               type="number" 
+               aria-label="@(AriaLabel ?? "Número")"
+               aria-invalid="@(!IsValidValue(_currentInputText, out _))"
+               value="@_currentInputText" 
+               min="@GetFormattedValue(Min)"
+               max="@GetFormattedValue(Max)"
+               step="@GetFormattedValue(Step)"
+               disabled="@Disabled"
+               placeholder="@Placeholder"
+               @oninput="OnInputTextChanged"
+               @onchange="OnInputChange"
+               @onblur="OnFocusOut" />
+    };
+
+    private RenderFragment RenderButton(string ariaLabel, bool isDisabled, Func<Task> onClick, bool isIncrement, string? customClasses = null) => __builder =>
+    {
+        var classes = customClasses ?? 
+                      "size-6 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800";
+    
+        <button type="button"
+                class="@classes"
+                tabindex="-1"
+                aria-label="@ariaLabel"
+                disabled="@isDisabled"
+                @onclick="onClick">
+            <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14"></path>
+                @if (isIncrement)
+                {
+                    <path d="M12 5v14"></path>
+                }
+            </svg>
+        </button>
+    };
 
     protected override void OnInitialized()
     {
@@ -172,6 +163,13 @@
         _previousValidValue = Value;
     }
 
+    protected override void OnParametersSet()
+    {
+        if (EqualityComparer<TValue>.Default.Equals(Value, _previousValidValue)) return;
+        _currentInputText = GetFormattedValue();
+        _previousValidValue = Value;
+    }
+
     private TValue GetDefaultValue()
     {
         return (TValue)Convert.ChangeType(0, typeof(TValue));
@@ -180,6 +178,7 @@
     private TValue GetMinValue()
     {
         if (typeof(TValue) == typeof(int)) return (TValue)(object)int.MinValue;
+        if (typeof(TValue) == typeof(long)) return (TValue)(object)long.MinValue;
         if (typeof(TValue) == typeof(float)) return (TValue)(object)float.MinValue;
         if (typeof(TValue) == typeof(double)) return (TValue)(object)double.MinValue;
         if (typeof(TValue) == typeof(decimal)) return (TValue)(object)decimal.MinValue;
@@ -189,6 +188,7 @@
     private TValue GetMaxValue()
     {
         if (typeof(TValue) == typeof(int)) return (TValue)(object)int.MaxValue;
+        if (typeof(TValue) == typeof(long)) return (TValue)(object)long.MaxValue;
         if (typeof(TValue) == typeof(float)) return (TValue)(object)float.MaxValue;
         if (typeof(TValue) == typeof(double)) return (TValue)(object)double.MaxValue;
         if (typeof(TValue) == typeof(decimal)) return (TValue)(object)decimal.MaxValue;
@@ -197,7 +197,8 @@
 
     private TValue GetDefaultStep()
     {
-        if (typeof(TValue) == typeof(int)) return (TValue)(object)1;
+        if (typeof(TValue) == typeof(int) || typeof(TValue) == typeof(long)) 
+            return (TValue)Convert.ChangeType(1, typeof(TValue));
         if (typeof(TValue) == typeof(float)) return (TValue)(object)0.1f;
         if (typeof(TValue) == typeof(double)) return (TValue)(object)0.1;
         if (typeof(TValue) == typeof(decimal)) return (TValue)(object)0.1m;
@@ -209,12 +210,22 @@
         if (EqualityComparer<TValue>.Default.Equals(value, default))
             value = Value;
 
-        var format = DecimalPlaces > 0 ? $"F{DecimalPlaces}" : "0";
-
         try
         {
-            return string.Format(CultureInfo.InvariantCulture, $"{{0:{format}}}", value)
-                .TrimEnd('0').TrimEnd('.');
+            if (typeof(TValue) == typeof(int) || typeof(TValue) == typeof(long))
+            {
+                return value.ToString() ?? "0";
+            }
+
+            var format = DecimalPlaces > 0 ? $"F{DecimalPlaces}" : "0";
+            var formatted = string.Format(CultureInfo.InvariantCulture, $"{{0:{format}}}", value);
+            
+            if (DecimalPlaces > 0 && formatted.Contains('.'))
+            {
+                formatted = formatted.TrimEnd('0').TrimEnd('.');
+            }
+            
+            return formatted;
         }
         catch
         {
@@ -233,7 +244,6 @@
         {
             var value = (TValue)Convert.ChangeType(stringValue, typeof(TValue), CultureInfo.InvariantCulture);
             
-            // Verifica limites
             if (value.CompareTo(Min) < 0)
                 value = Min;
             else if (value.CompareTo(Max) > 0)
@@ -252,7 +262,7 @@
     {
         Value = _previousValidValue;
         _currentInputText = GetFormattedValue();
-        await _inputElement.FocusAsync();
+        await ValueChanged.InvokeAsync(Value);
         StateHasChanged();
     }
 
@@ -261,7 +271,7 @@
         var baseClasses = Variant switch
         {
             InputNumberVariant.Vertical => "bg-white border border-gray-200 rounded-lg dark:bg-neutral-900 dark:border-neutral-700 w-full",
-            InputNumberVariant.Horizontal => "bg-white border border-gray-200 rounded-lg dark:bg-neutral-900 dark:border-neutral-700 w-full",
+            InputNumberVariant.Horizontal => "py-2 px-3 bg-white border border-gray-200 rounded-lg dark:bg-neutral-900 dark:border-neutral-700 w-full",
             InputNumberVariant.Mini => "py-2 px-3 inline-block bg-white border border-gray-200 rounded-lg dark:bg-neutral-900 dark:border-neutral-700",
             _ => "bg-white border border-gray-200 rounded-lg dark:bg-neutral-900 dark:border-neutral-700"
         };
@@ -305,6 +315,11 @@
 
     private TValue RoundValue(TValue value)
     {
+        if (typeof(TValue) == typeof(int) || typeof(TValue) == typeof(long))
+        {
+            return value;
+        }
+
         if (typeof(TValue) == typeof(float))
         {
             var floatValue = Convert.ToSingle(value);

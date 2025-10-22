@@ -11,11 +11,11 @@ namespace WaxMapArt.Web.Services;
 
 public class AuthService(IDbContextFactory<DatabaseContext> dbFactory, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, ILogger<AuthService> logger)
 {
-    private readonly DatabaseContext _dbContext = dbFactory.CreateDbContext();
-    
     public async Task<bool> LoginAsync(string username, string password)
     {
-        var user = await _dbContext.Users
+        var dbContext = await dbFactory.CreateDbContextAsync();
+        
+        var user = await dbContext.Users
             .FirstOrDefaultAsync(u => u.Name == username);
         
         if (user?.Name is null)
@@ -33,7 +33,9 @@ public class AuthService(IDbContextFactory<DatabaseContext> dbFactory, IHttpCont
 
     public async Task<bool> RegisterAsync(string username, string password)
     {
-        if (await _dbContext.Users.AnyAsync(u => u.Name == username))
+        var dbContext = await dbFactory.CreateDbContextAsync();
+
+        if (await dbContext.Users.AnyAsync(u => u.Name == username))
             return false;
 
         var salt = CreateSalt();
@@ -57,8 +59,8 @@ public class AuthService(IDbContextFactory<DatabaseContext> dbFactory, IHttpCont
             PasswordSalt = salt
         };
 
-        _dbContext.Users.Add(user);
-        await _dbContext.SaveChangesAsync();
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
         
         var token = GenerateJwtToken(user);
         SetAuthCookie(token);
@@ -80,8 +82,10 @@ public class AuthService(IDbContextFactory<DatabaseContext> dbFactory, IHttpCont
     
     public User? GetCurrentUser()
     {
+        var dbContext = dbFactory.CreateDbContext();
+
         var userId = GetCurrentUserId();
-        return userId.HasValue ? _dbContext.Users.FirstOrDefault(u => u.Id == userId) : null;
+        return userId.HasValue ? dbContext.Users.FirstOrDefault(u => u.Id == userId) : null;
     }
 
     private string GenerateJwtToken(User user)
@@ -140,7 +144,7 @@ public class AuthService(IDbContextFactory<DatabaseContext> dbFactory, IHttpCont
             Salt = user.PasswordSalt,
             Iterations = 4,
             MemorySize = 65536,
-            DegreeOfParallelism = 2,
+            DegreeOfParallelism = 2
         };
         
         var hash = await argon2.GetBytesAsync(512);
@@ -150,20 +154,24 @@ public class AuthService(IDbContextFactory<DatabaseContext> dbFactory, IHttpCont
     
     public async Task<bool> UpdateUsernameAsync(Guid userId, string newUsername)
     {
-        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        var dbContext = await dbFactory.CreateDbContextAsync();
+
+        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null) return false;
 
-        if (await _dbContext.Users.AnyAsync(u => u.Name == newUsername && u.Id != userId))
+        if (await dbContext.Users.AnyAsync(u => u.Name == newUsername && u.Id != userId))
             return false;
 
         user.Name = newUsername;
-        await _dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync();
     
         return true;
     }
 
     public async Task<bool> UpdatePasswordAsync(User user, string newPassword)
     {
+        var dbContext = await dbFactory.CreateDbContextAsync();
+
         var salt = CreateSalt();
 
         var argon2 = new Argon2id(Encoding.UTF8.GetBytes(newPassword))
@@ -181,7 +189,7 @@ public class AuthService(IDbContextFactory<DatabaseContext> dbFactory, IHttpCont
         user.PasswordHash = hash;
         user.PasswordSalt = salt;
     
-        await _dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync();
     
         return true;
     }
