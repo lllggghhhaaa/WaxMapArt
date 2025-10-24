@@ -1,14 +1,25 @@
 ﻿using SkiaSharp;
 using WaxMapArt.Comparison;
+using WaxMapArt.Dithering;
 using WaxMapArt.Entities;
 
 namespace WaxMapArt.Utils;
 
 public static class ColorUtils
 {
-    public const double M0 = .71;
-    public const double M1 = .86;
-    
+    internal const double M0 = .71; 
+    internal const double M1 = .86;
+
+    internal static SKColor FindNearestColor(SKColor originalColor,
+        SKColor[] palette,
+        SKColor[] flatPalette,
+        IColorComparison colorComparison,
+        StaircaseMode staircaseMode,
+        double threshold) =>
+        staircaseMode is StaircaseMode.AdaptiveStaircase
+            ? FindNearestColorAdaptive(originalColor, palette, flatPalette, colorComparison, threshold)
+            : FindNearestColor(originalColor, palette, colorComparison);
+
     internal static SKColor FindNearestColor(SKColor originalColor, SKColor[] palette, IColorComparison colorComparison)
     {
         var nearestColor = palette.First();
@@ -24,6 +35,39 @@ public static class ColorUtils
 
         return nearestColor;
     }
+
+    internal static SKColor FindNearestColorAdaptive(
+        SKColor originalColor,
+        SKColor[] palette,
+        SKColor[] flatPalette,
+        IColorComparison colorComparison,
+        double threshold)
+    {
+        var bestColor = palette[0];
+        var bestDistance = colorComparison.GetColorDifference(originalColor, bestColor);
+
+        for (var i = 1; i < palette.Length; i++)
+        {
+            var distance = colorComparison.GetColorDifference(originalColor, palette[i]);
+            if (!(distance < bestDistance)) continue;
+            bestDistance = distance;
+            bestColor = palette[i];
+        }
+
+        var bestFlatColor = flatPalette[0];
+        var bestFlatDistance = colorComparison.GetColorDifference(originalColor, bestFlatColor);
+
+        for (var i = 1; i < flatPalette.Length; i++)
+        {
+            var distance = colorComparison.GetColorDifference(originalColor, flatPalette[i]);
+            if (!(distance < bestFlatDistance)) continue;
+            bestFlatDistance = distance;
+            bestFlatColor = flatPalette[i];
+        }
+
+        return Math.Abs(bestFlatDistance - bestDistance) <= threshold ? bestFlatColor : bestColor;
+    }
+
 
     public static SKColor[] GetPaletteColors(Palette palette, bool staircase = false)
     {

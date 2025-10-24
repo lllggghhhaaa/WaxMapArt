@@ -7,7 +7,7 @@ namespace WaxMapArt.Generator;
 
 public class FlatGenerator : IGenerator
 {
-    public GeneratorOutput Generate(SKBitmap image, Palette palette)
+    public GeneratorOutput Generate(SKBitmap image, SKBitmap originalImage, Palette palette)
     {
         var blocks = new ConcurrentBag<BlockInfo>();
 

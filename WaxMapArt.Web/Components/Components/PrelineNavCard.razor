@@ -74,18 +74,15 @@
 
     protected override void OnAfterRender(bool firstRender)
     {
-        if (firstRender && !string.IsNullOrEmpty(ActiveTabId) == false && _tabs.Any())
-        {
-            ActiveTabId = _tabs.First().Id;
-            StateHasChanged();
-        }
+        if (!firstRender || !string.IsNullOrEmpty(ActiveTabId) || !_tabs.Any()) return;
+        ActiveTabId = _tabs.First().Id;
+        StateHasChanged();
     }
 
     internal void AddTab(PrelineNavCardTab tab)
     {
         _tabs.Add(tab);
         
-        // Se for a primeira aba e não há aba ativa definida, ativa esta
         if (_tabs.Count == 1 && string.IsNullOrEmpty(ActiveTabId))
         {
             ActiveTabId = tab.Id;
@@ -98,7 +95,6 @@
     {
         _tabs.Remove(tab);
         
-        // Se a aba removida era a ativa, ativa a primeira disponível
         if (tab.Id == ActiveTabId && _tabs.Any())
         {
             ActiveTabId = _tabs.First().Id;

@@ -80,10 +80,10 @@
         <div class="w-full flex items-center gap-x-1">
             @if (Label is not null)
             {
-                <span class="py-2.5 px-4 inline-flex items-center min-w-fit border border-gray-200 bg-gray-50 text-sm text-gray-500 rounded-s-lg dark:bg-neutral-700 dark:border-neutral-700 dark:text-neutral-400">@Label</span>
+                <span class="py-2.5 px-3 inline-flex items-center min-w-fit border border-gray-200 bg-gray-50 text-sm text-gray-500 rounded-s-lg dark:bg-neutral-700 dark:border-neutral-700 dark:text-neutral-400">@Label</span>
             }
             
-            <div class="grow py-2 px-3">
+            <div class="grow py-2 px-2">
                 @RenderInput("w-full p-0 bg-transparent border-0 text-gray-800 focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none dark:text-white")
             </div>
             
@@ -271,7 +271,7 @@
         var baseClasses = Variant switch
         {
             InputNumberVariant.Vertical => "bg-white border border-gray-200 rounded-lg dark:bg-neutral-900 dark:border-neutral-700 w-full",
-            InputNumberVariant.Horizontal => "py-2 px-3 bg-white border border-gray-200 rounded-lg dark:bg-neutral-900 dark:border-neutral-700 w-full",
+            InputNumberVariant.Horizontal => "py-2 px-2 bg-white border border-gray-200 rounded-lg dark:bg-neutral-900 dark:border-neutral-700 w-full",
             InputNumberVariant.Mini => "py-2 px-3 inline-block bg-white border border-gray-200 rounded-lg dark:bg-neutral-900 dark:border-neutral-700",
             _ => "bg-white border border-gray-200 rounded-lg dark:bg-neutral-900 dark:border-neutral-700"
         };

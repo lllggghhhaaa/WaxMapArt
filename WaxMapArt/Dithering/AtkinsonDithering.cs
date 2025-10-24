@@ -7,22 +7,25 @@ namespace WaxMapArt.Dithering;
 
 public class AtkinsonDithering(float errorDiffusionStrength = 1.0f, bool serpentineScanning = false) : IDithering
 {
-    public SKBitmap ApplyDithering(SKBitmap image, Palette palette, IColorComparison colorComparison, bool staircase)
+    public SKBitmap ApplyDithering(SKBitmap image, Palette palette, IColorComparison colorComparison, StaircaseMode staircaseMode, double threshold)
     {
-        var colors = ColorUtils.GetPaletteColors(palette, staircase);
+        var result = image.Copy();
+        var colors = ColorUtils.GetPaletteColors(palette, staircaseMode is StaircaseMode.Staircase or StaircaseMode.AdaptiveStaircase );
+        var flatColors = ColorUtils.GetPaletteColors(palette);
         
-        for (var y = 0; y < image.Height; y++)
+        for (var y = 0; y < result.Height; y++)
         {
             var isReversed = serpentineScanning && y % 2 == 1;
-            var xStart = isReversed ? image.Width - 1 : 0;
-            var xEnd = isReversed ? -1 : image.Width;
+            var xStart = isReversed ? result.Width - 1 : 0;
+            var xEnd = isReversed ? -1 : result.Width;
             var xStep = isReversed ? -1 : 1;
 
             for (var x = xStart; x != xEnd; x += xStep)
             {
-                var originalColor = image.GetPixel(x, y);
-                var nearestColor = ColorUtils.FindNearestColor(originalColor, colors, colorComparison);
-                image.SetPixel(x, y, nearestColor);
+                var originalColor = result.GetPixel(x, y);
+                var nearestColor =
+                    ColorUtils.FindNearestColor(originalColor, colors, flatColors, colorComparison, staircaseMode, threshold);
+                result.SetPixel(x, y, nearestColor);
 
                 var error = new Vector3(
                     originalColor.Red - nearestColor.Red,
@@ -30,11 +33,11 @@ public class AtkinsonDithering(float errorDiffusionStrength = 1.0f, bool serpent
                     originalColor.Blue - nearestColor.Blue
                 ) * errorDiffusionStrength;
 
-                DistributeError(image, x, y, error, xStep);
+                DistributeError(result, x, y, error, xStep);
             }
         }
 
-        return image;
+        return result;
     }
 
     private static void DistributeError(SKBitmap image, int x, int y, Vector3 error, int direction)

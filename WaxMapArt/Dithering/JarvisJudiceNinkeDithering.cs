@@ -6,26 +6,28 @@ namespace WaxMapArt.Dithering;
 
 public class JarvisJudiceNinkeDithering(float errorDiffusionStrength = 1.0f, bool serpentineScanning = false) : IDithering
 {
-    public SKBitmap ApplyDithering(SKBitmap image, Palette palette, IColorComparison colorComparison, bool staircase = false)
+    public SKBitmap ApplyDithering(SKBitmap image, Palette palette, IColorComparison colorComparison, StaircaseMode staircaseMode, double threshold)
     {
-        var colors = ColorUtils.GetPaletteColors(palette, staircase);
+        var result = image.Copy();
+        var colors = ColorUtils.GetPaletteColors(palette, staircaseMode is StaircaseMode.Staircase or StaircaseMode.AdaptiveStaircase);
+        var flatColors = ColorUtils.GetPaletteColors(palette);
         
-        var errorImage = new float[image.Width, image.Height, 3];
+        var errorImage = new float[result.Width, result.Height, 3];
         
-        for (var y = 0; y < image.Height; y++)
-        for (var x = 0; x < image.Width; x++)
+        for (var y = 0; y < result.Height; y++)
+        for (var x = 0; x < result.Width; x++)
         {
-            var pixel = image.GetPixel(x, y);
+            var pixel = result.GetPixel(x, y);
             errorImage[x, y, 0] = pixel.Red;
             errorImage[x, y, 1] = pixel.Green;
             errorImage[x, y, 2] = pixel.Blue;
         }
         
-        for (var y = 0; y < image.Height; y++)
+        for (var y = 0; y < result.Height; y++)
         {
             var isReversed = serpentineScanning && y % 2 == 1;
-            var xStart = isReversed ? image.Width - 1 : 0;
-            var xEnd = isReversed ? -1 : image.Width;
+            var xStart = isReversed ? result.Width - 1 : 0;
+            var xEnd = isReversed ? -1 : result.Width;
             var xStep = isReversed ? -1 : 1;
 
             for (var x = xStart; x != xEnd; x += xStep)
@@ -36,19 +38,20 @@ public class JarvisJudiceNinkeDithering(float errorDiffusionStrength = 1.0f, boo
                 
                 var currentColor = new SKColor(currentR, currentG, currentB);
                 
-                var nearestColor = ColorUtils.FindNearestColor(currentColor, colors, colorComparison);
+                var nearestColor =
+                    ColorUtils.FindNearestColor(currentColor, colors, flatColors, colorComparison, staircaseMode, threshold);
                 
-                image.SetPixel(x, y, nearestColor);
+                result.SetPixel(x, y, nearestColor);
                 
                 var errorR = (currentR - nearestColor.Red) * errorDiffusionStrength;
                 var errorG = (currentG - nearestColor.Green) * errorDiffusionStrength;
                 var errorB = (currentB - nearestColor.Blue) * errorDiffusionStrength;
                 
-                DistributeError(errorImage, x, y, errorR, errorG, errorB, image.Width, image.Height, xStep);
+                DistributeError(errorImage, x, y, errorR, errorG, errorB, result.Width, result.Height, xStep);
             }
         }
         
-        return image;
+        return result;
     }
     
     private void DistributeError(float[,,] errorImage, int x, int y, float errorR, float errorG, float errorB, int width, int height, int direction)

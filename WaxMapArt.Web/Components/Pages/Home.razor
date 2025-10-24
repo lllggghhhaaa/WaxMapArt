@@ -70,10 +70,10 @@
                                            @bind-SelectedValue="_formModel.DitheringMode"
                                            Placeholder="Select Dithering Mode"
                                            SelectOptions="@(SelectOption.FromEnum<DitheringMode>())" />
-                            <PrelineSelect TValue="GeneratorType"
-                                           @bind-SelectedValue="_formModel.GeneratorType"
+                            <PrelineSelect TValue="StaircaseMode"
+                                           @bind-SelectedValue="_formModel.StaircaseMode"
                                            Placeholder="Select Generator Type"
-                                           SelectOptions="@(SelectOption.FromEnum<GeneratorType>())" />
+                                           SelectOptions="@(SelectOption.FromEnum<StaircaseMode>())" />
                             <PrelineSelect TValue="ComparisonMode"
                                            @bind-SelectedValue="_formModel.ComparisonMode"
                                            Placeholder="Select Comparison Mode"
@@ -99,20 +99,22 @@
                             <PrelineNavCardTab Id="size" Title="Size">
                                 <div class="space-y-4">
                                     <div class="grid grid-cols-2 gap-4">
-                                        <PrelineInputNumber TValue="int"
-                                                            Value="_formModel.WidthMultiplier"
-                                                            ValueChanged="@(value => _formModel.WidthMultiplier = value)"
-                                                            Variant="InputNumberVariant.Horizontal"
-                                                            Min="1" Max="16" Step="1">
-                                            <Label>Width</Label>
-                                        </PrelineInputNumber>
-                                        <PrelineInputNumber TValue="int"
-                                                            Value="_formModel.HeightMultiplier"
-                                                            ValueChanged="@(value => _formModel.HeightMultiplier = value)"
-                                                            Variant="InputNumberVariant.Horizontal"
-                                                            Min="1" Max="16" Step="1">
-                                            <Label>Height</Label>
-                                        </PrelineInputNumber>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Width</label>
+                                            <PrelineInputNumber TValue="int"
+                                                                Value="_formModel.WidthMultiplier"
+                                                                ValueChanged="@(value => _formModel.WidthMultiplier = value)"
+                                                                Variant="InputNumberVariant.Horizontal"
+                                                                Min="1" Max="16" Step="1"/>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Height</label>
+                                            <PrelineInputNumber TValue="int"
+                                                                Value="_formModel.HeightMultiplier"
+                                                                ValueChanged="@(value => _formModel.HeightMultiplier = value)"
+                                                                Variant="InputNumberVariant.Horizontal"
+                                                                Min="1" Max="16" Step="1"/>
+                                        </div>
                                     </div>
                                     <PrelineSelect TValue="ResizeMethod"
                                                    @bind-SelectedValue="_formModel.ResizeMethod"
@@ -121,20 +123,22 @@
                                     @if (_formModel.ResizeMethod == ResizeMethod.Crop)
                                     {
                                         <div class="grid grid-cols-2 gap-4">
-                                            <PrelineInputNumber TValue="int"
-                                                                Value="_formModel.CropOffsetX"
-                                                                ValueChanged="@(value => _formModel.CropOffsetX = value)"
-                                                                Variant="InputNumberVariant.Horizontal"
-                                                                Step="1">
-                                                <Label>Offset X</Label>
-                                            </PrelineInputNumber>
-                                            <PrelineInputNumber TValue="int"
-                                                                Value="_formModel.CropOffsetY"
-                                                                ValueChanged="@(value => _formModel.CropOffsetY = value)"
-                                                                Variant="InputNumberVariant.Horizontal"
-                                                                Step="1">
-                                                <Label>Offset Y</Label>
-                                            </PrelineInputNumber>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Offset X</label>
+                                                <PrelineInputNumber TValue="int"
+                                                                    Value="_formModel.CropOffsetX"
+                                                                    ValueChanged="@(value => _formModel.CropOffsetX = value)"
+                                                                    Variant="InputNumberVariant.Horizontal"
+                                                                    Step="1"/>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Offset Y</label>
+                                                <PrelineInputNumber TValue="int"
+                                                                    Value="_formModel.CropOffsetY"
+                                                                    ValueChanged="@(value => _formModel.CropOffsetY = value)"
+                                                                    Variant="InputNumberVariant.Horizontal"
+                                                                    Step="1"/>
+                                            </div>
                                         </div>
                                     }
                                     else if (_formModel.ResizeMethod == ResizeMethod.Pad)
@@ -154,7 +158,7 @@
                                             <PrelineInputNumber TValue="float"
                                                                 Value="_formModel.ErrorDiffusionStrength"
                                                                 ValueChanged="@(value => _formModel.ErrorDiffusionStrength = value)"
-                                                                Variant="InputNumberVariant.Mini"
+                                                                Variant="InputNumberVariant.Horizontal"
                                                                 DecimalPlaces="2"
                                                                 Min="0" Max="2" Step="0.05f" />
                                         </div>
@@ -180,7 +184,7 @@
                                         <PrelineInputNumber TValue="float"
                                                             Value="_formModel.Saturation"
                                                             ValueChanged="@(value => _formModel.Saturation = value)"
-                                                            Variant="InputNumberVariant.Mini"
+                                                            Variant="InputNumberVariant.Horizontal"
                                                             DecimalPlaces="2"
                                                             Min="0.0f" Max="2.0f" Step="0.05f" />
                                     </div>
@@ -189,7 +193,7 @@
                                         <PrelineInputNumber TValue="float"
                                                             Value="_formModel.Brightness"
                                                             ValueChanged="@(value => _formModel.Brightness = value)"
-                                                            Variant="InputNumberVariant.Mini"
+                                                            Variant="InputNumberVariant.Horizontal"
                                                             DecimalPlaces="2"
                                                             Min="0.0f" Max="2.0f" Step="0.05f" />
                                     </div>
@@ -198,7 +202,7 @@
                                         <PrelineInputNumber TValue="float"
                                                             Value="_formModel.Contrast"
                                                             ValueChanged="@(value => _formModel.Contrast = value)"
-                                                            Variant="InputNumberVariant.Mini"
+                                                            Variant="InputNumberVariant.Horizontal"
                                                             DecimalPlaces="2"
                                                             Min="0.0f" Max="2.0f" Step="0.05f" />
                                     </div>
@@ -207,9 +211,21 @@
                                         <PrelineInputNumber TValue="float"
                                                             Value="_formModel.BlurRadius"
                                                             ValueChanged="@(value => _formModel.BlurRadius = value)"
-                                                            Variant="InputNumberVariant.Mini"
+                                                            Variant="InputNumberVariant.Horizontal"
                                                             DecimalPlaces="1"
                                                             Min="0.0f" Step="1f" />
+                                    </div>
+                                </div>
+                            </PrelineNavCardTab>
+                            <PrelineNavCardTab Id="Generator" Title="Generator">
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Adaptive Staircase Threshold</label>
+                                        <PrelineInputNumber TValue="double"
+                                                            @bind-Value="_formModel.AdaptiveStaircaseThreshold"
+                                                            Variant="InputNumberVariant.Horizontal"
+                                                            DecimalPlaces="2"
+                                                            Min="0.0d" Max="50.0d" Step="0.05d" />
                                     </div>
                                 </div>
                             </PrelineNavCardTab>
@@ -436,7 +452,7 @@
             Contrast = _formModel.Contrast,
             DitheringMode = DitheringMode.None,
             ComparisonMode = _formModel.ComparisonMode,
-            GeneratorType = _formModel.GeneratorType,
+            StaircaseMode = _formModel.StaircaseMode,
             ShouldGenerateStructure = false
         };
 
@@ -475,9 +491,9 @@
                     SerpentineScanning = _formModel.SerpentineScanning
                 },
                 ComparisonMode = _formModel.ComparisonMode,
-                GeneratorType = _formModel.GeneratorType,
+                StaircaseMode = _formModel.StaircaseMode,
                 ShouldGenerateStructure = _generate,
-                Exporter = _generate ? _formModel.Exporter : null,
+                Exporter = _generate ? _formModel.Exporter : null
             };
 
             var result = await Task.Run(() => Generator.Generate(request));
@@ -620,7 +636,7 @@
 
         public DitheringMode DitheringMode { get; set; }
         public ComparisonMode ComparisonMode { get; set; }
-        public GeneratorType GeneratorType { get; set; }
+        public StaircaseMode StaircaseMode { get; set; }
         public Palette? SelectedPalette { get; set; }
         public IExporter? Exporter { get; set; }
         public int WidthMultiplier { get; set; } = 1;
@@ -631,6 +647,7 @@
         public string PadColor { get; set; } = "#FFFFFF";
         public float ErrorDiffusionStrength { get; set; } = 1;
         public bool SerpentineScanning { get; set; }
+        public double AdaptiveStaircaseThreshold { get; set; } = 10;
 
         public float Saturation
         {

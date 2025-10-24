@@ -63,7 +63,7 @@ public class ImageProcessor
             colorFilter = colorFilter is null ? cfCombined : SKColorFilter.CreateCompose(cfCombined, colorFilter);
         }
 
-        // 👇 Blur
+        // Blur
         if (Options.BlurRadius > 0)
         {
             imageFilter = SKImageFilter.CreateBlur(Options.BlurRadius, Options.BlurRadius);

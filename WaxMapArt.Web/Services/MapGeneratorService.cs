@@ -41,7 +41,8 @@ public class MapGeneratorService(ILogger<MapGeneratorService> logger)
             processedImage, 
             request.Palette, 
             colorComparison, 
-            request.GeneratorType == GeneratorType.Staircase
+            request.StaircaseMode,
+            request.AdaptiveStaircaseThreshold
         );
         
         var ditheredImageData = BitmapToBytes(ditheredImage);
@@ -49,17 +50,22 @@ public class MapGeneratorService(ILogger<MapGeneratorService> logger)
         // Step 3: Generate structure and export if requested
         BlockInfo[]? blocks = null;
         Stream? exportStream = null;
-        
-        if (request.ShouldGenerateStructure)
-        {
-            var generator = CreateGenerator(request.GeneratorType);
-            var output = generator.Generate(ditheredImage, request.Palette);
-            blocks = output.Blocks;
-            
-            if (request.Exporter != null)
+
+        if (!request.ShouldGenerateStructure)
+            return new MapGenerationResult
             {
-                exportStream = request.Exporter.SaveAsStream(request.Palette, blocks);
-            }
+                ProcessedImage = processedImageData,
+                GeneratedImage = ditheredImageData,
+                Blocks = blocks,
+                ExportStream = exportStream
+            };
+        var generator = CreateGenerator(request.StaircaseMode);
+        var output = generator.Generate(ditheredImage, processedImage, request.Palette); 
+        blocks = output.Blocks;
+            
+        if (request.Exporter != null)
+        {
+            exportStream = request.Exporter.SaveAsStream(request.Palette, blocks);
         }
 
         return new MapGenerationResult
@@ -106,12 +112,12 @@ public class MapGeneratorService(ILogger<MapGeneratorService> logger)
         };
     }
 
-    private static IGenerator CreateGenerator(GeneratorType type)
+    private static IGenerator CreateGenerator(StaircaseMode type)    
     {
         return type switch
         {
-            GeneratorType.Flat => new FlatGenerator(),
-            GeneratorType.Staircase => new StaircaseGenerator(),
+            StaircaseMode.Flat => new FlatGenerator(),
+            StaircaseMode.Staircase or StaircaseMode.AdaptiveStaircase => new StaircaseGenerator(),
             _ => throw new ArgumentOutOfRangeException(nameof(type))
         };
     }
@@ -153,8 +159,9 @@ public class MapGenerationRequest
     public ComparisonMode ComparisonMode { get; init; }
     
     // Generation
-    public GeneratorType GeneratorType { get; init; }
+    public StaircaseMode StaircaseMode { get; init; }
     public bool ShouldGenerateStructure { get; init; }
+    public double AdaptiveStaircaseThreshold { get; init; }
     public IExporter? Exporter { get; init; }
 }
 
@@ -170,10 +177,4 @@ public class MapGenerationResult
     public required byte[] GeneratedImage { get; init; }
     public BlockInfo[]? Blocks { get; init; }
     public Stream? ExportStream { get; init; }
-}
-
-public enum GeneratorType
-{
-    Flat,
-    Staircase
 }
