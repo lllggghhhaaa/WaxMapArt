@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WaxMapArt", "WaxMapArt\WaxM
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WaxMapArt.Web", "WaxMapArt.Web\WaxMapArt.Web.csproj", "{3115CC6A-0429-4B22-86F0-995253E51D33}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WaxMapArt.AppHost", "WaxMapArt.AppHost\WaxMapArt.AppHost.csproj", "{DD6BE869-E0CD-4529-BC2B-A37B0D338DE7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WaxMapArt.ServiceDefaults", "WaxMapArt.ServiceDefaults\WaxMapArt.ServiceDefaults.csproj", "{C8145002-A4A6-469B-920D-7E783C973311}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +25,14 @@ Global
 		{3115CC6A-0429-4B22-86F0-995253E51D33}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3115CC6A-0429-4B22-86F0-995253E51D33}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3115CC6A-0429-4B22-86F0-995253E51D33}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD6BE869-E0CD-4529-BC2B-A37B0D338DE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD6BE869-E0CD-4529-BC2B-A37B0D338DE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD6BE869-E0CD-4529-BC2B-A37B0D338DE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD6BE869-E0CD-4529-BC2B-A37B0D338DE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8145002-A4A6-469B-920D-7E783C973311}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8145002-A4A6-469B-920D-7E783C973311}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8145002-A4A6-469B-920D-7E783C973311}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8145002-A4A6-469B-920D-7E783C973311}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
