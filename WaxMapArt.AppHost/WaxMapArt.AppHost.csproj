@@ -12,7 +12,6 @@
 
     <ItemGroup>
         <PackageReference Include="Aspire.Hosting.AppHost" Version="9.5.2" />
-        <PackageReference Include="Aspire.Hosting.Docker" Version="9.5.2-preview.1.25522.3" />
         <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="9.5.2" />
     </ItemGroup>
 

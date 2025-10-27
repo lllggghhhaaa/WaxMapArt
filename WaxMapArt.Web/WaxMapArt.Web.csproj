@@ -35,7 +35,6 @@
     </ItemGroup>
 
     <Target Name="Npm Run Build" BeforeTargets="BeforeBuild">
-        <Exec Command="npm i" />
-        <Exec Command="npm run build" />
+      <Exec Command="npm run build" />
     </Target>
 </Project>
