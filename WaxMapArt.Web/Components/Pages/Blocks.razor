@@ -16,7 +16,7 @@
 <div class="flex flex-col space-y-1">
     <AuthorizeView Roles="Developer">
         <div class="flex justify-end">
-            <button @onclick="NavigateToAddBlock" type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
+            <button @onclick="NavigateToAddBlock" type="button" class="w-full sm:w-auto py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
                 Add Block
             </button>
         </div>
@@ -162,8 +162,8 @@
                 Sortable = true,
                 Template = block => @<div class="flex items-center space-x-2">
                     <img src="@block.ImageUrl" alt="@block.MinecraftId"
-                         class="w-10 h-10 object-cover rounded-md border border-gray-300"/>
-                    <span>@block.MinecraftId</span>
+                         class="w-9 h-9 sm:w-10 sm:h-10 object-cover rounded-md border border-gray-300"/>
+                    <span class="truncate max-w-[8rem] sm:max-w-none">@block.MinecraftId</span>
                 </div>
             },
             new PrelineTable<Block>.TableColumn<Block>
@@ -171,10 +171,10 @@
                 Header = "Properties",
                 PropertyName = "Properties",
                 Sortable = false,
-                Template = block => @<div class="flex items-center space-x-2">
+                Template = block => @<div class="flex items-center gap-1 flex-wrap">
                     @foreach (var prop in block.Properties)
                     {
-                        <div class="text-sm text-gray-700 dark:text-neutral-300">@prop.Key: @prop.Value</div>
+                        <div class="text-xs sm:text-sm text-gray-700 dark:text-neutral-300 whitespace-nowrap">@prop.Key: @prop.Value</div>
                     }
                 </div>
             }
@@ -226,7 +226,7 @@
                 @ref="@_buttonRefs[block.Id]"
                 type="button"
                 class="inline-flex items-center gap-x-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-neutral-300 dark:hover:text-white transition-colors duration-150">
-            <span>Actions</span>
+            <span class="hidden sm:inline">Actions</span>
             <i class="ri-arrow-up-s-line text-gray-500 dark:text-neutral-400 transition-transform duration-150 @(_openPopovers.Contains(block.Id) ? "rotate-90" : "")"></i>
         </button>
     </AuthorizeView>;

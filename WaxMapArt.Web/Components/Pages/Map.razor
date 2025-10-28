@@ -53,6 +53,25 @@
                     ShowProgressBar="true"
                     AcceptedFileTypes="image/*"
                     MaxFileSize="@(50 * 1024 * 1024)" />
+                @if (_imageName is not null && _inputImage is not null)
+                {
+                    <div class="mt-4 flex items-center justify-between text-sm text-gray-600 dark:text-neutral-400">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-4.553a1.5 1.5 0 00-2.121-2.121L12.879 7.879M5 19h14a2 2 0 002-2V7"/>
+                            </svg>
+                            <span>@_imageName</span>
+                            <span class="mx-2">•</span>
+                            <span>@_inputImage.Width x @_inputImage.Height px</span>
+                        </div>
+                        <button type="button" @onclick="ClearImage" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-800">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            Clear
+                        </button>
+                    </div>
+                }
             </div>
 
             @if (_originalImageUrl is not null)
@@ -120,6 +139,11 @@
                                                    @bind-SelectedValue="_formModel.ResizeMethod"
                                                    Placeholder="Select resize method"
                                                    SelectOptions="@(SelectOption.FromEnum<ResizeMethod>())"/>
+                                    <div class="text-xs text-gray-500 dark:text-neutral-400">
+                                        Output size: <span class="font-medium">@(_formModel.WidthMultiplier * 128) × @(_formModel.HeightMultiplier * 128) px</span>
+                                        <span class="mx-2">•</span>
+                                        Maps: <span class="font-medium">@_formModel.WidthMultiplier × @_formModel.HeightMultiplier = @_formModel.WidthMultiplier * _formModel.HeightMultiplier</span>
+                                    </div>
                                     @if (_formModel.ResizeMethod == ResizeMethod.Crop)
                                     {
                                         <div class="grid grid-cols-2 gap-4">
@@ -268,7 +292,7 @@
 
                 <!-- Actions -->
                 <div class="flex flex-wrap gap-4 justify-center">
-                    <button type="submit" @onclick="() => _generate = false" disabled="@_isProcessing"
+                    <button type="submit" @onclick="() => _generate = false" disabled="@(_isProcessing || _inputImage is null || _formModel.SelectedPalette is null)"
                             class="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
                         @if (_isProcessing && !_generate)
                         {
@@ -282,7 +306,7 @@
                         </svg>
                         Preview
                     </button>
-                    <button type="submit" @onclick="() => _generate = true" disabled="@_isProcessing"
+                    <button type="submit" @onclick="() => _generate = true" disabled="@(_isProcessing || _inputImage is null || _formModel.SelectedPalette is null)"
                             class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
                         @if (_isProcessing && _generate)
                         {
@@ -355,6 +379,7 @@
 
     private string? _imageName;
     private SKBitmap? _inputImage;
+    private CancellationTokenSource? _previewCts;
 
     private List<MapMaterial>? _materialList;
     private List<MapMaterial>? _sortedMaterialList;
@@ -428,8 +453,27 @@
     {
         if (_inputImage is not null)
         {
-            await GeneratePreview();
-            StateHasChanged();
+            _previewCts?.Cancel();
+            _previewCts?.Dispose();
+            _previewCts = new CancellationTokenSource();
+            var token = _previewCts.Token;
+
+            try
+            {
+                await Task.Delay(200, token);
+                if (!token.IsCancellationRequested)
+                {
+                    await GeneratePreview();
+                    if (!token.IsCancellationRequested)
+                    {
+                        StateHasChanged();
+                    }
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                // ignored
+            }
         }
     }
 
@@ -450,6 +494,7 @@
             Saturation = _formModel.Saturation,
             Brightness = _formModel.Brightness,
             Contrast = _formModel.Contrast,
+            BlurRadius = _formModel.BlurRadius,
             DitheringMode = DitheringMode.None,
             ComparisonMode = _formModel.ComparisonMode,
             StaircaseMode = _formModel.StaircaseMode,
@@ -520,6 +565,21 @@
             _isProcessing = false;
             StateHasChanged();
         }
+    }
+
+    private void ClearImage()
+    {
+        _imageName = null;
+        _originalImageUrl = null;
+        _preProcessedImageUrl = null;
+        _generatedImageUrl = null;
+        _exportUrl = null;
+        _exportName = null;
+        _materialList = null;
+        _sortedMaterialList = null;
+        _inputImage?.Dispose();
+        _inputImage = null;
+        StateHasChanged();
     }
 
     private async Task ProcessMaterials(BlockInfo[] blocks)
@@ -598,12 +658,12 @@
             );
             
             using (var canvas = new SKCanvas(resized))
-            using (var paint = new SKPaint { FilterQuality = SKFilterQuality.High, IsAntialias = true })
+            using (var srcImage = SKImage.FromBitmap(_inputImage))
             {
                 canvas.Clear(SKColors.Transparent);
-                var srcRect = new SKRect(0, 0, _inputImage.Width, _inputImage.Height);
+                var srcRect = new SKRectI(0, 0, _inputImage.Width, _inputImage.Height);
                 var dstRect = new SKRect(0, 0, resized.Width, resized.Height);
-                canvas.DrawBitmap(_inputImage, srcRect, dstRect, paint);
+                canvas.DrawImage(srcImage, srcRect, dstRect, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear));
                 canvas.Flush();
             }
 
@@ -624,6 +684,8 @@
     {
         _database?.Dispose();
         _inputImage?.Dispose();
+        _previewCts?.Cancel();
+        _previewCts?.Dispose();
     }
 
     private class FormModel

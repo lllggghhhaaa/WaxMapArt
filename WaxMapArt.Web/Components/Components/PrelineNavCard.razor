@@ -5,13 +5,20 @@
 <div class="flex flex-col bg-white border border-gray-200 shadow-2xs rounded-xl dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70 @Class">
     <div class="sm:hidden">
         <label for="@GetHashCode()" class="sr-only">Select a nav</label>
-        <select id="@GetHashCode()" @onchange="OnMobileTabChange" 
-                class="block w-full border-t-0 border-x-0 border-gray-300 rounded-t-xl focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600">
-            @foreach (var tab in _tabs)
-            {
-                <option value="@tab.Id" selected="@(tab.Id == ActiveTabId)">@tab.Title</option>
-            }
-        </select>
+        <div class="relative">
+            <select id="@GetHashCode()" @bind-Value="ActiveTabId" @bind-Value:event="onchange"
+                    class="block w-full border border-gray-300 rounded-lg py-2.5 ps-3 pe-9 bg-white text-gray-700 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-200 dark:placeholder-neutral-500 dark:focus:ring-neutral-600">
+                @foreach (var tab in _tabs)
+                {
+                    <option value="@tab.Id">@tab.Title</option>
+                }
+            </select>
+            <span class="pointer-events-none absolute inset-y-0 end-0 flex items-center pe-3 text-gray-400 dark:text-neutral-500">
+                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </span>
+        </div>
     </div>
     
     <div class="hidden sm:block">
@@ -44,13 +51,12 @@
                     cssClasses += " rounded-se-xl";
                 }
                 
-                <a @onclick="() => SetActiveTab(tab.Id)" 
-                   @onclick:preventDefault="true"
-                   class="@cssClasses" 
-                   href="#"
-                   aria-current="@(isActive ? "page" : null)">
+                <button type="button"
+                        @onclick="() => SetActiveTab(tab.Id)"
+                        class="@cssClasses"
+                        aria-current="@(isActive ? "page" : null)">
                     @tab.Title
-                </a>
+                </button>
             }
         </nav>
     </div>
