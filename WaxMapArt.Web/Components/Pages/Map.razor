@@ -1,0 +1,703 @@
+﻿@page "/map"
+@rendermode InteractiveServer
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+@using SkiaSharp
+@using WaxMapArt.Comparison
+@using WaxMapArt.Dithering
+@using WaxMapArt.Entities
+@using WaxMapArt.Exporter
+@using WaxMapArt.Processing
+@using WaxMapArt.Web.Components.Components
+@using WaxMapArt.Web.Services
+@using Palette = WaxMapArt.Web.Database.Palette
+@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject IDbContextFactory<DatabaseContext> DbContextFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject MapGeneratorService Generator
+
+<PageTitle>WaxMapArt - Generator</PageTitle>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    @if (_palettes is null)
+    {
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="text-center">
+                <div class="inline-flex items-center px-4 py-2 font-semibold text-sm shadow rounded-md text-white bg-blue-500">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Loading...
+                </div>
+                <p class="mt-4 text-gray-600 dark:text-neutral-400">Please log in to continue</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <EditForm Model="_formModel" OnValidSubmit="OnValidSubmit" class="space-y-8">
+            <DataAnnotationsValidator />
+            
+            <!-- Upload Section -->
+            <div class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-700 p-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <i class="ri-image-add-line text-blue-500"></i>
+                    Upload Image
+                </h2>
+                <PrelineFileUpload
+                    @ref="_imageUpload"
+                    OnFilesSelected="FileUploaded"
+                    ShowProgressBar="true"
+                    AcceptedFileTypes="image/*"
+                    MaxFileSize="@(50 * 1024 * 1024)" />
+            </div>
+
+            @if (_originalImageUrl is not null)
+            {
+                <!-- Settings Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Basic Settings -->
+                    <div class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-700 p-6">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                            <i class="ri-settings-3-fill text-green-300"></i>
+                            Basic Settings
+                        </h2>
+                        <div class="space-y-4">
+                            <PrelineSelect TValue="DitheringMode"
+                                           @bind-SelectedValue="_formModel.DitheringMode"
+                                           Placeholder="Select Dithering Mode"
+                                           SelectOptions="@(SelectOption.FromEnum<DitheringMode>())" />
+                            <PrelineSelect TValue="StaircaseMode"
+                                           @bind-SelectedValue="_formModel.StaircaseMode"
+                                           Placeholder="Select Generator Type"
+                                           SelectOptions="@(SelectOption.FromEnum<StaircaseMode>())" />
+                            <PrelineSelect TValue="ComparisonMode"
+                                           @bind-SelectedValue="_formModel.ComparisonMode"
+                                           Placeholder="Select Comparison Mode"
+                                           SelectOptions="@(SelectOption.FromEnum<ComparisonMode>())" />
+                            <PrelineSelect TValue="Palette"
+                                           @bind-SelectedValue="_formModel.SelectedPalette"
+                                           Placeholder="Select Palette"
+                                           SelectOptions="@(_palettes.Select(p => new SelectOption<Palette>{ Text = p.Name, Value = p }).ToList())" />
+                            <PrelineSelect TValue="IExporter"
+                                           @bind-SelectedValue="_formModel.Exporter"
+                                           Placeholder="Exporter"
+                                           SelectOptions="_exportOptions" />
+                        </div>
+                    </div>
+
+                    <!-- Advanced Settings -->
+                    <div class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-700 p-6">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                            <i class="ri-settings-3-fill text-blue-500"></i>
+                            Advanced Settings
+                        </h2>
+                        <PrelineNavCard ActiveTabId="size">
+                            <PrelineNavCardTab Id="size" Title="Size">
+                                <div class="space-y-4">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Width</label>
+                                            <PrelineInputNumber TValue="int"
+                                                                Value="_formModel.WidthMultiplier"
+                                                                ValueChanged="@(value => _formModel.WidthMultiplier = value)"
+                                                                Variant="InputNumberVariant.Horizontal"
+                                                                Min="1" Max="16" Step="1"/>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Height</label>
+                                            <PrelineInputNumber TValue="int"
+                                                                Value="_formModel.HeightMultiplier"
+                                                                ValueChanged="@(value => _formModel.HeightMultiplier = value)"
+                                                                Variant="InputNumberVariant.Horizontal"
+                                                                Min="1" Max="16" Step="1"/>
+                                        </div>
+                                    </div>
+                                    <PrelineSelect TValue="ResizeMethod"
+                                                   @bind-SelectedValue="_formModel.ResizeMethod"
+                                                   Placeholder="Select resize method"
+                                                   SelectOptions="@(SelectOption.FromEnum<ResizeMethod>())"/>
+                                    @if (_formModel.ResizeMethod == ResizeMethod.Crop)
+                                    {
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Offset X</label>
+                                                <PrelineInputNumber TValue="int"
+                                                                    Value="_formModel.CropOffsetX"
+                                                                    ValueChanged="@(value => _formModel.CropOffsetX = value)"
+                                                                    Variant="InputNumberVariant.Horizontal"
+                                                                    Step="1"/>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Offset Y</label>
+                                                <PrelineInputNumber TValue="int"
+                                                                    Value="_formModel.CropOffsetY"
+                                                                    ValueChanged="@(value => _formModel.CropOffsetY = value)"
+                                                                    Variant="InputNumberVariant.Horizontal"
+                                                                    Step="1"/>
+                                            </div>
+                                        </div>
+                                    }
+                                    else if (_formModel.ResizeMethod == ResizeMethod.Pad)
+                                    {
+                                        <PrelineInputText @bind-Value="_formModel.PadColor" Placeholder="Fill Color">
+                                            <Label>Fill Color</Label>
+                                        </PrelineInputText>
+                                    }
+                                </div>
+                            </PrelineNavCardTab>
+                            <PrelineNavCardTab Id="dithering" Title="Dithering">
+                                <div class="space-y-4">
+                                    @if (_formModel.DitheringMode is DitheringMode.Atkinson or DitheringMode.FloydSteinberg or DitheringMode.JarvisJudiceNinke)
+                                    {
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Error Diffusion</label>
+                                            <PrelineInputNumber TValue="float"
+                                                                Value="_formModel.ErrorDiffusionStrength"
+                                                                ValueChanged="@(value => _formModel.ErrorDiffusionStrength = value)"
+                                                                Variant="InputNumberVariant.Horizontal"
+                                                                DecimalPlaces="2"
+                                                                Min="0" Max="2" Step="0.05f" />
+                                        </div>
+                                        <PrelineSwitch @bind-Value="_formModel.SerpentineScanning" Label="Serpentine Scanning" />
+                                    }
+                                    else
+                                    {
+                                        <div class="bg-blue-50 border border-blue-200 text-sm text-blue-800 rounded-lg p-4 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400">
+                                            <div class="flex gap-3">
+                                                <svg class="shrink-0 size-4 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                                </svg>
+                                                <p>This dithering mode doesn't have additional settings.</p>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </PrelineNavCardTab>
+                            <PrelineNavCardTab Id="processing" Title="Processing">
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Saturation</label>
+                                        <PrelineInputNumber TValue="float"
+                                                            Value="_formModel.Saturation"
+                                                            ValueChanged="@(value => _formModel.Saturation = value)"
+                                                            Variant="InputNumberVariant.Horizontal"
+                                                            DecimalPlaces="2"
+                                                            Min="0.0f" Max="2.0f" Step="0.05f" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Brightness</label>
+                                        <PrelineInputNumber TValue="float"
+                                                            Value="_formModel.Brightness"
+                                                            ValueChanged="@(value => _formModel.Brightness = value)"
+                                                            Variant="InputNumberVariant.Horizontal"
+                                                            DecimalPlaces="2"
+                                                            Min="0.0f" Max="2.0f" Step="0.05f" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Contrast</label>
+                                        <PrelineInputNumber TValue="float"
+                                                            Value="_formModel.Contrast"
+                                                            ValueChanged="@(value => _formModel.Contrast = value)"
+                                                            Variant="InputNumberVariant.Horizontal"
+                                                            DecimalPlaces="2"
+                                                            Min="0.0f" Max="2.0f" Step="0.05f" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Blur Radius</label>
+                                        <PrelineInputNumber TValue="float"
+                                                            Value="_formModel.BlurRadius"
+                                                            ValueChanged="@(value => _formModel.BlurRadius = value)"
+                                                            Variant="InputNumberVariant.Horizontal"
+                                                            DecimalPlaces="1"
+                                                            Min="0.0f" Step="1f" />
+                                    </div>
+                                </div>
+                            </PrelineNavCardTab>
+                            <PrelineNavCardTab Id="Generator" Title="Generator">
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Adaptive Staircase Threshold</label>
+                                        <PrelineInputNumber TValue="double"
+                                                            @bind-Value="_formModel.AdaptiveStaircaseThreshold"
+                                                            Variant="InputNumberVariant.Horizontal"
+                                                            DecimalPlaces="2"
+                                                            Min="0.0d" Max="50.0d" Step="0.05d" />
+                                    </div>
+                                </div>
+                            </PrelineNavCardTab>
+                        </PrelineNavCard>
+                    </div>
+                </div>
+
+                <!-- Preview Section -->
+                <div class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-700 p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <i class="ri-eye-line text-amber-300"></i>
+                        Preview
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="relative aspect-square overflow-hidden rounded-lg border-2 border-gray-200 dark:border-neutral-700">
+                            <img src="@_originalImageUrl" class="w-full h-full object-cover" alt="Original"/>
+                            <PrelineBadge Variant="PrelineBadgeVariant.Soft" Color="gray-800" BackgroundColor="gray-100" 
+                                          Class="absolute top-4 right-4">Original</PrelineBadge>
+                        </div>
+                        @if (_preProcessedImageUrl is not null)
+                        {
+                            <div class="relative aspect-square overflow-hidden rounded-lg border-2 border-gray-200 dark:border-neutral-700">
+                                <img src="@_preProcessedImageUrl" class="w-full h-full object-cover" alt="Pre-processed"/>
+                                <PrelineBadge Variant="PrelineBadgeVariant.Soft" Color="blue-600" BackgroundColor="blue-100" 
+                                              Class="absolute top-4 right-4 dark:bg-blue-800/30 dark:text-blue-400">Pre-Processed</PrelineBadge>
+                            </div>
+                        }
+                    </div>
+                    @if (_generatedImageUrl is not null)
+                    {
+                        <div class="mt-6 flex justify-center">
+                            <div class="relative w-full md:w-1/2 aspect-square overflow-hidden rounded-lg border-2 border-teal-500">
+                                <img src="@_generatedImageUrl" class="w-full h-full object-cover" alt="Generated"/>
+                                <PrelineBadge Variant="PrelineBadgeVariant.Soft" Color="teal-500" BackgroundColor="teal-100" 
+                                              Class="absolute top-4 right-4 dark:bg-teal-800/30 dark:text-teal-500">Generated</PrelineBadge>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Actions -->
+                <div class="flex flex-wrap gap-4 justify-center">
+                    <button type="submit" @onclick="() => _generate = false" disabled="@_isProcessing"
+                            class="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
+                        @if (_isProcessing && !_generate)
+                        {
+                            <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        }
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        Preview
+                    </button>
+                    <button type="submit" @onclick="() => _generate = true" disabled="@_isProcessing"
+                            class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
+                        @if (_isProcessing && _generate)
+                        {
+                            <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        }
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        Generate
+                    </button>
+                    @if (_exportUrl is not null)
+                    {
+                        <a href="@_exportUrl" download="@(_exportName ?? "Untitled.nbt")"
+                           class="px-6 py-3 bg-stone-600 text-white font-medium rounded-lg hover:bg-stone-700 transition-colors flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            Download
+                        </a>
+                    }
+                </div>
+
+                <ValidationSummary />
+            }
+        </EditForm>
+
+        <!-- Materials Table -->
+        @if (_materialList is not null && _materialList.Count > 0)
+        {
+            <div class="mt-8 bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-700 overflow-hidden">
+                <div class="p-6 border-b border-gray-200 dark:border-neutral-700">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                        Materials Required
+                        <span class="text-sm font-normal text-gray-500 dark:text-neutral-400">(@_materialList.Count blocks)</span>
+                    </h2>
+                </div>
+                <PrelineTable TItem="MapMaterial"
+                              Items="@_sortedMaterialList"
+                              TotalCount="@_materialList.Count"
+                              IsLoading="false"
+                              CurrentPage="1"
+                              PageSize="@_materialList.Count"
+                              Columns="@_materialColumns"
+                              InitialSortColumn="Count"
+                              InitialSortAscending="false"
+                              OnPageChanged="OnMaterialPageChanged"
+                              EmptyText="No materials necessary."
+                              LoadingText="Loading materials...">
+                </PrelineTable>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private DatabaseContext? _database;
+    private PrelineFileUpload _imageUpload = null!;
+
+    private string? _originalImageUrl;
+    private string? _preProcessedImageUrl;
+    private string? _generatedImageUrl;
+    private string? _exportUrl;
+    private string? _exportName;
+
+    private string? _imageName;
+    private SKBitmap? _inputImage;
+
+    private List<MapMaterial>? _materialList;
+    private List<MapMaterial>? _sortedMaterialList;
+    private string _materialSortColumn = "Count";
+    private bool _materialSortAscending;
+
+    private readonly List<SelectOption<IExporter>> _exportOptions = [
+        new() { Text = "Vanilla", Value = new VanillaExporter(), IsSelected = true }, 
+        new() { Text = "Litematica", Value = new LitematicaExporter() }
+    ];
+
+    private readonly List<PrelineTable<MapMaterial>.TableColumn<MapMaterial>> _materialColumns = [
+        new() {
+            Header = "Block",
+            PropertyName = "Block",
+            Sortable = true,
+            Template = material => @<div class="flex items-center space-x-3">
+                                       <img src="@material.Material.ImageUrl" alt="@material.Material.MinecraftId"
+                                            class="w-12 h-12 object-cover rounded-lg border-2 border-gray-300 dark:border-neutral-600"/>
+                                       <span class="font-medium">@material.Material.Name</span>
+                                   </div>
+        },
+        new() {
+            Header = "ID",
+            PropertyName = "Id",
+            Sortable = true,
+            Template = material => @<code class="text-xs bg-gray-100 dark:bg-neutral-800 px-2 py-1 rounded">@material.Material.MinecraftId</code>
+        },
+        new() {
+            Header = "Count",
+            PropertyName = "Count",
+            Sortable = true,
+            CssClass = "font-semibold text-blue-600 dark:text-blue-400",
+            Template = material => @<span>@material.Count.ToString("N0")</span>
+        }
+    ];
+
+    private List<Palette>? _palettes;
+    private readonly FormModel _formModel = new();
+    private bool _generate;
+    private bool _isProcessing;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _database = await DbContextFactory.CreateDbContextAsync();
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated != true)
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+
+        var userId = Guid.Parse(authState.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty);
+        if (userId == Guid.Empty)
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+
+        _palettes = await _database.Palettes
+            .Include(p => p.Blocks)
+            .Include(p => p.PlaceholderBlock)
+            .Where(p => p.UserId == userId)
+            .ToListAsync();
+
+        _formModel.SetPreProcessingChangeCallback(OnPreProcessingChange);
+    }
+
+    private async Task OnPreProcessingChange()
+    {
+        if (_inputImage is not null)
+        {
+            await GeneratePreview();
+            StateHasChanged();
+        }
+    }
+
+    private async Task GeneratePreview()
+    {
+        if (_inputImage is null || _formModel.SelectedPalette is null) return;
+        
+        var request = new MapGenerationRequest
+        {
+            InputImage = _inputImage,
+            Palette = _formModel.SelectedPalette,
+            WidthMultiplier = _formModel.WidthMultiplier,
+            HeightMultiplier = _formModel.HeightMultiplier,
+            ResizeMethod = _formModel.ResizeMethod,
+            CropOffsetX = _formModel.CropOffsetX,
+            CropOffsetY = _formModel.CropOffsetY,
+            PadColor = _formModel.PadColor,
+            Saturation = _formModel.Saturation,
+            Brightness = _formModel.Brightness,
+            Contrast = _formModel.Contrast,
+            DitheringMode = DitheringMode.None,
+            ComparisonMode = _formModel.ComparisonMode,
+            StaircaseMode = _formModel.StaircaseMode,
+            ShouldGenerateStructure = false
+        };
+
+        var result = await Task.Run(() => Generator.Generate(request));
+        
+        _preProcessedImageUrl = ConvertStreamToBase64Url(result.ProcessedImage);
+    }
+
+    private async Task OnValidSubmit()
+    {
+        if (_inputImage is null || _formModel.SelectedPalette is null) return;
+        
+        _isProcessing = true;
+        StateHasChanged();
+
+        try
+        {
+            var request = new MapGenerationRequest
+            {
+                InputImage = _inputImage,
+                Palette = _formModel.SelectedPalette,
+                WidthMultiplier = _formModel.WidthMultiplier,
+                HeightMultiplier = _formModel.HeightMultiplier,
+                ResizeMethod = _formModel.ResizeMethod,
+                CropOffsetX = _formModel.CropOffsetX,
+                CropOffsetY = _formModel.CropOffsetY,
+                PadColor = _formModel.PadColor,
+                Saturation = _formModel.Saturation,
+                Brightness = _formModel.Brightness,
+                Contrast = _formModel.Contrast,
+                BlurRadius = _formModel.BlurRadius,
+                DitheringMode = _formModel.DitheringMode,
+                DitheringOptions = new DitheringOptions
+                {
+                    ErrorDiffusionStrength = _formModel.ErrorDiffusionStrength,
+                    SerpentineScanning = _formModel.SerpentineScanning
+                },
+                ComparisonMode = _formModel.ComparisonMode,
+                StaircaseMode = _formModel.StaircaseMode,
+                ShouldGenerateStructure = _generate,
+                Exporter = _generate ? _formModel.Exporter : null
+            };
+
+            var result = await Task.Run(() => Generator.Generate(request));
+            
+            _preProcessedImageUrl = ConvertStreamToBase64Url(result.ProcessedImage);
+            _generatedImageUrl = ConvertStreamToBase64Url(result.GeneratedImage);
+
+            if (_generate && result.Blocks is not null)
+            {
+                await ProcessMaterials(result.Blocks);
+                
+                if (result.ExportStream is not null)
+                {
+                    var ms = new MemoryStream();
+                    await result.ExportStream.CopyToAsync(ms);
+                    
+                    _exportName = $"{_imageName}.{_formModel.Exporter?.GetFileFormat()}";
+                    _exportUrl = ConvertStreamToBase64Url(ms.ToArray(), "application/octet-stream");
+                }
+            }
+        }
+        finally
+        {
+            _isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ProcessMaterials(BlockInfo[] blocks)
+    {
+        if (_database is null) return;
+
+        var blockIds = blocks.Select(b => b.Id).Distinct().ToList();
+        var dbBlocks = await _database.Blocks
+            .Where(b => blockIds.Contains(b.MinecraftId))
+            .ToDictionaryAsync(b => b.MinecraftId);
+
+        _materialList = blocks
+            .GroupBy(b => b.Id)
+            .Where(g => dbBlocks.ContainsKey(g.Key))
+            .Select(g => new MapMaterial(dbBlocks[g.Key], g.Count()))
+            .ToList();
+
+        _sortedMaterialList = _materialList.OrderByDescending(m => m.Count).ToList();
+    }
+
+    private async Task OnMaterialPageChanged(PrelineTable<MapMaterial>.PageChangedEventArgs args)
+    {
+        _materialSortColumn = args.SortColumn;
+        _materialSortAscending = args.SortAscending;
+
+        if (_materialList is null) return;
+
+        _sortedMaterialList = _materialSortColumn switch
+        {
+            "Count" => _materialSortAscending
+                ? _materialList.OrderBy(m => m.Count).ToList()
+                : _materialList.OrderByDescending(m => m.Count).ToList(),
+            "Block" => _materialSortAscending
+                ? _materialList.OrderBy(m => m.Material.Name).ToList()
+                : _materialList.OrderByDescending(m => m.Material.Name).ToList(),
+            "Id" => _materialSortAscending
+                ? _materialList.OrderBy(m => m.Material.MinecraftId).ToList()
+                : _materialList.OrderByDescending(m => m.Material.MinecraftId).ToList(),
+            _ => _materialList
+        };
+    }
+
+    private static string ConvertStreamToBase64Url(byte[] data, string contentType = "image/png") 
+        => $"data:{contentType};base64,{Convert.ToBase64String(data)}";
+
+    private async Task FileUploaded(IBrowserFile[] obj)
+    {
+        var file = obj.FirstOrDefault();
+        if (file is null) return;
+
+        try
+        {
+            await using var ms = new MemoryStream();
+            var stream = file.OpenReadStream(_imageUpload.MaxFileSize);
+            var buffer = new byte[8192];
+            int bytesRead;
+            long totalRead = 0;
+
+            while ((bytesRead = await stream.ReadAsync(buffer)) > 0)
+            {
+                await ms.WriteAsync(buffer.AsMemory(0, bytesRead));
+                totalRead += bytesRead;
+                var percentComplete = (int)((float)totalRead / file.Size * 100);
+                _imageUpload.SetFileProgress(file, percentComplete);
+            }
+
+            var data = ms.ToArray();
+            _imageName = Path.GetFileNameWithoutExtension(file.Name);
+            _inputImage = SKBitmap.Decode(data);
+
+            using var resized = new SKBitmap(
+                _formModel.WidthMultiplier * 128, 
+                _formModel.HeightMultiplier * 128, 
+                _inputImage.ColorType, 
+                _inputImage.AlphaType
+            );
+            
+            using (var canvas = new SKCanvas(resized))
+            using (var paint = new SKPaint { FilterQuality = SKFilterQuality.High, IsAntialias = true })
+            {
+                canvas.Clear(SKColors.Transparent);
+                var srcRect = new SKRect(0, 0, _inputImage.Width, _inputImage.Height);
+                var dstRect = new SKRect(0, 0, resized.Width, resized.Height);
+                canvas.DrawBitmap(_inputImage, srcRect, dstRect, paint);
+                canvas.Flush();
+            }
+
+            using var skImage = SKImage.FromBitmap(resized);
+            using var imageData = skImage.Encode(SKEncodedImageFormat.Png, 100);
+            _originalImageUrl = ConvertStreamToBase64Url(imageData.ToArray());
+
+            await GeneratePreview();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error processing image: {ex.Message}");
+        }
+    }
+
+    public void Dispose()
+    {
+        _database?.Dispose();
+        _inputImage?.Dispose();
+    }
+
+    private class FormModel
+    {
+        private float _saturation = 1.0f;
+        private float _brightness = 1.0f;
+        private float _contrast = 1.0f;
+        private float _blurRadius;
+        private Func<Task>? _preProcessingChangeCallback;
+
+        public DitheringMode DitheringMode { get; set; }
+        public ComparisonMode ComparisonMode { get; set; }
+        public StaircaseMode StaircaseMode { get; set; }
+        public Palette? SelectedPalette { get; set; }
+        public IExporter? Exporter { get; set; }
+        public int WidthMultiplier { get; set; } = 1;
+        public int HeightMultiplier { get; set; } = 1;
+        public ResizeMethod ResizeMethod { get; set; } = ResizeMethod.Crop;
+        public int CropOffsetX { get; set; }
+        public int CropOffsetY { get; set; }
+        public string PadColor { get; set; } = "#FFFFFF";
+        public float ErrorDiffusionStrength { get; set; } = 1;
+        public bool SerpentineScanning { get; set; }
+        public double AdaptiveStaircaseThreshold { get; set; } = 10;
+
+        public float Saturation
+        {
+            get => _saturation;
+            set
+            {
+                if (Math.Abs(_saturation - value) < float.Epsilon) return;
+                _saturation = value;
+                _preProcessingChangeCallback?.Invoke();
+            }
+        }
+
+        public float Brightness
+        {
+            get => _brightness;
+            set
+            {
+                if (Math.Abs(_brightness - value) < float.Epsilon) return;
+                _brightness = value;
+                _preProcessingChangeCallback?.Invoke();
+            }
+        }
+
+        public float Contrast
+        {
+            get => _contrast;
+            set
+            {
+                if (Math.Abs(_contrast - value) < float.Epsilon) return;
+                _contrast = value;
+                _preProcessingChangeCallback?.Invoke();
+            }
+        }
+        
+        public float BlurRadius
+        {
+            get => _blurRadius;
+            set
+            {
+                if (Math.Abs(_blurRadius - value) < float.Epsilon) return;
+                _blurRadius = value;
+                _preProcessingChangeCallback?.Invoke();
+            }
+        }
+
+        public void SetPreProcessingChangeCallback(Func<Task> callback)
+        {
+            _preProcessingChangeCallback = callback;
+        }
+    }
+
+    record struct MapMaterial(Block Material, int Count);
+}

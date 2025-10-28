@@ -16,23 +16,36 @@
                ActiveClass="border-gray-800 text-gray-800 dark:border-neutral-200 dark:text-neutral-200"
                Match="NavLinkMatch.All"
                href="/">
+        <i class="ri-home-2-line"></i>
+        Home
+      </NavLink>
+      <NavLink class="flex items-center gap-x-2 py-0.5 md:py-3 px-4 md:px-2 border-s-2 md:border-s-0 md:border-b-2 border-transparent text-gray-500 hover:text-gray-800 dark:text-neutral-400 dark:hover:text-neutral-200"
+               ActiveClass="border-gray-800 text-gray-800 dark:border-neutral-200 dark:text-neutral-200"
+               Match="NavLinkMatch.Prefix"
+               href="/map">
         <i class="ri-artboard-2-line"></i>
         Map Generator
       </NavLink>
-      <NavLink class="flex items-center gap-x-2 py-0.5 md:py-3 px-4 md:px-2 border-s-2 md:border-s-0 md:border-b-2 border-transparent text-gray-500 hover:text-gray-800 dark:text-neutral-400 dark:hover:text-neutral-200"
-               ActiveClass="border-gray-800 text-gray-800 dark:border-neutral-200 dark:text-neutral-200"
-               Match="NavLinkMatch.Prefix"
-               href="palettes">
-        <i class="ri-palette-line"></i>
-        Palettes
-      </NavLink>
-      <NavLink class="flex items-center gap-x-2 py-0.5 md:py-3 px-4 md:px-2 border-s-2 md:border-s-0 md:border-b-2 border-transparent text-gray-500 hover:text-gray-800 dark:text-neutral-400 dark:hover:text-neutral-200"
-               ActiveClass="border-gray-800 text-gray-800 dark:border-neutral-200 dark:text-neutral-200"
-               Match="NavLinkMatch.Prefix"
-               href="blocks">
-        <i class="ri-box-2-fill"></i>
-        Blocks
-      </NavLink>
+      <AuthorizeView>
+        <Authorized>
+          <NavLink class="flex items-center gap-x-2 py-0.5 md:py-3 px-4 md:px-2 border-s-2 md:border-s-0 md:border-b-2 border-transparent text-gray-500 hover:text-gray-800 dark:text-neutral-400 dark:hover:text-neutral-200"
+                   ActiveClass="border-gray-800 text-gray-800 dark:border-neutral-200 dark:text-neutral-200"
+                   Match="NavLinkMatch.Prefix"
+                   href="palettes">
+            <i class="ri-palette-line"></i>
+            Palettes
+          </NavLink>
+        </Authorized>
+      </AuthorizeView>
+      <AuthorizeView Roles="Developer">
+        <NavLink class="flex items-center gap-x-2 py-0.5 md:py-3 px-4 md:px-2 border-s-2 md:border-s-0 md:border-b-2 border-transparent text-gray-500 hover:text-gray-800 dark:text-neutral-400 dark:hover:text-neutral-200"
+                 ActiveClass="border-gray-800 text-gray-800 dark:border-neutral-200 dark:text-neutral-200"
+                 Match="NavLinkMatch.Prefix"
+                 href="blocks">
+          <i class="ri-box-2-fill"></i>
+          Blocks
+        </NavLink>
+      </AuthorizeView>
     </div>
 
     <div class="flex items-center gap-2 md:order-4 md:ms-4">

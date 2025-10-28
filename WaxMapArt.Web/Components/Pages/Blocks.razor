@@ -1,5 +1,7 @@
 ﻿@page "/blocks"
+@attribute [Authorize(Roles = "Developer")]
 @rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
 @using WaxMapArt.Utils
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.EntityFrameworkCore
