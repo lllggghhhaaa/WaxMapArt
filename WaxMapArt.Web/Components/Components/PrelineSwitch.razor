@@ -1,24 +1,28 @@
 ﻿@inherits InputBase<bool>
 
-<div class="flex items-center gap-x-3">
-    <!-- Toggle -->
-    <label for="@Id" class="relative inline-block w-11 h-6 cursor-pointer flex-shrink-0">
-        <input
-            type="checkbox"
-            id="@Id"
-            checked="@CurrentValue"
-            @onchange="OnChange"
-            class="peer sr-only"
-            disabled="@Disabled"
-        />
-        <span class="absolute inset-0 bg-gray-200 rounded-full transition-colors duration-200 ease-in-out peer-checked:bg-blue-600 dark:bg-neutral-700 dark:peer-checked:bg-blue-500 peer-disabled:opacity-50 peer-disabled:pointer-events-none"></span>
-        <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 ease-in-out peer-checked:translate-x-[20px] dark:bg-neutral-400 dark:peer-checked:bg-white"></span>
-    </label>
+<div class="flex items-center gap-3">
+    <!-- Toggle Switch -->
+    <button
+        type="button"
+        role="switch"
+        aria-checked="@CurrentValue"
+        aria-labelledby="@(string.IsNullOrEmpty(Label) ? null : $"label-{GetHashCode()}")"
+        @onclick="ToggleValue"
+        disabled="@Disabled"
+        class="@GetToggleClasses()"
+    >
+        <span class="@GetThumbClasses()" style="@GetThumbStyle()"></span>
+    </button>
 
     <!-- Label -->
     @if (!string.IsNullOrEmpty(Label))
     {
-        <label for="@Id" class="text-sm text-gray-500 dark:text-neutral-400 select-none cursor-pointer">@Label</label>
+        <label 
+            id="label-@GetHashCode()" 
+            @onclick="ToggleValue"
+            class="@GetLabelClasses()">
+            @Label
+        </label>
     }
 </div>
 
@@ -26,12 +30,25 @@
     [Parameter] public string? Label { get; set; }
     [Parameter] public bool Disabled { get; set; }
 
-    private string Id { get; } = $"toggle-{Guid.NewGuid()}";
-
-    private void OnChange(ChangeEventArgs e)
+    private void ToggleValue()
     {
-        CurrentValue = (bool)e.Value!;
+        if (!Disabled)
+        {
+            CurrentValue = !CurrentValue;
+        }
     }
+
+    private string GetToggleClasses()
+        => $"relative inline-flex items-center h-6 w-11 flex-shrink-0 rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-900 {(Disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer")} {(CurrentValue ? "bg-blue-600 dark:bg-blue-500" : "bg-gray-200 dark:bg-neutral-700")}";
+
+    private string GetThumbClasses()
+        => "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-lg transition-all duration-200 ease-in-out";
+
+    private string GetThumbStyle()
+        => CurrentValue ? "left: calc(100% - 22px);" : "left: 2px;";
+
+    private string GetLabelClasses()
+        => $"text-sm font-medium text-gray-700 dark:text-neutral-300 select-none {(!Disabled ? "cursor-pointer" : "opacity-50 cursor-not-allowed")}";
 
     protected override bool TryParseValueFromString(string? value, out bool result, out string? validationErrorMessage)
     {
@@ -39,4 +56,5 @@
         validationErrorMessage = null;
         return true;
     }
+
 }
