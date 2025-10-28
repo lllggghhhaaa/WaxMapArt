@@ -73,6 +73,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 builder.Services.AddCascadingAuthenticationState();
 
+var adSenseClientId = builder.Configuration["AdSense:PublisherId"];
+builder.Services.AddSingleton(new AdSenseConfig { ClientId = adSenseClientId });
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

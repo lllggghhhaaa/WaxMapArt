@@ -1,4 +1,8 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using WaxMapArt.Web.Services
+@inject AdSenseConfig AdSense
+
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -11,6 +15,12 @@
     <ImportMap/>
     <link rel="icon" type="image/png" href="favicon.png"/>
     <HeadOutlet/>
+    @if (!string.IsNullOrEmpty(AdSense.ClientId))
+    {
+    <script async
+            src=@($"https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={AdSense.ClientId}")
+            crossorigin="anonymous"></script>
+    }
     <title>WaxMapArt</title>
 </head>
 
@@ -18,6 +28,7 @@
 <CascadingAuthenticationState>
     <Routes/>
 </CascadingAuthenticationState>
+
 <script src="_framework/blazor.web.js"></script>
 <script src="../node_modules/preline/dist/preline.js"></script>
 <script src="js/functions.js"></script>
