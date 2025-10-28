@@ -11,34 +11,35 @@
 @inject IDbContextFactory<DatabaseContext> DbContextFactory
 @inject IJSRuntime JS
 
-<div class="flex flex-col">
-    <div class="-m-1.5 overflow-x-auto">
-        <div class="p-1.5 min-w-full inline-block align-middle">
-            <div class="border border-gray-200 rounded-lg overflow-hidden dark:border-neutral-700">
-                <PrelineTable TItem="Block"
-                           Items="@_blocks"
-                           TotalCount="@_totalCount"
-                           IsLoading="@_isLoading"
-                           CurrentPage="@_currentPage"
-                           PageSize="@_pageSize"
-                           InitialSortColumn="@nameof(Block.MapId)"
-                           InitialSortAscending="true"
-                           Columns="@_columns"
-                           OnPageChanged="@LoadDataAsync"
-                           ActionsTemplate="@ActionsTemplate"
-                           LoadingText="Loading blocks..."
-                           EmptyText="No blocks found.">
-                </PrelineTable>
-            </div>
-        </div>
-    </div>
+<div class="flex flex-col space-y-1">
     <AuthorizeView Roles="Developer">
-        <div class="mt-4 flex justify-end">
+        <div class="flex justify-end">
             <button @onclick="NavigateToAddBlock" type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
                 Add Block
             </button>
         </div>
     </AuthorizeView>
+    <div class="-m-1.5 overflow-x-auto">
+        <div class="p-1.5 min-w-full inline-block align-middle">
+            <div class="border border-gray-200 rounded-lg overflow-hidden dark:border-neutral-700">
+                <PrelineTable TItem="Block"
+                              Items="@_blocks"
+                              TotalCount="@_totalCount"
+                              IsLoading="@_isLoading"
+                              CurrentPage="@_currentPage"
+                              PageSize="@_pageSize"
+                              InitialSortColumn="@nameof(Block.MapId)"
+                              InitialSortAscending="true"
+                              Columns="@_columns"
+                              OnPageChanged="@LoadDataAsync"
+                              ActionsTemplate="@ActionsTemplate"
+                              LoadingText="Loading blocks..."
+                              EmptyText="No blocks found.">
+                </PrelineTable>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 @if (_openPopovers.Any())

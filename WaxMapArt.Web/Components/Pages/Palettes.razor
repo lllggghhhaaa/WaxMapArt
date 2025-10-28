@@ -11,32 +11,33 @@
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JS
 
-<div class="flex flex-col">
-    <div class="-m-1.5 overflow-x-auto">
-        <div class="p-1.5 min-w-full inline-block align-middle">
-            <div class="border border-gray-200 rounded-lg overflow-hidden dark:border-neutral-700">
-                <PrelineTable TItem="Palette"
-                           Items="@_palettes"
-                           TotalCount="@_totalCount"
-                           IsLoading="@_isLoading"
-                           CurrentPage="@_currentPage"
-                           PageSize="@_pageSize"
-                           InitialSortColumn="@nameof(Palette.Name)"
-                           InitialSortAscending="true"
-                           Columns="@_columns"
-                           OnPageChanged="@LoadDataAsync"
-                           ActionsTemplate="@ActionsTemplate"
-                           LoadingText="Loading palettes..."
-                           EmptyText="No palettes found.">
-                </PrelineTable>
-            </div>
-        </div>
-    </div>
-    <div class="mt-4 flex justify-end">
+<div class="flex flex-col space-y-1">
+    <div class="flex justify-end">
         <button @onclick="NavigateToAddPalette" type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
             Add Palette
         </button>
     </div>
+    <div class="-m-1.5 overflow-x-auto">
+        <div class="p-1.5 min-w-full inline-block align-middle">
+            <div class="border border-gray-200 rounded-lg overflow-hidden dark:border-neutral-700">
+                <PrelineTable TItem="Palette"
+                              Items="@_palettes"
+                              TotalCount="@_totalCount"
+                              IsLoading="@_isLoading"
+                              CurrentPage="@_currentPage"
+                              PageSize="@_pageSize"
+                              InitialSortColumn="@nameof(Palette.Name)"
+                              InitialSortAscending="true"
+                              Columns="@_columns"
+                              OnPageChanged="@LoadDataAsync"
+                              ActionsTemplate="@ActionsTemplate"
+                              LoadingText="Loading palettes..."
+                              EmptyText="No palettes found.">
+                </PrelineTable>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 @if (_openPopovers.Any())
