@@ -251,6 +251,46 @@
                                                             DecimalPlaces="2"
                                                             Min="0.0d" Max="50.0d" Step="0.05d" />
                                     </div>
+                                    <div class="border-t border-gray-200 dark:border-neutral-700 pt-4">
+                                        <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Region Splitting</h3>
+                                        <PrelineSwitch @bind-Value="_formModel.EnableRegionSplitting" Label="Enable Region Splitting" />
+                                        @if (_formModel.EnableRegionSplitting)
+                                        {
+                                            <div class="mt-3 space-y-4">
+                                                <div class="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Region Width (in maps)</label>
+                                                        <PrelineInputNumber TValue="int"
+                                                                            @bind-Value="_formModel.RegionWidthInMaps"
+                                                                            Variant="InputNumberVariant.Horizontal"
+                                                                            Min="1" Max="16" Step="1" />
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Region Height (in maps)</label>
+                                                        <PrelineInputNumber TValue="int"
+                                                                            @bind-Value="_formModel.RegionHeightInMaps"
+                                                                            Variant="InputNumberVariant.Horizontal"
+                                                                            Min="1" Max="16" Step="1" />
+                                                    </div>
+                                                </div>
+                                                <p class="text-xs text-gray-500 dark:text-neutral-400">
+                                                    Each region will be @(_formModel.RegionWidthInMaps * 128) × @(_formModel.RegionHeightInMaps * 128) blocks.
+                                                    The placeholder row (Z=0) will be included in every region and does not count towards region size.
+                                                    @if (_formModel.Exporter is not null)
+                                                    {
+                                                        @if (_formModel.Exporter is LitematicaExporter)
+                                                        {
+                                                            <span>Regions will be saved in a single Litematica file.</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span>Regions will be saved as separate files in a ZIP archive.</span>
+                                                        }
+                                                    }
+                                                </p>
+                                            </div>
+                                        }
+                                    </div>
                                 </div>
                             </PrelineNavCardTab>
                         </PrelineNavCard>
@@ -539,7 +579,10 @@
                 ComparisonMode = _formModel.ComparisonMode,
                 StaircaseMode = _formModel.StaircaseMode,
                 ShouldGenerateStructure = _generate,
-                Exporter = _generate ? _formModel.Exporter : null
+                Exporter = _generate ? _formModel.Exporter : null,
+                EnableRegionSplitting = _formModel.EnableRegionSplitting,
+                RegionWidthInMaps = _formModel.RegionWidthInMaps,
+                RegionHeightInMaps = _formModel.RegionHeightInMaps
             };
 
             var result = await Task.Run(() => Generator.Generate(request));
@@ -556,8 +599,8 @@
                     var ms = new MemoryStream();
                     await result.ExportStream.CopyToAsync(ms);
                     
-                    _exportName = $"{_imageName}.{_formModel.Exporter?.GetFileFormat()}";
-                    _exportUrl = ConvertStreamToBase64Url(ms.ToArray(), "application/octet-stream");
+                    _exportName = result.ExportFileName ?? $"{_imageName}.{_formModel.Exporter?.GetFileFormat()}";
+                    _exportUrl = ConvertStreamToBase64Url(ms.ToArray(), result.ExportMimeType);
                 }
             }
         }
@@ -711,6 +754,9 @@
         public float ErrorDiffusionStrength { get; set; } = 1;
         public bool SerpentineScanning { get; set; }
         public double AdaptiveStaircaseThreshold { get; set; } = 10;
+        public bool EnableRegionSplitting { get; set; } = false;
+        public int RegionWidthInMaps { get; set; } = 1;
+        public int RegionHeightInMaps { get; set; } = 1;
 
         public float Saturation
         {
