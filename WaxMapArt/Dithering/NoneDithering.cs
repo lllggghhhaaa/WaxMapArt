@@ -1,26 +1,43 @@
-﻿using SkiaSharp;
+using SkiaSharp;
 using WaxMapArt.Comparison;
-using WaxMapArt.Utils;
+using WaxMapArt.Models;
 
 namespace WaxMapArt.Dithering;
 
 public class NoneDithering : IDithering
 {
-    public SKBitmap ApplyDithering(SKBitmap image, Palette palette, IColorComparison colorComparison, StaircaseMode staircaseMode, double threshold)
+    public PixelMatch[,] Apply(SKBitmap image, Palette palette,
+        IColorComparison comparison, StaircaseMode mode)
     {
-        var result = image.Copy();
-        var colors = ColorUtils.GetPaletteColors(palette, staircaseMode is StaircaseMode.Staircase or StaircaseMode.AdaptiveStaircase);
-        var flatColors = ColorUtils.GetPaletteColors(palette);
-        
-        for (var y = 0; y < result.Height; y++)
-        for (var x = 0; x < result.Width; x++)
+        var entries = PaletteResolver.Resolve(palette, mode);
+        var result = new PixelMatch[image.Width, image.Height];
+
+        for (var y = 0; y < image.Height; y++)
+        for (var x = 0; x < image.Width; x++)
         {
-            var originalColor = result.GetPixel(x, y);
-            var nearestColor =
-                ColorUtils.FindNearestColor(originalColor, colors, flatColors, colorComparison, staircaseMode, threshold);
-            result.SetPixel(x, y, nearestColor);
+            var pixel = image.GetPixel(x, y);
+            result[x, y] = FindBestMatch(pixel, entries, comparison);
         }
 
         return result;
+    }
+
+    private static PixelMatch FindBestMatch(SKColor color, PaletteEntry[] entries,
+        IColorComparison comparison)
+    {
+        var best = entries[0];
+        var bestDistance = comparison.GetColorDifference(color, best.Color);
+
+        for (var i = 1; i < entries.Length; i++)
+        {
+            var distance = comparison.GetColorDifference(color, entries[i].Color);
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                best = entries[i];
+            }
+        }
+
+        return best.Match;
     }
 }

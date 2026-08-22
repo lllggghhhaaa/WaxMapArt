@@ -1,5 +1,5 @@
 ﻿using SkiaSharp;
-using WaxMapArt.Entities;
+using WaxMapArt.Utils;
 
 namespace WaxMapArt.Comparison;
 
@@ -7,8 +7,8 @@ public class CieDe2000ColorComparison : IColorComparison
 {
     public double GetColorDifference(SKColor color1, SKColor color2)
     {
-        var lab1 = Lab.FromSKColor(color1);
-        var lab2 = Lab.FromSKColor(color2);
+        var lab1 = color1.ToLab();
+        var lab2 = color2.ToLab();
 
         var k257 = Math.Pow(25, 7);
 

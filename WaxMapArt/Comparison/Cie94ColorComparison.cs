@@ -1,5 +1,5 @@
 ﻿using SkiaSharp;
-using WaxMapArt.Entities;
+using WaxMapArt.Utils;
 
 namespace WaxMapArt.Comparison;
 
@@ -7,8 +7,8 @@ public class Cie94ColorComparison(bool useTextTiles = false) : IColorComparison
 {
     public double GetColorDifference(SKColor color1, SKColor color2)
     {
-        var lab1 = Lab.FromSKColor(color1);
-        var lab2 = Lab.FromSKColor(color2);
+        var lab1 = color1.ToLab();
+        var lab2 = color2.ToLab();
 
         var kL = useTextTiles ? 2.0 : 1.0;
         var K1 = useTextTiles ? 0.048 : 0.045;

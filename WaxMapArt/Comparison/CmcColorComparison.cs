@@ -1,5 +1,5 @@
 ﻿using SkiaSharp;
-using WaxMapArt.Entities;
+using WaxMapArt.Utils;
 
 namespace WaxMapArt.Comparison;
 
@@ -7,8 +7,8 @@ public class CmcColorComparison(double lightnessRatio = 2, double chromaRatio = 
 {
     public double GetColorDifference(SKColor color1, SKColor color2)
     {
-        var lab1 = Lab.FromSKColor(color1);
-        var lab2 = Lab.FromSKColor(color2);
+        var lab1 = color1.ToLab();
+        var lab2 = color2.ToLab();
 
         var dL = lab1.L - lab2.L;
         var C1 = Math.Sqrt(lab1.A * lab1.A + lab1.B * lab1.B);
@@ -26,7 +26,7 @@ public class CmcColorComparison(double lightnessRatio = 2, double chromaRatio = 
         if (H1 < 0) H1 += 360.0;
 
         double T;
-        if (H1 >= 164 && H1 <= 345)
+        if (H1 is >= 164 and <= 345)
             T = 0.56 + Math.Abs(0.2 * Math.Cos((H1 + 168.0) * Math.PI / 180.0));
         else
             T = 0.36 + Math.Abs(0.4 * Math.Cos((H1 + 35.0) * Math.PI / 180.0));
@@ -41,5 +41,4 @@ public class CmcColorComparison(double lightnessRatio = 2, double chromaRatio = 
 
         return Math.Sqrt(vL * vL + vC * vC + vH * vH);
     }
-    
 }
